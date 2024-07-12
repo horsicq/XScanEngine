@@ -124,6 +124,7 @@ public:
         bool bShowExtraInfo;
         QString sSpecial;        // Special info
         QString sSignatureName;  // Optional
+        QString sDetectFunction;
     };
 
     struct SCAN_DATA {
@@ -153,10 +154,10 @@ public:
     XScanEngine::SCAN_RESULT scanFile(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
     XScanEngine::SCAN_RESULT scanMemory(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
     XScanEngine::SCAN_RESULT scanSubdevice(QIODevice *pDevice, qint64 nOffset, qint64 nSize, XScanEngine::SCAN_OPTIONS *pOptions,
-                                                      XBinary::PDSTRUCT *pPdStruct = nullptr);
+                                           XBinary::PDSTRUCT *pPdStruct = nullptr);
 
     void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, XScanEngine::SCANID parentId, XScanEngine::SCAN_OPTIONS *pOptions,
-                 bool bInit, XBinary::PDSTRUCT *pPdStruct);
+                     bool bInit, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
     void process();

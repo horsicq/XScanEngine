@@ -425,7 +425,7 @@ XScanEngine::SCAN_RESULT XScanEngine::scanMemory(char *pData, qint32 nDataSize, 
 }
 
 XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 nOffset, qint64 nSize, XScanEngine::SCAN_OPTIONS *pOptions,
-                                                       XBinary::PDSTRUCT *pPdStruct)
+                                                    XBinary::PDSTRUCT *pPdStruct)
 {
     XScanEngine::SCAN_RESULT result = {};
 

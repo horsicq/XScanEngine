@@ -20,7 +20,7 @@
  */
 #include "scanitemmodel.h"
 
-ScanItemModel::ScanItemModel(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns, bool bIsColoredOutput) : QAbstractItemModel(0)
+ScanItemModel::ScanItemModel(const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns, bool bIsColoredOutput) : QAbstractItemModel(0)
 {
     g_bIsColoredOutput = bIsColoredOutput;
     g_pRootItem = new ScanItem(tr("Result"), nullptr, nNumberOfColumns, true);
