@@ -31,7 +31,6 @@ bool _sortItems(const XScanEngine::SCANSTRUCT &v1, const XScanEngine::SCANSTRUCT
 
 XScanEngine::XScanEngine(QObject *pParent) : QObject(pParent)
 {
-
 }
 
 void XScanEngine::setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct)
@@ -424,8 +423,7 @@ XScanEngine::SCAN_RESULT XScanEngine::scanMemory(char *pData, qint32 nDataSize, 
     return result;
 }
 
-XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 nOffset, qint64 nSize, XScanEngine::SCAN_OPTIONS *pOptions,
-                                                    XBinary::PDSTRUCT *pPdStruct)
+XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 nOffset, qint64 nSize, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
 {
     XScanEngine::SCAN_RESULT result = {};
 
@@ -442,7 +440,8 @@ XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 n
     return result;
 }
 
-void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, SCANID parentId, SCAN_OPTIONS *pOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct)
+void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, SCANID parentId, SCAN_OPTIONS *pOptions, bool bInit,
+                              XBinary::PDSTRUCT *pPdStruct)
 {
     XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();
 
@@ -506,7 +505,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     }
 
     if (pOptions->bAllTypesScan) {
-
         if (stFT.contains(XBinary::FT_PE32) || stFT.contains(XBinary::FT_PE64) || stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX) ||
             stFT.contains(XBinary::FT_NE)) {
             _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pOptions, true, pPdStruct);
@@ -748,7 +746,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                             _options.fileType = XBinary::FT_UNKNOWN;
 
                             scanProcess(_pDevice, pScanResult, listExtractRecords.at(i).nOffset, listExtractRecords.at(i).nSize, scanIdRegion, &_options, false,
-                                    pPdStruct);
+                                        pPdStruct);
                         }
                         XBinary::setPdStructCurrent(pPdStruct, _nFreeIndex, i);
                     }
