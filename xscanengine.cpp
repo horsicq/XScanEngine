@@ -80,13 +80,13 @@ QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
     if (pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) {
         sResult += XBinary::recordFilePartIdToString(pScanStruct->parentId.filePart);
 
-        if (pScanStruct->parentId.sVersion != "") {
-            sResult += QString("(%1)").arg(pScanStruct->parentId.sVersion);
-        }
+        // if (pScanStruct->parentId.sVersion != "") {
+        //     sResult += QString("(%1)").arg(pScanStruct->parentId.sVersion);
+        // }
 
-        if (pScanStruct->parentId.sInfo != "") {
-            sResult += QString("[%1]").arg(pScanStruct->parentId.sInfo);
-        }
+        // if (pScanStruct->parentId.sInfo != "") {
+        //     sResult += QString("[%1]").arg(pScanStruct->parentId.sInfo);
+        // }
 
         sResult += ": ";
     }
@@ -539,6 +539,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LE, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_NE)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NE, pOptions, true, pPdStruct);
+    } else if (stFT.contains(XBinary::FT_DOS16M) || stFT.contains(XBinary::FT_DOS4G)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DOS16M, pOptions, false, pPdStruct);
     } else if (stFT.contains(XBinary::FT_MSDOS)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_APK)) {
@@ -554,7 +556,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     } else if (stFT.contains(XBinary::FT_NPM)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NPM, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_MACHOFAT)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHOFAT, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHOFAT, pOptions, false, pPdStruct);
     } else if (stFT.contains(XBinary::FT_COM) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
@@ -708,7 +710,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
             QList<XArchive::RECORD> listRecords;
             XBinary::FT _fileType = XBinary::FT_UNKNOWN;
 
-            if (stFTOriginal.contains(XBinary::FT_ARCHIVE)) {
+            if (stFTOriginal.contains(XBinary::FT_ARCHIVE) || stFTOriginal.contains(XBinary::FT_DOS16M) || stFTOriginal.contains(XBinary::FT_DOS4G)) {
                 _fileType = XBinary::_getPrefFileType(&stFT);
                 listRecords = XArchives::getRecords(_pDevice, _fileType, 20000, pPdStruct);
             } else {
@@ -739,6 +741,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                         if (listExtractRecords.at(i).nOffset != 0) {
                             XScanEngine::SCANID scanIdRegion = scanIdMain;
                             scanIdRegion.filePart = XBinary::FILEPART_REGION;
+                            scanIdRegion.fileType = listExtractRecords.at(i).fileType;
                             scanIdRegion.nOffset = listExtractRecords.at(i).nOffset;
                             scanIdRegion.nSize = listExtractRecords.at(i).nSize;
 
@@ -764,6 +767,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 if (((_fileType == XBinary::FT_ZLIB) || (_fileType == XBinary::FT_LHA) || (_fileType == XBinary::FT_GZIP)) && (nNumberOfRecords == 1)) {
                     bScanAll = true;
                     bShowFileName = false;
+                } else if ((_fileType == XBinary::FT_MACHOFAT) || (_fileType == XBinary::FT_DOS16M) || (_fileType == XBinary::FT_DOS4G)) {
+                    bScanAll = true;
                 }
 
                 qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
@@ -778,7 +783,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     if (bScanAll || isScanable(_stFT)) {
                         XScanEngine::SCANID scanIdArchiveRecord = scanIdMain;
                         scanIdArchiveRecord.filePart = XBinary::FILEPART_ARCHIVERECORD;
-                        scanIdArchiveRecord.fileType = XBinary::FT_ARCHIVE;
+                        scanIdArchiveRecord.fileType = _fileType;
 
                         XScanEngine::SCAN_OPTIONS _options = *pOptions;
                         _options.fileType = XBinary::FT_UNKNOWN;

@@ -42,17 +42,21 @@ ScanItemModel::ScanItemModel(const QList<XScanEngine::SCANSTRUCT> *pListScanStru
             }
 
             if (_pItemParent == nullptr) {
-                _pItemParent = g_pRootItem;
+                // _pItemParent = g_pRootItem;
+                QString sParent = XBinary::fileTypeIdToString(pListScanStructs->at(i).parentId.fileType);
+                _pItemParent = new ScanItem(sParent, g_pRootItem, nNumberOfColumns, true);
+                g_pRootItem->appendChild(_pItemParent);
+                mapParents.insert(pListScanStructs->at(i).parentId.sUuid, _pItemParent);
             }
 
-            QString sParent = XScanEngine::createTypeString(&pListScanStructs->at(i));
+            QString sTypeString = XScanEngine::createTypeString(&pListScanStructs->at(i));
 
-            ScanItem *pItemParent = new ScanItem(sParent, _pItemParent, nNumberOfColumns, true);
+            ScanItem *pItemMain = new ScanItem(sTypeString, _pItemParent, nNumberOfColumns, true);
             XScanEngine::SCANSTRUCT ss = XScanEngine::createHeaderScanStruct(&pListScanStructs->at(i));
-            pItemParent->setScanStruct(ss);
-            _pItemParent->appendChild(pItemParent);
+            pItemMain->setScanStruct(ss);
+            _pItemParent->appendChild(pItemMain);
 
-            mapParents.insert(pListScanStructs->at(i).id.sUuid, pItemParent);
+            mapParents.insert(pListScanStructs->at(i).id.sUuid, pItemMain);
         }
 
         if (pListScanStructs->at(i).sName != "") {
@@ -177,7 +181,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
         else if ((nRole == Qt::ForegroundRole) && (g_bIsColoredOutput)) {
             QColor colText;
 
-            if (pItem->scanStruct().globalColor == Qt::transparent) {
+            if ((pItem->scanStruct().globalColor == Qt::transparent) || (pItem->scanStruct().globalColor == Qt::color0)) {
                 colText = QApplication::palette().text().color();
             } else {
                 colText = QColor(pItem->scanStruct().globalColor);
