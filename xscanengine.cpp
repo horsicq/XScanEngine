@@ -80,13 +80,13 @@ QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
     if (pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) {
         sResult += XBinary::recordFilePartIdToString(pScanStruct->parentId.filePart);
 
-        // if (pScanStruct->parentId.sVersion != "") {
-        //     sResult += QString("(%1)").arg(pScanStruct->parentId.sVersion);
-        // }
+        if (pScanStruct->parentId.sVersion != "") {
+            sResult += QString("(%1)").arg(pScanStruct->parentId.sVersion);
+        }
 
-        // if (pScanStruct->parentId.sInfo != "") {
-        //     sResult += QString("[%1]").arg(pScanStruct->parentId.sInfo);
-        // }
+        if (pScanStruct->parentId.sInfo != "") {
+            sResult += QString("[%1]").arg(pScanStruct->parentId.sInfo);
+        }
 
         sResult += ": ";
     }
@@ -557,6 +557,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NPM, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_MACHOFAT)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHOFAT, pOptions, false, pPdStruct);
+    } else if (stFT.contains(XBinary::FT_BWDOS16M)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BWDOS16M, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_COM) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
