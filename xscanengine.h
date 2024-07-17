@@ -125,6 +125,7 @@ public:
         QString sSpecial;        // Special info
         QString sSignatureName;  // Optional
         QString sDetectFunction;
+        bool bIsHighlight;
     };
 
     struct SCAN_DATA {

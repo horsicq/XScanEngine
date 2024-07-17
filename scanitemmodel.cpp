@@ -20,9 +20,9 @@
  */
 #include "scanitemmodel.h"
 
-ScanItemModel::ScanItemModel(const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns, bool bIsColoredOutput) : QAbstractItemModel(0)
+ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns) : QAbstractItemModel(0)
 {
-    g_bIsColoredOutput = bIsColoredOutput;
+    g_pScanOptions= pScanOptions;
     g_pRootItem = new ScanItem(tr("Result"), nullptr, nNumberOfColumns, true);
     XScanEngine::SCANSTRUCT emptySS = {};
     g_pRootItem->setScanStruct(emptySS);
@@ -178,7 +178,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
             result = pItem->scanStruct().id.sUuid;
         }
 #ifdef QT_GUI_LIB
-        else if ((nRole == Qt::ForegroundRole) && (g_bIsColoredOutput)) {
+        else if ((nRole == Qt::ForegroundRole) && (g_pScanOptions->bIsHighlight)) {
             QColor colText;
 
             if ((pItem->scanStruct().globalColor == Qt::transparent) || (pItem->scanStruct().globalColor == Qt::color0)) {
@@ -443,7 +443,7 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
     HANDLE hConsole = 0;
     WORD wOldAttribute = 0;
 
-    if (g_bIsColoredOutput) {
+    if (g_pScanOptions->bIsHighlight) {
         if (pItem->scanStruct().globalColor != Qt::transparent) {
             hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -487,7 +487,7 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
         }
     }
 #else
-    if (g_bIsColoredOutput) {
+    if (g_pScanOptions->bIsHighlight) {
         if (pItem->scanStruct().globalColor != Qt::transparent) {
             if (pItem->scanStruct().globalColor == Qt::blue) {
                 printf("\033[0;34m");
@@ -521,7 +521,7 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
     printf("%s", pItem->data(0).toString().toUtf8().data());
 
 #ifdef Q_OS_WIN
-    if (g_bIsColoredOutput) {
+    if (g_pScanOptions->bIsHighlight) {
         if (pItem->scanStruct().globalColor != Qt::transparent) {
             if (wOldAttribute) {
                 SetConsoleTextAttribute(hConsole, wOldAttribute);
@@ -529,7 +529,7 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
         }
     }
 #else
-    if (g_bIsColoredOutput) {
+    if (g_pScanOptions->bIsHighlight) {
         if (pItem->scanStruct().globalColor != Qt::transparent) {
             printf("\033[0m");
         }
