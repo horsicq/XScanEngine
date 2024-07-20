@@ -20,9 +20,10 @@
  */
 #include "scanitemmodel.h"
 
-ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns) : QAbstractItemModel(0)
+ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns)
+    : QAbstractItemModel(0)
 {
-    g_pScanOptions= pScanOptions;
+    g_pScanOptions = pScanOptions;
     g_pRootItem = new ScanItem(tr("Result"), nullptr, nNumberOfColumns, true);
     XScanEngine::SCANSTRUCT emptySS = {};
     g_pRootItem->setScanStruct(emptySS);
