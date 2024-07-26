@@ -498,7 +498,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     QSet<XBinary::FT> stFT = XFormats::getFileTypes(_pDevice, true, pPdStruct);
     QSet<XBinary::FT> stFTOriginal = stFT;
 
-    if (bInit || (pOptions->fileType == XBinary::FT_BINARY))  {
+    if (bInit || (pOptions->fileType == XBinary::FT_BINARY)) {
         if (pOptions->fileType != XBinary::FT_UNKNOWN) {
             XBinary::filterFileTypes(&stFT, pOptions->fileType);
         }
