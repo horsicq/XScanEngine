@@ -498,7 +498,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     QSet<XBinary::FT> stFT = XFormats::getFileTypes(_pDevice, true, pPdStruct);
     QSet<XBinary::FT> stFTOriginal = stFT;
 
-    if (bInit) {
+    if (bInit || (pOptions->fileType == XBinary::FT_BINARY))  {
         if (pOptions->fileType != XBinary::FT_UNKNOWN) {
             XBinary::filterFileTypes(&stFT, pOptions->fileType);
         }
@@ -563,6 +563,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pOptions, true, pPdStruct);
     } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pOptions, true, pPdStruct);
+    } else if (stFT.contains(XBinary::FT_BINARY) && (stFT.size() == 1)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pOptions, true, pPdStruct);
     } else {
         XScanEngine::SCAN_RESULT _scanResultCOM = {};
 
@@ -615,6 +617,40 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                 _options.fileType = XBinary::FT_UNKNOWN;
 
                                 scanProcess(_pDevice, pScanResult, nResourceOffset, nResourceSize, scanIdResource, &_options, false, pPdStruct);
+                            }
+                        }
+
+                        XBinary::setPdStructCurrentIncrement(pPdStruct, _nFreeIndex);
+                    }
+
+                    XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
+                }
+
+                if (pe.isDebugPresent()) {
+                    QList<XPE_DEF::S_IMAGE_DEBUG_DIRECTORY> listDebug = pe.getDebugList(&memoryMap);
+
+                    qint32 nNumberOfRecords = listDebug.count();
+
+                    qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
+                    XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
+
+                    for (qint32 i = 0; (i < nNumberOfRecords) && (!(pPdStruct->bIsStop)); i++) {
+                        qint64 nRecordOffset = listDebug.at(i).PointerToRawData;
+                        qint64 nRecordSize = listDebug.at(i).SizeOfData;
+                        quint32 nRecordType = listDebug.at(i).Type;
+
+                        if ((nRecordType == 0) || (nRecordType == 2)) {
+                            if (pe.checkOffsetSize(nRecordOffset, nRecordSize)) {
+                                XScanEngine::SCANID scanIdDebug = scanIdMain;
+                                scanIdDebug.filePart = XBinary::FILEPART_DEBUGDATA;
+                                scanIdDebug.sInfo = XBinary::valueToHexEx(nRecordOffset);
+                                scanIdDebug.nOffset = nRecordOffset;
+                                scanIdDebug.nSize = nRecordSize;
+
+                                XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                                _options.fileType = XBinary::FT_BINARY;
+
+                                scanProcess(_pDevice, pScanResult, nRecordOffset, nRecordSize, scanIdDebug, &_options, false, pPdStruct);
                             }
                         }
 

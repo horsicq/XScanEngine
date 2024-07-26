@@ -102,6 +102,7 @@ public:
         bool bIsRecursiveScan;
         qint64 nBufferSize;
         bool bAllTypesScan;
+        bool bShowUnknown; // TODO options
         bool bShowDetects;
         bool bResultAsXML;
         bool bResultAsJSON;
