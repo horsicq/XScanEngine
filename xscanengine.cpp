@@ -112,7 +112,7 @@ XScanEngine::SCANSTRUCT XScanEngine::createHeaderScanStruct(const SCANSTRUCT *pS
     return result;
 }
 
-QString XScanEngine::createResultString2(const SCANSTRUCT *pScanStruct)
+QString XScanEngine::createResultStringEx(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct)
 {
     QString sResult;
 
@@ -120,14 +120,40 @@ QString XScanEngine::createResultString2(const SCANSTRUCT *pScanStruct)
         sResult += "(Heuristic)";
     }
 
-    sResult += QString("%1: %2").arg(pScanStruct->sType, pScanStruct->sName);
+    if (pOptions->bShowType) {
+        sResult += QString("%1: ").arg(pScanStruct->sType);
+    }
 
-    if (pScanStruct->sVersion != "") {
+    sResult += pScanStruct->sName;
+
+    if ((pOptions->bShowVersion) && (pScanStruct->sVersion != "")) {
         sResult += QString("(%1)").arg(pScanStruct->sVersion);
     }
 
-    if (pScanStruct->sInfo != "") {
+    if ((pOptions->bShowInfo) && (pScanStruct->sInfo != "")) {
         sResult += QString("[%1]").arg(pScanStruct->sInfo);
+    }
+
+    return sResult;
+}
+
+QString XScanEngine::createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult)
+{
+    QString sResult;
+
+    qint64 nNumberOfRecords = scanResult.listRecords.count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        SCANSTRUCT scanStruct = scanResult.listRecords.at(i);
+
+        if (scanStruct.id.fileType != XBinary::FT_BINARY) {
+            // sResult = createFullResultString2(&scanStruct);
+            sResult = QString("%1: %2").arg(XBinary::fileTypeIdToString(scanStruct.id.fileType), createResultStringEx(pOptions, &scanStruct));
+            break;
+        } else if (!scanStruct.bIsUnknown) {
+            sResult = createResultStringEx(pOptions, &scanStruct);
+            break;
+        }
     }
 
     return sResult;
@@ -332,7 +358,7 @@ void XScanEngine::sortRecords(QList<SCANSTRUCT> *pListRecords)
     std::sort(pListRecords->begin(), pListRecords->end(), _sortItems);
 }
 
-QString XScanEngine::getProtection(QList<SCANSTRUCT> *pListRecords)
+QString XScanEngine::getProtection(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords)
 {
     QString sResult;
 
@@ -341,7 +367,7 @@ QString XScanEngine::getProtection(QList<SCANSTRUCT> *pListRecords)
     for (qint32 i = 0; i < nNumberOfRecords; i++) {
         if (pListRecords->at(i).bIsProtection) {
             SCANSTRUCT scanStruct = pListRecords->at(i);
-            sResult = createResultString2(&scanStruct);
+            sResult = createResultStringEx(pScanOptions, &scanStruct);
             break;
         }
     }
@@ -504,7 +530,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         }
     }
 
-    if (pOptions->bAllTypesScan) {
+    if (pOptions->bIsAllTypesScan) {
         if (stFT.contains(XBinary::FT_PE32) || stFT.contains(XBinary::FT_PE64) || stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX) ||
             stFT.contains(XBinary::FT_NE)) {
             _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pOptions, true, pPdStruct);
@@ -918,6 +944,105 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     }
 }
 
+QMap<quint64, QString> XScanEngine::getScanFlags()
+{
+    QMap<quint64, QString> mapResult;
+
+    mapResult.insert(SCANFLAG_RECURSIVESCAN, tr("Recursive scan"));
+    mapResult.insert(SCANFLAG_DEEPSCAN, tr("Deep scan"));
+    mapResult.insert(SCANFLAG_HEURISTICSCAN, tr("Heuristic scan"));
+    mapResult.insert(SCANFLAG_VERBOSE, tr("Verbose"));
+    mapResult.insert(SCANFLAG_ALLTYPESSCAN, tr("All types"));
+
+    return mapResult;
+}
+
+quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
+{
+    quint64 nResult = 0;
+
+    if (pScanOptions->bIsRecursiveScan) {
+        nResult |= SCANFLAG_RECURSIVESCAN;
+    }
+
+    if (pScanOptions->bIsDeepScan) {
+        nResult |= SCANFLAG_DEEPSCAN;
+    }
+
+    if (pScanOptions->bIsHeuristicScan) {
+        nResult |= SCANFLAG_HEURISTICSCAN;
+    }
+
+    if (pScanOptions->bIsVerbose) {
+        nResult |= SCANFLAG_VERBOSE;
+    }
+
+    if (pScanOptions->bIsAllTypesScan) {
+        nResult |= SCANFLAG_ALLTYPESSCAN;
+    }
+
+    return nResult;
+}
+
+void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
+{
+    if ( nFlags & SCANFLAG_RECURSIVESCAN) {
+        pScanOptions->bIsRecursiveScan = true;
+    }
+
+    if ( nFlags & SCANFLAG_DEEPSCAN) {
+        pScanOptions->bIsDeepScan = true;
+    }
+
+    if ( nFlags & SCANFLAG_HEURISTICSCAN) {
+        pScanOptions->bIsHeuristicScan = true;
+    }
+
+    if ( nFlags & SCANFLAG_VERBOSE) {
+        pScanOptions->bIsVerbose = true;
+    }
+
+    if ( nFlags & SCANFLAG_ALLTYPESSCAN) {
+        pScanOptions->bIsAllTypesScan = true;
+    }
+}
+
+quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
+{
+    quint64 nResult = 0;
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_RECURSIVE).toBool()) {
+        nResult |= SCANFLAG_RECURSIVESCAN;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_DEEP).toBool()) {
+        nResult |= SCANFLAG_DEEPSCAN;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_HEURISTIC).toBool()) {
+        nResult |= SCANFLAG_HEURISTICSCAN;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_VERBOSE).toBool()) {
+        nResult |= SCANFLAG_VERBOSE;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_ALLTYPES).toBool()) {
+        nResult |= SCANFLAG_ALLTYPESSCAN;
+    }
+
+    return nResult;
+}
+
+void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags)
+{
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, nFlags & SCANFLAG_RECURSIVESCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_DEEP, nFlags & SCANFLAG_DEEPSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_HEURISTIC, nFlags & SCANFLAG_HEURISTICSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SCANFLAG_VERBOSE);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SCANFLAG_ALLTYPESSCAN);
+}
+
 void XScanEngine::process()
 {
     XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();
@@ -990,4 +1115,34 @@ void XScanEngine::process()
     XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
 
     emit completed(scanTimer.elapsed());
+}
+
+void XScanEngine::_errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMessage)
+{
+    // g_bIsErrorLogEnable = true;
+    // g_bIsWarningLogEnable = false;
+    // g_bIsInfoLogEnable = false;
+
+    // if ((pOptions->bResultAsCSV) || (pOptions->bResultAsJSON) || (pOptions->bResultAsTSV) || (pOptions->bResultAsXML)) {
+    //     g_bIsErrorLogEnable = false;
+    //     g_bIsWarningLogEnable = false;
+    //     g_bIsInfoLogEnable = false;
+    // }
+
+    // if (pOptions->bLogProfiling) {
+    //     g_bIsInfoLogEnable = true;
+    //     g_bIsWarningLogEnable = true;
+    // }
+
+    emit errorMessage(sErrorMessage);
+}
+
+void XScanEngine::_warningMessage(SCAN_OPTIONS *pOptions, const QString &sWarningMessage)
+{
+    emit errorMessage(sWarningMessage);
+}
+
+void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessage)
+{
+    emit errorMessage(sInfoMessage);
 }

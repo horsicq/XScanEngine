@@ -26,6 +26,7 @@
 #include "xoptions.h"
 #include <QFutureWatcher>
 
+// TODO pOptions -> pScanOptions
 class XScanEngine : public QObject {
     Q_OBJECT
 
@@ -56,6 +57,7 @@ public:
 
     struct SCANSTRUCT {
         bool bIsHeuristic;
+        bool bIsUnknown;
         SCANID id;
         SCANID parentId;
         quint32 nType;
@@ -94,16 +96,23 @@ public:
         QList<DEBUG_RECORD> listDebugRecords;
     };
 
+    enum SCANFLAG {
+        SCANFLAG_RECURSIVESCAN = 1,
+        SCANFLAG_DEEPSCAN = 2,
+        SCANFLAG_HEURISTICSCAN = 4,
+        SCANFLAG_VERBOSE = 8,
+        SCANFLAG_ALLTYPESSCAN = 16,
+    };
+
     struct SCAN_OPTIONS {
         //        bool bEmulate; // TODO Check
         bool bIsDeepScan;
         bool bIsHeuristicScan;
         bool bIsVerbose;
         bool bIsRecursiveScan;
+        bool bIsAllTypesScan;
         qint64 nBufferSize;
-        bool bAllTypesScan;
-        bool bShowUnknown;  // TODO options
-        bool bShowDetects;
+        bool bShowInternalDetects;
         bool bResultAsXML;
         bool bResultAsJSON;
         bool bResultAsCSV;
@@ -116,13 +125,16 @@ public:
         XBinary::FT fileType;            // Optional
         XBinary::FILEPART initFilePart;  // Optional
         QVariant varInfo;                // Optional
-        bool bIsProfiling;
+        bool bLogErrors;  // TODO options
+        bool bLogAll;  // TODO options
+        bool bLogProfiling;
         bool bShowScanTime;
         bool bShowType;
         bool bShowVersion;
-        bool bShowOptions;
+        bool bShowInfo;
+        bool bShowUnknown;  // TODO options
         bool bShowEntropy;
-        bool bShowExtraInfo;
+        bool bShowFileInfo;
         QString sSpecial;        // Special info
         QString sSignatureName;  // Optional
         QString sDetectFunction;
@@ -142,13 +154,14 @@ public:
 
     static QString createTypeString(const SCANSTRUCT *pScanStruct);
     static SCANSTRUCT createHeaderScanStruct(const SCANSTRUCT *pScanStruct);
-    static QString createResultString2(const SCANSTRUCT *pScanStruct);
+    static QString createResultStringEx(XScanEngine::SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct);
+    static QString createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
     static Qt::GlobalColor typeToColor(const QString &sType);
     static qint32 typeToPrio(const QString &sType);
     static QString translateType(const QString &sType);
     static QString _translate(const QString &sString);
     static void sortRecords(QList<SCANSTRUCT> *pListRecords);
-    static QString getProtection(QList<SCANSTRUCT> *pListRecords);
+    static QString getProtection(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
     static bool isProtection(const QString &sType);
     static bool isScanable(const QSet<XBinary::FT> &stFT);
 
@@ -160,12 +173,21 @@ public:
     void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, XScanEngine::SCANID parentId,
                      XScanEngine::SCAN_OPTIONS *pOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct);
 
+    static QMap<quint64, QString> getScanFlags();
+    static quint64 getScanFlags(SCAN_OPTIONS *pScanOptions);
+    static void setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags);
+    static quint64 getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions);
+    static void setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags);
+
 public slots:
     void process();
 
 protected:
     virtual void _processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions,
                                 bool bAddUnknown, XBinary::PDSTRUCT *pPdStruct) = 0;
+    void _errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMessage);
+    void _warningMessage(SCAN_OPTIONS *pOptions, const QString &sWarningMessage);
+    void _infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessage);
 
 signals:
     // TODO error and info signals !!!
