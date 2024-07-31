@@ -105,9 +105,9 @@ public:
     };
 
     enum DATABASE {
-        DATABASE_MAIN = 0,
-        DATABASE_EXTRA = 1,
-        DATABASE_CUSTOM = 2,
+        DATABASE_MAIN = 1,
+        DATABASE_EXTRA = 2,
+        DATABASE_CUSTOM = 4,
     };
 
     struct SCAN_OPTIONS {
@@ -131,8 +131,8 @@ public:
         XBinary::FT fileType;            // Optional
         XBinary::FILEPART initFilePart;  // Optional
         QVariant varInfo;                // Optional
-        bool bLogErrors;  // TODO options
-        bool bLogAll;  // TODO options
+        bool bLogErrors;                 // TODO options
+        bool bLogAll;                    // TODO options
         bool bLogProfiling;
         bool bShowScanTime;
         bool bShowType;

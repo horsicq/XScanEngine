@@ -986,23 +986,23 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
 
 void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
 {
-    if ( nFlags & SCANFLAG_RECURSIVESCAN) {
+    if (nFlags & SCANFLAG_RECURSIVESCAN) {
         pScanOptions->bIsRecursiveScan = true;
     }
 
-    if ( nFlags & SCANFLAG_DEEPSCAN) {
+    if (nFlags & SCANFLAG_DEEPSCAN) {
         pScanOptions->bIsDeepScan = true;
     }
 
-    if ( nFlags & SCANFLAG_HEURISTICSCAN) {
+    if (nFlags & SCANFLAG_HEURISTICSCAN) {
         pScanOptions->bIsHeuristicScan = true;
     }
 
-    if ( nFlags & SCANFLAG_VERBOSE) {
+    if (nFlags & SCANFLAG_VERBOSE) {
         pScanOptions->bIsVerbose = true;
     }
 
-    if ( nFlags & SCANFLAG_ALLTYPESSCAN) {
+    if (nFlags & SCANFLAG_ALLTYPESSCAN) {
         pScanOptions->bIsAllTypesScan = true;
     }
 }
@@ -1056,7 +1056,7 @@ QMap<quint64, QString> XScanEngine::getDatabases()
 
 quint64 XScanEngine::getDatabases(SCAN_OPTIONS *pScanOptions)
 {
-    quint64 nResult = 0;
+    quint64 nResult = DATABASE_MAIN;
 
     if (pScanOptions->bUseExtraDatabase) {
         nResult |= DATABASE_EXTRA;
@@ -1077,7 +1077,7 @@ void XScanEngine::setDatabases(SCAN_OPTIONS *pScanOptions, quint64 nDatabases)
 
 quint64 XScanEngine::getDatabasesFromGlobalOptions(XOptions *pGlobalOptions)
 {
-    quint64 nResult = 0;
+    quint64 nResult = DATABASE_MAIN;
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_DATABASE_EXTRA_ENABLED).toBool()) {
         nResult |= DATABASE_EXTRA;
