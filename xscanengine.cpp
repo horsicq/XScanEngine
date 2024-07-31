@@ -1043,6 +1043,59 @@ void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SCANFLAG_ALLTYPESSCAN);
 }
 
+QMap<quint64, QString> XScanEngine::getDatabases()
+{
+    QMap<quint64, QString> mapResult;
+
+    mapResult.insert(DATABASE_MAIN, tr("Main"));
+    mapResult.insert(DATABASE_EXTRA, tr("Extra"));
+    mapResult.insert(DATABASE_CUSTOM, tr("Custom"));
+
+    return mapResult;
+}
+
+quint64 XScanEngine::getDatabases(SCAN_OPTIONS *pScanOptions)
+{
+    quint64 nResult = 0;
+
+    if (pScanOptions->bUseExtraDatabase) {
+        nResult |= DATABASE_EXTRA;
+    }
+
+    if (pScanOptions->bUseCustomDatabase) {
+        nResult |= DATABASE_CUSTOM;
+    }
+
+    return nResult;
+}
+
+void XScanEngine::setDatabases(SCAN_OPTIONS *pScanOptions, quint64 nDatabases)
+{
+    pScanOptions->bUseExtraDatabase = (nDatabases & DATABASE_EXTRA);
+    pScanOptions->bUseCustomDatabase = (nDatabases & DATABASE_CUSTOM);
+}
+
+quint64 XScanEngine::getDatabasesFromGlobalOptions(XOptions *pGlobalOptions)
+{
+    quint64 nResult = 0;
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_DATABASE_EXTRA_ENABLED).toBool()) {
+        nResult |= DATABASE_EXTRA;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_DATABASE_CUSTOM_ENABLED).toBool()) {
+        nResult |= DATABASE_CUSTOM;
+    }
+
+    return nResult;
+}
+
+void XScanEngine::setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases)
+{
+    pGlobalOptions->setValue(XOptions::ID_SCAN_DATABASE_EXTRA_ENABLED, nDatabases & DATABASE_EXTRA);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_DATABASE_CUSTOM_ENABLED, nDatabases & DATABASE_CUSTOM);
+}
+
 void XScanEngine::process()
 {
     XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();

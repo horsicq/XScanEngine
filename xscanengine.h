@@ -104,6 +104,12 @@ public:
         SCANFLAG_ALLTYPESSCAN = 16,
     };
 
+    enum DATABASE {
+        DATABASE_MAIN = 0,
+        DATABASE_EXTRA = 1,
+        DATABASE_CUSTOM = 2,
+    };
+
     struct SCAN_OPTIONS {
         //        bool bEmulate; // TODO Check
         bool bIsDeepScan;
@@ -139,6 +145,8 @@ public:
         QString sSignatureName;  // Optional
         QString sDetectFunction;
         bool bIsHighlight;
+        bool bUseExtraDatabase;
+        bool bUseCustomDatabase;
     };
 
     struct SCAN_DATA {
@@ -178,6 +186,12 @@ public:
     static void setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags);
     static quint64 getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions);
     static void setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags);
+
+    static QMap<quint64, QString> getDatabases();
+    static quint64 getDatabases(SCAN_OPTIONS *pScanOptions);
+    static void setDatabases(SCAN_OPTIONS *pScanOptions, quint64 nDatabases);
+    static quint64 getDatabasesFromGlobalOptions(XOptions *pGlobalOptions);
+    static void setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases);
 
 public slots:
     void process();

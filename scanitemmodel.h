@@ -50,6 +50,7 @@ public:
         UD_UUID
     };
 
+    // TODO nNumberOfColumns remove, use scanOptions
     explicit ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns);
     ~ScanItemModel();
 
@@ -82,7 +83,7 @@ private:
 
 private:
     ScanItem *g_pRootItem;
-    XScanEngine::SCAN_OPTIONS *g_pScanOptions;
+    XScanEngine::SCAN_OPTIONS g_scanOptions;
 };
 
 #endif  // SCANITEMMODEL_H
