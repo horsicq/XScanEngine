@@ -1172,6 +1172,7 @@ void XScanEngine::process()
 
 void XScanEngine::_errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMessage)
 {
+    Q_UNUSED(pOptions)
     // g_bIsErrorLogEnable = true;
     // g_bIsWarningLogEnable = false;
     // g_bIsInfoLogEnable = false;
@@ -1192,10 +1193,12 @@ void XScanEngine::_errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMes
 
 void XScanEngine::_warningMessage(SCAN_OPTIONS *pOptions, const QString &sWarningMessage)
 {
+    Q_UNUSED(pOptions)
     emit errorMessage(sWarningMessage);
 }
 
 void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessage)
 {
+    Q_UNUSED(pOptions)
     emit errorMessage(sInfoMessage);
 }
