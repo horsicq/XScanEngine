@@ -93,6 +93,10 @@ QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
 
     sResult += XBinary::fileTypeIdToString(pScanStruct->id.fileType);
 
+    if (pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) {
+        sResult += QString("[%1=0x%2,%3=0x%4]").arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+    }
+
     return sResult;
 }
 
@@ -175,6 +179,8 @@ Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
         result = Qt::green;
     } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform")) {
         result = Qt::darkYellow;
+    } else if (_sType == "format") {
+        result = Qt::darkGreen;
     } else if ((_sType == "sign tool") || (_sType == "certificate")) {
         result = Qt::darkMagenta;
     } else if (_sType == "language") {
@@ -630,17 +636,17 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                         qint64 nResourceSize = listResources.at(i).nSize;
 
                         if (pe.checkOffsetSize(nResourceOffset, nResourceSize)) {
-                            QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, nResourceOffset, nResourceSize);
+                            QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, nResourceOffset, nResourceSize, true, pPdStruct);
 
                             if (isScanable(_stFT)) {
                                 XScanEngine::SCANID scanIdResource = scanIdMain;
                                 scanIdResource.filePart = XBinary::FILEPART_RESOURCE;
-                                scanIdResource.sInfo = XBinary::valueToHexEx(nResourceOffset);
                                 scanIdResource.nOffset = nResourceOffset;
                                 scanIdResource.nSize = nResourceSize;
 
                                 XScanEngine::SCAN_OPTIONS _options = *pOptions;
                                 _options.fileType = XBinary::FT_UNKNOWN;
+                                _options.bIsRecursiveScan = false;
 
                                 scanProcess(_pDevice, pScanResult, nResourceOffset, nResourceSize, scanIdResource, &_options, false, pPdStruct);
                             }
@@ -669,12 +675,12 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                             if (pe.checkOffsetSize(nRecordOffset, nRecordSize)) {
                                 XScanEngine::SCANID scanIdDebug = scanIdMain;
                                 scanIdDebug.filePart = XBinary::FILEPART_DEBUGDATA;
-                                scanIdDebug.sInfo = XBinary::valueToHexEx(nRecordOffset);
                                 scanIdDebug.nOffset = nRecordOffset;
                                 scanIdDebug.nSize = nRecordSize;
 
                                 XScanEngine::SCAN_OPTIONS _options = *pOptions;
                                 _options.fileType = XBinary::FT_BINARY;
+                                _options.bIsRecursiveScan = false;
 
                                 scanProcess(_pDevice, pScanResult, nRecordOffset, nRecordSize, scanIdDebug, &_options, false, pPdStruct);
                             }
@@ -694,6 +700,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                     XScanEngine::SCAN_OPTIONS _options = *pOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
+                    _options.bIsRecursiveScan = false;
 
                     scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
                 }
@@ -712,6 +719,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                     XScanEngine::SCAN_OPTIONS _options = *pOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
+                    _options.bIsRecursiveScan = false;
 
                     scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
                 }
@@ -730,6 +738,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                     XScanEngine::SCAN_OPTIONS _options = *pOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
+                    _options.bIsRecursiveScan = false;
 
                     scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
                 }
@@ -748,6 +757,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                     XScanEngine::SCAN_OPTIONS _options = *pOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
+                    _options.bIsRecursiveScan = false;
 
                     scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
                 }
@@ -766,6 +776,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                     XScanEngine::SCAN_OPTIONS _options = *pOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
+                    _options.bIsRecursiveScan = false;
 
                     scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
                 }
@@ -811,6 +822,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                             XScanEngine::SCAN_OPTIONS _options = *pOptions;
                             _options.fileType = XBinary::FT_UNKNOWN;
+                            _options.bIsRecursiveScan = false;
 
                             scanProcess(_pDevice, pScanResult, listExtractRecords.at(i).nOffset, listExtractRecords.at(i).nSize, scanIdRegion, &_options, false,
                                         pPdStruct);
@@ -851,6 +863,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                         XScanEngine::SCAN_OPTIONS _options = *pOptions;
                         _options.fileType = XBinary::FT_UNKNOWN;
+                        _options.bIsRecursiveScan = false;
 
                         if (bShowFileName) {
                             scanIdArchiveRecord.sInfo = listRecords.at(i).sFileName;
