@@ -308,6 +308,7 @@ void ScanItemModel::_toXML(QXmlStreamWriter *pXml, ScanItem *pItem, qint32 nLeve
         if (ss.id.filePart != XBinary::FILEPART_UNKNOWN) {
             pXml->writeAttribute("parentfilepart", XBinary::recordFilePartIdToString(ss.parentId.filePart));
             pXml->writeAttribute("filetype", XBinary::fileTypeIdToString(ss.id.fileType));
+            pXml->writeAttribute("info", ss.id.sInfo);
             pXml->writeAttribute("offset", QString::number(ss.id.nOffset));
             pXml->writeAttribute("size", QString::number(ss.id.nSize));
         }
@@ -340,6 +341,7 @@ void ScanItemModel::_toJSON(QJsonObject *pJsonObject, ScanItem *pItem, qint32 nL
         if (ss.id.filePart != XBinary::FILEPART_UNKNOWN) {
             pJsonObject->insert("parentfilepart", XBinary::recordFilePartIdToString(ss.parentId.filePart));
             pJsonObject->insert("filetype", XBinary::fileTypeIdToString(ss.id.fileType));
+            pJsonObject->insert("info", ss.id.sInfo);
             pJsonObject->insert("offset", QString::number(ss.id.nOffset));
             pJsonObject->insert("size", QString::number(ss.id.nSize));
 

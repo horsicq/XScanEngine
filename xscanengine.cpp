@@ -93,7 +93,7 @@ QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
 
     sResult += XBinary::fileTypeIdToString(pScanStruct->id.fileType);
 
-    if (pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) {
+    if ((pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) && (pScanStruct->parentId.filePart != XBinary::FILEPART_ARCHIVERECORD)) {
         sResult += QString("[%1=0x%2,%3=0x%4]").arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
     }
 
