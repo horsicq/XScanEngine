@@ -203,6 +203,7 @@ qint32 XScanEngine::typeToPrio(const QString &sType)
     QString _sType = sType.toLower().remove("~");
 
     if ((_sType == "operation system") || (_sType == "virtual machine")) nResult = 10;
+    else if (_sType == "format") nResult = 12;
     else if (_sType == "platform") nResult = 14;
     else if (_sType == "linker") nResult = 20;
     else if (_sType == "compiler") nResult = 30;
