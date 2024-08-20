@@ -116,6 +116,7 @@ public:
         bool bIsHeuristicScan;
         bool bIsVerbose;
         bool bIsRecursiveScan;
+        bool bIsAggressiveScan;
         bool bIsAllTypesScan;
         qint64 nBufferSize;
         bool bShowInternalDetects;
