@@ -229,10 +229,17 @@ QString XScanEngine::translateType(const QString &sType)
 
     QString _sType = sType;
     bool bHeur = false;
+    bool bAHeur = false;
 
-    if (_sType.size() > 0) {
+    if (_sType.size() > 1) {
         if (_sType[0] == QChar('~')) {
             bHeur = true;
+            _sType.remove(0, 1);
+        }
+
+        if (_sType[0] == QChar('!')) {
+            bHeur = false;
+            bAHeur = true;
             _sType.remove(0, 1);
         }
     }
@@ -245,6 +252,8 @@ QString XScanEngine::translateType(const QString &sType)
 
     if (bHeur) {
         sResult = QString("(Heur)%1").arg(sResult);
+    } else if (bAHeur) {
+        sResult = QString("(A-Heur)%1").arg(sResult);
     }
 
     return sResult;
@@ -489,6 +498,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         pScanTimer = new QElapsedTimer;
         pScanTimer->start();
         pScanResult->sFileName = XBinary::getDeviceFileName(pDevice);
+        pScanResult->nSize = nSize;
     }
 
     QIODevice *_pDevice = nullptr;
@@ -988,6 +998,7 @@ QMap<quint64, QString> XScanEngine::getScanFlags()
     mapResult.insert(SCANFLAG_RECURSIVESCAN, tr("Recursive scan"));
     mapResult.insert(SCANFLAG_DEEPSCAN, tr("Deep scan"));
     mapResult.insert(SCANFLAG_HEURISTICSCAN, tr("Heuristic scan"));
+    mapResult.insert(SCANFLAG_AGGRESSIVESCAN, tr("Aggressive scan"));
     mapResult.insert(SCANFLAG_VERBOSE, tr("Verbose"));
     mapResult.insert(SCANFLAG_ALLTYPESSCAN, tr("All types"));
 
@@ -1008,6 +1019,10 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
 
     if (pScanOptions->bIsHeuristicScan) {
         nResult |= SCANFLAG_HEURISTICSCAN;
+    }
+
+    if (pScanOptions->bIsAggressiveScan) {
+        nResult |= SCANFLAG_AGGRESSIVESCAN;
     }
 
     if (pScanOptions->bIsVerbose) {
@@ -1035,6 +1050,10 @@ void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
         pScanOptions->bIsHeuristicScan = true;
     }
 
+    if (nFlags & SCANFLAG_AGGRESSIVESCAN) {
+        pScanOptions->bIsAggressiveScan = true;
+    }
+
     if (nFlags & SCANFLAG_VERBOSE) {
         pScanOptions->bIsVerbose = true;
     }
@@ -1060,6 +1079,10 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
         nResult |= SCANFLAG_HEURISTICSCAN;
     }
 
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE).toBool()) {
+        nResult |= SCANFLAG_AGGRESSIVESCAN;
+    }
+
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_VERBOSE).toBool()) {
         nResult |= SCANFLAG_VERBOSE;
     }
@@ -1076,6 +1099,7 @@ void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, nFlags & SCANFLAG_RECURSIVESCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_DEEP, nFlags & SCANFLAG_DEEPSCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_HEURISTIC, nFlags & SCANFLAG_HEURISTICSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SCANFLAG_AGGRESSIVESCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SCANFLAG_VERBOSE);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SCANFLAG_ALLTYPESSCAN);
 }
