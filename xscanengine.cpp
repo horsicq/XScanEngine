@@ -122,7 +122,7 @@ QString XScanEngine::createResultStringEx(SCAN_OPTIONS *pOptions, const SCANSTRU
     QString sResult;
 
     if (pScanStruct->bIsHeuristic) {
-        sResult += "(Heuristic)";
+        sResult += "(Heur)";
     }
 
     if (pOptions->bShowType) {
@@ -170,6 +170,7 @@ Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
     Qt::GlobalColor result = Qt::transparent;
 
     _sType = _sType.toLower().remove("~");
+    _sType = _sType.toLower().remove("!");
 
     // TODO more
     if ((_sType == "installer") || (_sType == "sfx") || (_sType == "archive")) {
@@ -182,7 +183,7 @@ Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
         result = Qt::darkYellow;
     } else if (_sType == "format") {
         result = Qt::darkGreen;
-    } else if ((_sType == "sign tool") || (_sType == "certificate")) {
+    } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
         result = Qt::darkMagenta;
     } else if (_sType == "language") {
         result = Qt::darkCyan;
@@ -200,7 +201,9 @@ Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
 qint32 XScanEngine::typeToPrio(const QString &sType)
 {
     qint32 nResult = 0;
-    QString _sType = sType.toLower().remove("~");
+    QString _sType = sType;
+    _sType = _sType.toLower().remove("~");
+    _sType = _sType.toLower().remove("!");
 
     if ((_sType == "operation system") || (_sType == "virtual machine")) nResult = 10;
     else if (_sType == "format") nResult = 12;
@@ -356,6 +359,8 @@ QString XScanEngine::_translate(const QString &sString)
             sResult = tr("Malware");
         } else if (_sString == "package") {
             sResult = tr("Package");
+        } else if (_sString == "licensing") {
+            sResult = tr("Licensing");
         } else {
             sResult = _sString;
         }
