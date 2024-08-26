@@ -47,7 +47,6 @@ public:
         QString sArch;
         QString sVersion;
         QString sInfo;
-
         XBinary::MODE mode;
         XBinary::ENDIAN endian;
         QString sType;
