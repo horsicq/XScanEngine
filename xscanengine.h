@@ -146,6 +146,7 @@ public:
         QString sSignatureName;  // Optional
         QString sDetectFunction;
         bool bIsHighlight;
+        bool bIsSort;
         bool bUseExtraDatabase;
         bool bUseCustomDatabase;
     };
