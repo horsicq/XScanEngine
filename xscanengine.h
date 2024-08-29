@@ -157,7 +157,7 @@ public:
 
     XScanEngine(QObject *pParent = nullptr);
 
-    void setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
+    void setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(const QString &sDirectoryName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
@@ -220,7 +220,7 @@ private:
     QIODevice *g_pDevice;
     char *g_pData;
     qint32 g_nDataSize;
-    XScanEngine::SCAN_OPTIONS *g_pOptions;
+    XScanEngine::SCAN_OPTIONS *g_pScanOptions;
     XScanEngine::SCAN_RESULT *g_pScanResult;
     SCAN_TYPE g_scanType;
     XBinary::PDSTRUCT *g_pPdStruct;
