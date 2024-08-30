@@ -90,6 +90,7 @@ public:
         qint64 nScanTime;
         QString sFileName;
         qint64 nSize;
+        XBinary::FT ftInit;
         QList<SCANSTRUCT> listRecords;
         QList<ERROR_RECORD> listErrors;
         QList<DEBUG_RECORD> listDebugRecords;
@@ -181,7 +182,7 @@ public:
     XScanEngine::SCAN_RESULT scanSubdevice(QIODevice *pDevice, qint64 nOffset, qint64 nSize, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
 
     void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, XScanEngine::SCANID parentId,
-                     XScanEngine::SCAN_OPTIONS *pOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct);
+                     XScanEngine::SCAN_OPTIONS *pScanOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct);
 
     static QMap<quint64, QString> getScanFlags();
     static quint64 getScanFlags(SCAN_OPTIONS *pScanOptions);

@@ -488,7 +488,7 @@ XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 n
     return result;
 }
 
-void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, SCANID parentId, SCAN_OPTIONS *pOptions, bool bInit,
+void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, SCANID parentId, SCAN_OPTIONS *pScanOptions, bool bInit,
                               XBinary::PDSTRUCT *pPdStruct)
 {
     XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();
@@ -521,8 +521,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
     bool bMemory = false;
 
-    if (pOptions->nBufferSize) {
-        if (nSize <= pOptions->nBufferSize) {
+    if (pScanOptions->nBufferSize) {
+        if (nSize <= pScanOptions->nBufferSize) {
             QBuffer *pBuffer = dynamic_cast<QBuffer *>(_pDevice);
 
             if (!pBuffer) {
@@ -547,82 +547,110 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     QSet<XBinary::FT> stFT = XFormats::getFileTypes(_pDevice, true, pPdStruct);
     QSet<XBinary::FT> stFTOriginal = stFT;
 
-    if (bInit || (pOptions->fileType == XBinary::FT_BINARY)) {
-        if (pOptions->fileType != XBinary::FT_UNKNOWN) {
-            XBinary::filterFileTypes(&stFT, pOptions->fileType);
+    if (bInit || (pScanOptions->fileType == XBinary::FT_BINARY)) {
+        if (pScanOptions->fileType != XBinary::FT_UNKNOWN) {
+            XBinary::filterFileTypes(&stFT, pScanOptions->fileType);
         }
     }
 
-    if (pOptions->bIsAllTypesScan) {
+    if (pScanOptions->bIsAllTypesScan) {
         if (stFT.contains(XBinary::FT_PE32) || stFT.contains(XBinary::FT_PE64) || stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX) ||
             stFT.contains(XBinary::FT_NE)) {
-            _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pOptions, true, pPdStruct);
+            _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pScanOptions, true, pPdStruct);
         }
 
         if (stFT.contains(XBinary::FT_APK) || stFT.contains(XBinary::FT_IPA)) {
-            _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_JAR, pOptions, true, pPdStruct);
+            _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_JAR, pScanOptions, true, pPdStruct);
         }
 
         if (stFT.contains(XBinary::FT_JAR)) {
-            _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_ZIP, pOptions, true, pPdStruct);
+            _processDetect(0, pScanResult, _pDevice, parentId, XBinary::FT_ZIP, pScanOptions, true, pPdStruct);
         }
     }
 
     XScanEngine::SCANID scanIdMain = {};
 
     if (stFT.contains(XBinary::FT_PE32)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE32, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE32, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_PE32;
     } else if (stFT.contains(XBinary::FT_PE64)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE64, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE64, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_PE64;
     } else if (stFT.contains(XBinary::FT_ELF32)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF32, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF32, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_ELF32;
     } else if (stFT.contains(XBinary::FT_ELF64)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF64, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF64, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_ELF64;
     } else if (stFT.contains(XBinary::FT_MACHO32)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO32, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO32, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_MACHO32;
     } else if (stFT.contains(XBinary::FT_MACHO64)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO64, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO64, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_MACHO64;
     } else if (stFT.contains(XBinary::FT_LX)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LX, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LX, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_LX;
     } else if (stFT.contains(XBinary::FT_LE)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LE, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LE, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_LE;
     } else if (stFT.contains(XBinary::FT_NE)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NE, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NE, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_NE;
     } else if (stFT.contains(XBinary::FT_DOS16M) || stFT.contains(XBinary::FT_DOS4G)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DOS16M, pOptions, false, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DOS16M, pScanOptions, false, pPdStruct);
+        if (bInit) {
+            if (stFT.contains(XBinary::FT_DOS16M)) {
+                pScanResult->ftInit = XBinary::FT_DOS16M;
+            } else if (stFT.contains(XBinary::FT_DOS4G)) {
+                pScanResult->ftInit = XBinary::FT_DOS4G;
+            }
+        }
     } else if (stFT.contains(XBinary::FT_MSDOS)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_MSDOS;
     } else if (stFT.contains(XBinary::FT_APK)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_APK, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_APK, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_APK;
     } else if (stFT.contains(XBinary::FT_IPA)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_IPA, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_IPA, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_IPA;
     } else if (stFT.contains(XBinary::FT_JAR)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JAR, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JAR, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_JAR;
     } else if (stFT.contains(XBinary::FT_ZIP)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ZIP, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ZIP, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_ZIP;
     } else if (stFT.contains(XBinary::FT_DEX)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DEX, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DEX, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_DEX;
     } else if (stFT.contains(XBinary::FT_NPM)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NPM, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NPM, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_NPM;
     } else if (stFT.contains(XBinary::FT_MACHOFAT)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHOFAT, pOptions, false, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHOFAT, pScanOptions, false, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_MACHOFAT;
     } else if (stFT.contains(XBinary::FT_BWDOS16M)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BWDOS16M, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BWDOS16M, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_BWDOS16M;
     } else if (stFT.contains(XBinary::FT_COM) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_COM;
     } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_ARCHIVE;
     } else if (stFT.contains(XBinary::FT_BINARY) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_BINARY;
     } else {
         XScanEngine::SCAN_RESULT _scanResultCOM = {};
 
-        _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, pOptions, false, pPdStruct);
+        _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, pScanOptions, false, pPdStruct);
 
-        bool bAddUnknown = (_scanResultCOM.listRecords.count() == 0);
+        bool bIsCOM = _scanResultCOM.listRecords.count();
 
         XScanEngine::SCAN_RESULT _scanResultBinary = {};
-        _processDetect(&scanIdMain, &_scanResultBinary, _pDevice, parentId, XBinary::FT_BINARY, pOptions, bAddUnknown, pPdStruct);
+        _processDetect(&scanIdMain, &_scanResultBinary, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, !bIsCOM, pPdStruct);
 
         pScanResult->listRecords.append(_scanResultBinary.listRecords);
         pScanResult->listErrors.append(_scanResultBinary.listErrors);
@@ -631,9 +659,15 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         pScanResult->listRecords.append(_scanResultCOM.listRecords);
         pScanResult->listErrors.append(_scanResultCOM.listErrors);
         pScanResult->listDebugRecords.append(_scanResultCOM.listDebugRecords);
+
+        if (bIsCOM) {
+            pScanResult->ftInit = XBinary::FT_COM;
+        } else {
+            pScanResult->ftInit = XBinary::FT_BINARY;
+        }
     }
 
-    if (pOptions->bIsRecursiveScan) {
+    if (pScanOptions->bIsRecursiveScan) {
         if (stFT.contains(XBinary::FT_PE32) || stFT.contains(XBinary::FT_PE64)) {
             XPE pe(_pDevice);
 
@@ -664,7 +698,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     scanIdResource.nOffset = nResourceOffset;
                                     scanIdResource.nSize = nResourceSize;
 
-                                    XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                                     _options.fileType = XBinary::FT_UNKNOWN;
                                     _options.bIsRecursiveScan = false;
 
@@ -703,7 +737,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     scanIdDebug.nOffset = nRecordOffset;
                                     scanIdDebug.nSize = nRecordSize;
 
-                                    XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                                     _options.fileType = XBinary::FT_BINARY;
                                     _options.bIsRecursiveScan = false;
 
@@ -726,7 +760,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     scanIdOverlay.nOffset = pe.getOverlayOffset(&memoryMap, pPdStruct);
                     scanIdOverlay.nSize = pe.getOverlaySize(&memoryMap, pPdStruct);
 
-                    XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
                     _options.bIsRecursiveScan = false;
 
@@ -745,7 +779,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     scanIdOverlay.nOffset = elf.getOverlayOffset(&memoryMap, pPdStruct);
                     scanIdOverlay.nSize = elf.getOverlaySize(&memoryMap, pPdStruct);
 
-                    XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
                     _options.bIsRecursiveScan = false;
 
@@ -764,7 +798,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     scanIdOverlay.nOffset = le.getOverlayOffset(&memoryMap, pPdStruct);
                     scanIdOverlay.nSize = le.getOverlaySize(&memoryMap, pPdStruct);
 
-                    XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
                     _options.bIsRecursiveScan = false;
 
@@ -783,7 +817,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     scanIdOverlay.nOffset = ne.getOverlayOffset(&memoryMap, pPdStruct);
                     scanIdOverlay.nSize = ne.getOverlaySize(&memoryMap, pPdStruct);
 
-                    XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
                     _options.bIsRecursiveScan = false;
 
@@ -802,7 +836,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     scanIdOverlay.nOffset = msdos.getOverlayOffset(&memoryMap, pPdStruct);
                     scanIdOverlay.nSize = msdos.getOverlaySize(&memoryMap, pPdStruct);
 
-                    XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                     _options.fileType = XBinary::FT_UNKNOWN;
                     _options.bIsRecursiveScan = false;
 
@@ -817,7 +851,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 _fileType = XBinary::_getPrefFileType(&stFT);
                 listRecords = XArchives::getRecords(_pDevice, _fileType, 20000, pPdStruct);
             } else {
-                if (pOptions->bIsDeepScan) {
+                if (pScanOptions->bIsDeepScan) {
                     XExtractor::OPTIONS options = {};
                     options.bHeuristicScan = true;
                     options.fileType = XBinary::FT_BINARY;
@@ -851,7 +885,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                 scanIdRegion.nOffset = listExtractRecords.at(i).nOffset;
                                 scanIdRegion.nSize = listExtractRecords.at(i).nSize;
 
-                                XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                                XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                                 _options.fileType = XBinary::FT_UNKNOWN;
                                 _options.bIsRecursiveScan = false;
 
@@ -898,7 +932,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                             scanIdArchiveRecord.filePart = XBinary::FILEPART_ARCHIVERECORD;
                             scanIdArchiveRecord.fileType = _fileType;
 
-                            XScanEngine::SCAN_OPTIONS _options = *pOptions;
+                            XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                             _options.fileType = XBinary::FT_UNKNOWN;
                             _options.bIsRecursiveScan = false;
 
@@ -913,8 +947,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                 if (_nUncompressedSize > _nRecordDataSize) {
                                     bool _bMemory = false;
 
-                                    if (pOptions->nBufferSize) {
-                                        if (_nUncompressedSize <= pOptions->nBufferSize) {
+                                    if (pScanOptions->nBufferSize) {
+                                        if (_nUncompressedSize <= pScanOptions->nBufferSize) {
                                             _bMemory = true;
                                         }
                                     }
