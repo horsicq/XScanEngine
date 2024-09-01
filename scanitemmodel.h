@@ -51,7 +51,7 @@ public:
     };
 
     // TODO nNumberOfColumns remove, use scanOptions
-    explicit ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, int nNumberOfColumns);
+    explicit ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, qint32 nNumberOfColumns);
     ~ScanItemModel();
 
     QVariant headerData(int nSection, Qt::Orientation orientation, int nRole = Qt::DisplayRole) const override;
