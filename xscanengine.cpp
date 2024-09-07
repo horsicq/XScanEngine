@@ -660,10 +660,12 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         pScanResult->listErrors.append(_scanResultCOM.listErrors);
         pScanResult->listDebugRecords.append(_scanResultCOM.listDebugRecords);
 
-        if (bIsCOM) {
-            pScanResult->ftInit = XBinary::FT_COM;
-        } else {
-            pScanResult->ftInit = XBinary::FT_BINARY;
+        if (bInit) {
+            if (bIsCOM) {
+                pScanResult->ftInit = XBinary::FT_COM;
+            } else {
+                pScanResult->ftInit = XBinary::FT_BINARY;
+            }
         }
     }
 
