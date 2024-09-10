@@ -179,7 +179,7 @@ Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
         result = Qt::red;
     } else if ((_sType == "pe tool") || (_sType == "apk tool")) {
         result = Qt::green;
-    } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform")) {
+    } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
         result = Qt::darkYellow;
     } else if (_sType == "format") {
         result = Qt::darkGreen;
@@ -207,7 +207,7 @@ qint32 XScanEngine::typeToPrio(const QString &sType)
 
     if ((_sType == "operation system") || (_sType == "virtual machine")) nResult = 10;
     else if (_sType == "format") nResult = 12;
-    else if (_sType == "platform") nResult = 14;
+    else if ((_sType == "platform") || (_sType == "dos extender"))  nResult = 14;
     else if (_sType == "linker") nResult = 20;
     else if (_sType == "compiler") nResult = 30;
     else if (_sType == "language") nResult = 40;
@@ -1211,10 +1211,10 @@ void XScanEngine::process()
     scanTimer.start();
 
     qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
-    XBinary::setPdStructInit(pPdStruct, _nFreeIndex, 0);
 
     if (g_scanType == SCAN_TYPE_FILE) {
         if ((g_pScanResult) && (g_sFileName != "")) {
+            XBinary::setPdStructInit(pPdStruct, _nFreeIndex, 0);
             XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, tr("File scan"));
 
             emit scanFileStarted(g_sFileName);
@@ -1225,6 +1225,7 @@ void XScanEngine::process()
         }
     } else if (g_scanType == SCAN_TYPE_DEVICE) {
         if (g_pDevice) {
+            XBinary::setPdStructInit(pPdStruct, _nFreeIndex, 0);
             XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, tr("Device scan"));
 
             *g_pScanResult = scanDevice(g_pDevice, g_pScanOptions, pPdStruct);
@@ -1232,6 +1233,7 @@ void XScanEngine::process()
             emit scanResult(*g_pScanResult);
         }
     } else if (g_scanType == SCAN_TYPE_MEMORY) {
+        XBinary::setPdStructInit(pPdStruct, _nFreeIndex, 0);
         XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, tr("Memory scan"));
 
         *g_pScanResult = scanMemory(g_pData, g_nDataSize, g_pScanOptions, pPdStruct);
@@ -1244,17 +1246,15 @@ void XScanEngine::process()
 
             XBinary::findFiles(g_sDirectoryName, &listFileNames, g_pScanOptions->bSubdirectories, 0, pPdStruct);
 
-            qint32 _nFreeIndexFiles = XBinary::getFreeIndex(pPdStruct);
-
             qint32 nTotal = listFileNames.count();
 
-            XBinary::setPdStructInit(pPdStruct, _nFreeIndexFiles, nTotal);
+            XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nTotal);
 
             for (qint32 i = 0; (i < nTotal) && (!(pPdStruct->bIsStop)); i++) {
                 QString sFileName = listFileNames.at(i);
 
-                XBinary::setPdStructCurrent(pPdStruct, _nFreeIndexFiles, i);
-                XBinary::setPdStructStatus(pPdStruct, _nFreeIndexFiles, sFileName);
+                XBinary::setPdStructCurrent(pPdStruct, _nFreeIndex, i);
+                XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, sFileName);
 
                 emit scanFileStarted(sFileName);
 
@@ -1262,8 +1262,6 @@ void XScanEngine::process()
 
                 emit scanResult(_scanResult);
             }
-
-            XBinary::setPdStructFinished(pPdStruct, _nFreeIndexFiles);
         }
     }
 
