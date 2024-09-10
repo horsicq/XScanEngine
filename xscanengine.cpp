@@ -677,7 +677,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 XBinary::_MEMORY_MAP memoryMap = pe.getMemoryMap(XBinary::MAPMODE_SECTIONS, pPdStruct);
 
                 if (pe.isResourcesPresent()) {
-                    QList<XPE::RESOURCE_RECORD> listResources = pe.getResources(&memoryMap);
+                    QList<XPE::RESOURCE_RECORD> listResources = pe.getResources(&memoryMap, 10000, pPdStruct);
 
                     qint32 nNumberOfRecords = listResources.count();
                     qint32 nMaxCount = 20;
