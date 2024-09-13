@@ -207,7 +207,7 @@ qint32 XScanEngine::typeToPrio(const QString &sType)
 
     if ((_sType == "operation system") || (_sType == "virtual machine")) nResult = 10;
     else if (_sType == "format") nResult = 12;
-    else if ((_sType == "platform") || (_sType == "dos extender"))  nResult = 14;
+    else if ((_sType == "platform") || (_sType == "dos extender")) nResult = 14;
     else if (_sType == "linker") nResult = 20;
     else if (_sType == "compiler") nResult = 30;
     else if (_sType == "language") nResult = 40;
