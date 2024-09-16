@@ -877,6 +877,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     QList<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
                     qint32 nNumberOfRecords = listExtractRecords.count();
                     qint32 nMaxCount = 20;
+                    //qint32 nMaxCount = -1;
                     qint32 nCount = 0;
 
                     qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
@@ -886,7 +887,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                         XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listExtractRecords.at(i).sString);
 
                         if (listExtractRecords.at(i).nOffset != 0) {
-                            if (nCount < nMaxCount) {
+                            if ((nCount < nMaxCount) || (nMaxCount == -1)) {
                                 XScanEngine::SCANID scanIdRegion = scanIdMain;
                                 scanIdRegion.filePart = XBinary::FILEPART_REGION;
                                 scanIdRegion.fileType = listExtractRecords.at(i).fileType;
@@ -913,6 +914,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
             if (listRecords.count()) {
                 qint32 nNumberOfRecords = listRecords.count();
                 qint32 nMaxCount = 20;
+                //qint32 nMaxCount = -1;
                 qint32 nCount = 0;
 
                 bool bScanAll = false;
@@ -935,7 +937,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     QSet<XBinary::FT> _stFT = XFormats::getFileTypes(&baRecordData, true);
 
                     if (bScanAll || isScanable(_stFT)) {
-                        if (nCount < nMaxCount) {
+                        if ((nCount < nMaxCount) || (nMaxCount == -1)) {
                             XScanEngine::SCANID scanIdArchiveRecord = scanIdMain;
                             scanIdArchiveRecord.filePart = XBinary::FILEPART_ARCHIVERECORD;
                             scanIdArchiveRecord.fileType = _fileType;
