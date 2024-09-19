@@ -1087,29 +1087,12 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
 
 void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
 {
-    if (nFlags & SCANFLAG_RECURSIVESCAN) {
-        pScanOptions->bIsRecursiveScan = true;
-    }
-
-    if (nFlags & SCANFLAG_DEEPSCAN) {
-        pScanOptions->bIsDeepScan = true;
-    }
-
-    if (nFlags & SCANFLAG_HEURISTICSCAN) {
-        pScanOptions->bIsHeuristicScan = true;
-    }
-
-    if (nFlags & SCANFLAG_AGGRESSIVESCAN) {
-        pScanOptions->bIsAggressiveScan = true;
-    }
-
-    if (nFlags & SCANFLAG_VERBOSE) {
-        pScanOptions->bIsVerbose = true;
-    }
-
-    if (nFlags & SCANFLAG_ALLTYPESSCAN) {
-        pScanOptions->bIsAllTypesScan = true;
-    }
+    pScanOptions->bIsRecursiveScan = nFlags & SCANFLAG_RECURSIVESCAN;
+    pScanOptions->bIsDeepScan = nFlags & SCANFLAG_DEEPSCAN;
+    pScanOptions->bIsHeuristicScan = nFlags & SCANFLAG_HEURISTICSCAN;
+    pScanOptions->bIsAggressiveScan = nFlags & SCANFLAG_AGGRESSIVESCAN;
+    pScanOptions->bIsVerbose = nFlags & SCANFLAG_VERBOSE;
+    pScanOptions->bIsAllTypesScan = nFlags & SCANFLAG_ALLTYPESSCAN;
 }
 
 quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
