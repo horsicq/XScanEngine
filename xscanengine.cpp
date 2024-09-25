@@ -1192,10 +1192,12 @@ void XScanEngine::setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 
 
 void XScanEngine::process()
 {
-    XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();
     XBinary::PDSTRUCT *pPdStruct = g_pPdStruct;
 
+    XBinary::PDSTRUCT pdStructEmpty = {};
+
     if (!pPdStruct) {
+        pdStructEmpty = XBinary::createPdStruct();
         pPdStruct = &pdStructEmpty;
     }
 
