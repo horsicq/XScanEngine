@@ -878,7 +878,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     QList<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
                     qint32 nNumberOfRecords = listExtractRecords.count();
                     qint32 nMaxCount = 20;
-                    //qint32 nMaxCount = -1;
+                    // qint32 nMaxCount = -1;
                     qint32 nCount = 0;
 
                     qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
@@ -915,7 +915,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
             if (listRecords.count()) {
                 qint32 nNumberOfRecords = listRecords.count();
                 qint32 nMaxCount = 20;
-                //qint32 nMaxCount = -1;
+                // qint32 nMaxCount = -1;
                 qint32 nCount = 0;
 
                 bool bScanAll = false;
