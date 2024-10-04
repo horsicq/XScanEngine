@@ -361,6 +361,8 @@ QString XScanEngine::_translate(const QString &sString)
             sResult = tr("Package");
         } else if (_sString == "licensing") {
             sResult = tr("Licensing");
+        } else if (_sString == "rom") {
+            sResult = QString("ROM");
         } else {
             sResult = _sString;
         }
