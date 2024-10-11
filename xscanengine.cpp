@@ -544,6 +544,11 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         bufDevice->setData(pBuffer, nSize);
         bufDevice->open(QIODevice::ReadOnly);
 
+        bufDevice->setProperty("DeviceDirectory", XBinary::getDeviceDirectory(_pDevice));
+        bufDevice->setProperty("DeviceFileBaseName", XBinary::getDeviceFileBaseName(_pDevice));
+        bufDevice->setProperty("DeviceFileCompleteSuffix", XBinary::getDeviceFileCompleteSuffix(_pDevice));
+        bufDevice->setProperty("DeviceFileSuffix", XBinary::getDeviceFileSuffix(_pDevice));
+
         _pDevice = bufDevice;
     }
 
