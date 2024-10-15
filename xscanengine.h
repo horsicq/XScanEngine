@@ -133,14 +133,13 @@ public:
         XBinary::FT fileType;            // Optional
         XBinary::FILEPART initFilePart;  // Optional
         QVariant varInfo;                // Optional
-        bool bLogErrors;                 // TODO options
-        bool bLogAll;                    // TODO options
+        bool bLog;                 // TODO options
         bool bLogProfiling;
         bool bShowScanTime;
         bool bShowType;
         bool bShowVersion;
         bool bShowInfo;
-        bool bShowUnknown;  // TODO options
+        bool bHideUnknown;
         bool bShowEntropy;
         bool bShowFileInfo;
         QString sSpecial;        // Special info

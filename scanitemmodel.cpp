@@ -62,12 +62,20 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
         }
 
         if (pListScanStructs->at(i).sName != "") {
-            ScanItem *pItemParent = mapParents.value(pListScanStructs->at(i).id.sUuid);
+            bool bAdd = true;
 
-            QString sItem = XScanEngine::createResultStringEx(pScanOptions, &pListScanStructs->at(i));
-            ScanItem *pItem = new ScanItem(sItem, pItemParent, nNumberOfColumns, false);
-            pItem->setScanStruct(pListScanStructs->at(i));
-            pItemParent->appendChild(pItem);
+            if (pListScanStructs->at(i).bIsUnknown && pScanOptions->bHideUnknown) {
+                bAdd = false;
+            }
+
+            if (bAdd) {
+                ScanItem *pItemParent = mapParents.value(pListScanStructs->at(i).id.sUuid);
+
+                QString sItem = XScanEngine::createResultStringEx(pScanOptions, &pListScanStructs->at(i));
+                ScanItem *pItem = new ScanItem(sItem, pItemParent, nNumberOfColumns, false);
+                pItem->setScanStruct(pListScanStructs->at(i));
+                pItemParent->appendChild(pItem);
+            }
         }
     }
 }
