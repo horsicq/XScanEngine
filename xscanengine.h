@@ -133,7 +133,7 @@ public:
         XBinary::FT fileType;            // Optional
         XBinary::FILEPART initFilePart;  // Optional
         QVariant varInfo;                // Optional
-        bool bLog;                 // TODO options
+        bool bLog;                       // TODO options
         bool bLogProfiling;
         bool bShowScanTime;
         bool bShowType;
