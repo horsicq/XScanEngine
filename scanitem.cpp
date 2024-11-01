@@ -63,11 +63,11 @@ QVariant ScanItem::data(int nColumn) const
             result = g_sString;
         } else if (nColumn == 1) {
             if (!g_bIsParent) {
-                result = "S"; // TODO icon
+                result = "S";  // TODO icon
             }
         } else if (nColumn == 2) {
             if (!g_bIsParent) {
-                result = "?"; // TODO icon
+                result = "?";  // TODO icon
             }
         }
     }
