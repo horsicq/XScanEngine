@@ -1063,7 +1063,9 @@ QMap<quint64, QString> XScanEngine::getScanFlags()
     mapResult.insert(SCANFLAG_RECURSIVESCAN, tr("Recursive scan"));
     mapResult.insert(SCANFLAG_DEEPSCAN, tr("Deep scan"));
     mapResult.insert(SCANFLAG_HEURISTICSCAN, tr("Heuristic scan"));
+#ifdef QT_DEBUG
     mapResult.insert(SCANFLAG_AGGRESSIVESCAN, tr("Aggressive scan"));
+#endif
     mapResult.insert(SCANFLAG_VERBOSE, tr("Verbose"));
     mapResult.insert(SCANFLAG_ALLTYPESSCAN, tr("All types"));
 
