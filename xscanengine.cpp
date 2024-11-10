@@ -605,15 +605,12 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     } else if (stFT.contains(XBinary::FT_NE)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NE, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_NE;
-    } else if (stFT.contains(XBinary::FT_DOS16M) || stFT.contains(XBinary::FT_DOS4G)) {
+    } else if (stFT.contains(XBinary::FT_DOS16M)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DOS16M, pScanOptions, false, pPdStruct);
-        if (bInit) {
-            if (stFT.contains(XBinary::FT_DOS16M)) {
-                pScanResult->ftInit = XBinary::FT_DOS16M;
-            } else if (stFT.contains(XBinary::FT_DOS4G)) {
-                pScanResult->ftInit = XBinary::FT_DOS4G;
-            }
-        }
+        if (bInit) pScanResult->ftInit = XBinary::FT_DOS16M;
+    } else if (stFT.contains(XBinary::FT_DOS4G)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DOS4G, pScanOptions, false, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_DOS4G;
     } else if (stFT.contains(XBinary::FT_MSDOS)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_MSDOS;
