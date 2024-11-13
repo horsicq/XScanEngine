@@ -660,7 +660,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_COM;
     } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
-         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pScanOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_ARCHIVE;
     } else if (stFT.contains(XBinary::FT_BINARY) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
