@@ -792,25 +792,25 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
                 }
             }
-        // } else if (stFT.contains(XBinary::FT_ELF32) || stFT.contains(XBinary::FT_ELF64)) {
-        //     XELF elf(_pDevice);
+            // } else if (stFT.contains(XBinary::FT_ELF32) || stFT.contains(XBinary::FT_ELF64)) {
+            //     XELF elf(_pDevice);
 
-        //     if (elf.isValid()) {
-        //         XBinary::_MEMORY_MAP memoryMap = elf.getMemoryMap(XBinary::MAPMODE_SEGMENTS, pPdStruct); // TODO use sections!
+            //     if (elf.isValid()) {
+            //         XBinary::_MEMORY_MAP memoryMap = elf.getMemoryMap(XBinary::MAPMODE_SEGMENTS, pPdStruct); // TODO use sections!
 
-        //         if (elf.isOverlayPresent(&memoryMap, pPdStruct)) {
-        //             XScanEngine::SCANID scanIdOverlay = scanIdMain;
-        //             scanIdOverlay.filePart = XBinary::FILEPART_OVERLAY;
-        //             scanIdOverlay.nOffset = elf.getOverlayOffset(&memoryMap, pPdStruct);
-        //             scanIdOverlay.nSize = elf.getOverlaySize(&memoryMap, pPdStruct);
+            //         if (elf.isOverlayPresent(&memoryMap, pPdStruct)) {
+            //             XScanEngine::SCANID scanIdOverlay = scanIdMain;
+            //             scanIdOverlay.filePart = XBinary::FILEPART_OVERLAY;
+            //             scanIdOverlay.nOffset = elf.getOverlayOffset(&memoryMap, pPdStruct);
+            //             scanIdOverlay.nSize = elf.getOverlaySize(&memoryMap, pPdStruct);
 
-        //             XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-        //             _options.fileType = XBinary::FT_UNKNOWN;
-        //             _options.bIsRecursiveScan = false;
+            //             XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+            //             _options.fileType = XBinary::FT_UNKNOWN;
+            //             _options.bIsRecursiveScan = false;
 
-        //             scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
-        //         }
-        //     }
+            //             scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
+            //         }
+            //     }
         } else if (stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX)) {
             XLE le(_pDevice);
 
