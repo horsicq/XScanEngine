@@ -8,9 +8,11 @@ if (NOT DEFINED XEXTRACTOR_SOURCES)
     include(${CMAKE_CURRENT_LIST_DIR}/../XExtractor/xextractor.cmake)
     set(XSCANENGINE_SOURCES ${XSCANENGINE_SOURCES} ${XEXTRACTOR_SOURCES})
 endif()
+if (NOT DEFINED XDEX_SOURCES)
+    include(${CMAKE_CURRENT_LIST_DIR}/../XDEX/xdex.cmake)
+    set(XSCANENGINE_SOURCES ${XSCANENGINE_SOURCES} ${XDEX_SOURCES})
+endif()
 
-
-include(${CMAKE_CURRENT_LIST_DIR}/../XDEX/xdex.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../XPDF/xpdf.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../XArchive/xarchives.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../XOptions/xoptions.cmake)
