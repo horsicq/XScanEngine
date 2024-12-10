@@ -12,8 +12,11 @@ if (NOT DEFINED XDEX_SOURCES)
     include(${CMAKE_CURRENT_LIST_DIR}/../XDEX/xdex.cmake)
     set(XSCANENGINE_SOURCES ${XSCANENGINE_SOURCES} ${XDEX_SOURCES})
 endif()
+if (NOT DEFINED XPDF_SOURCES)
+    include(${CMAKE_CURRENT_LIST_DIR}/../XPDF/xpdf.cmake)
+    set(XSCANENGINE_SOURCES ${XSCANENGINE_SOURCES} ${XPDF_SOURCES})
+endif()
 
-include(${CMAKE_CURRENT_LIST_DIR}/../XPDF/xpdf.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../XArchive/xarchives.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../XOptions/xoptions.cmake)
 
