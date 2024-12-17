@@ -96,13 +96,17 @@ public:
         QList<DEBUG_RECORD> listDebugRecords;
     };
 
-    enum SCANFLAG {
-        SCANFLAG_RECURSIVESCAN = 1,
-        SCANFLAG_DEEPSCAN = 2,
-        SCANFLAG_HEURISTICSCAN = 4,
-        SCANFLAG_AGGRESSIVESCAN = 8,
-        SCANFLAG_VERBOSE = 16,
-        SCANFLAG_ALLTYPESSCAN = 32,
+    enum SF {
+        SF_DEEPSCAN = 0x00000001,
+        SF_HEURISTICSCAN = 0x00000002,
+        SF_ALLTYPESSCAN = 0x00000004,
+        SF_RECURSIVESCAN = 0x00000008,
+        SF_VERBOSE = 0x00000010,
+        SF_AGGRESSIVESCAN = 0x00000020,
+        SF_RESULTASXML = 0x00010000,
+        SF_RESULTASJSON = 0x00020000,
+        SF_RESULTASTSV = 0x00040000,
+        SF_RESULTASCSV = 0x00080000,
     };
 
     enum DATABASE {
@@ -188,6 +192,7 @@ public:
     static void setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags);
     static quint64 getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions);
     static void setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags);
+    static SCAN_OPTIONS getDefaultOptions(quint64 nFlags);
 
     static QMap<quint64, QString> getDatabases();
     static quint64 getDatabases(SCAN_OPTIONS *pScanOptions);

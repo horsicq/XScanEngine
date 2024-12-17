@@ -286,7 +286,17 @@ QString ScanItemModel::toString(XBinary::FORMATTYPE formatType)
 {
     QString sResult;
 
-    if (formatType == XBinary::FORMATTYPE_XML) {
+    if (formatType == XBinary::FORMATTYPE_UNKNOWN) {
+        if (g_scanOptions.bResultAsCSV) formatType = XBinary::FORMATTYPE_CSV;
+        else if (g_scanOptions.bResultAsJSON) formatType = XBinary::FORMATTYPE_JSON;
+        else if (g_scanOptions.bResultAsTSV) formatType = XBinary::FORMATTYPE_TSV;
+        else if (g_scanOptions.bResultAsXML) formatType = XBinary::FORMATTYPE_XML;
+        else formatType = XBinary::FORMATTYPE_PLAINTEXT;
+    }
+
+    if (formatType == XBinary::FORMATTYPE_PLAINTEXT) {
+        sResult = toFormattedString();
+    } else if (formatType == XBinary::FORMATTYPE_XML) {
         sResult = toXML();
     } else if (formatType == XBinary::FORMATTYPE_JSON) {
         sResult = toJSON();
@@ -294,8 +304,6 @@ QString ScanItemModel::toString(XBinary::FORMATTYPE formatType)
         sResult = toCSV();
     } else if (formatType == XBinary::FORMATTYPE_TSV) {
         sResult = toTSV();
-    } else {
-        sResult = toFormattedString();
     }
 
     return sResult;

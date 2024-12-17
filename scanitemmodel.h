@@ -67,7 +67,7 @@ public:
     QString toTSV();
     QString toFormattedString();
     void coloredOutput();
-    QString toString(XBinary::FORMATTYPE formatType);
+    QString toString(XBinary::FORMATTYPE formatType = XBinary::FORMATTYPE_UNKNOWN);
     ScanItem *rootItem();
 
 private:

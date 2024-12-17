@@ -1061,14 +1061,14 @@ QMap<quint64, QString> XScanEngine::getScanFlags()
 {
     QMap<quint64, QString> mapResult;
 
-    mapResult.insert(SCANFLAG_RECURSIVESCAN, tr("Recursive scan"));
-    mapResult.insert(SCANFLAG_DEEPSCAN, tr("Deep scan"));
-    mapResult.insert(SCANFLAG_HEURISTICSCAN, tr("Heuristic scan"));
+    mapResult.insert(SF_RECURSIVESCAN, tr("Recursive scan"));
+    mapResult.insert(SF_DEEPSCAN, tr("Deep scan"));
+    mapResult.insert(SF_HEURISTICSCAN, tr("Heuristic scan"));
 #ifdef QT_DEBUG
-    mapResult.insert(SCANFLAG_AGGRESSIVESCAN, tr("Aggressive scan"));
+    mapResult.insert(SF_AGGRESSIVESCAN, tr("Aggressive scan"));
 #endif
-    mapResult.insert(SCANFLAG_VERBOSE, tr("Verbose"));
-    mapResult.insert(SCANFLAG_ALLTYPESSCAN, tr("All types"));
+    mapResult.insert(SF_VERBOSE, tr("Verbose"));
+    mapResult.insert(SF_ALLTYPESSCAN, tr("All types"));
 
     return mapResult;
 }
@@ -1078,27 +1078,39 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
     quint64 nResult = 0;
 
     if (pScanOptions->bIsRecursiveScan) {
-        nResult |= SCANFLAG_RECURSIVESCAN;
+        nResult |= SF_RECURSIVESCAN;
     }
 
     if (pScanOptions->bIsDeepScan) {
-        nResult |= SCANFLAG_DEEPSCAN;
+        nResult |= SF_DEEPSCAN;
     }
 
     if (pScanOptions->bIsHeuristicScan) {
-        nResult |= SCANFLAG_HEURISTICSCAN;
+        nResult |= SF_HEURISTICSCAN;
     }
 
     if (pScanOptions->bIsAggressiveScan) {
-        nResult |= SCANFLAG_AGGRESSIVESCAN;
+        nResult |= SF_AGGRESSIVESCAN;
     }
 
     if (pScanOptions->bIsVerbose) {
-        nResult |= SCANFLAG_VERBOSE;
+        nResult |= SF_VERBOSE;
     }
 
     if (pScanOptions->bIsAllTypesScan) {
-        nResult |= SCANFLAG_ALLTYPESSCAN;
+        nResult |= SF_ALLTYPESSCAN;
+    }
+
+    if (pScanOptions->bResultAsJSON) {
+        nResult |= SF_RESULTASJSON;
+    }
+
+    if (pScanOptions->bResultAsXML) {
+        nResult |= SF_RESULTASXML;
+    }
+
+    if (pScanOptions->bResultAsCSV) {
+        nResult |= SF_RESULTASCSV;
     }
 
     return nResult;
@@ -1106,12 +1118,15 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
 
 void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
 {
-    pScanOptions->bIsRecursiveScan = nFlags & SCANFLAG_RECURSIVESCAN;
-    pScanOptions->bIsDeepScan = nFlags & SCANFLAG_DEEPSCAN;
-    pScanOptions->bIsHeuristicScan = nFlags & SCANFLAG_HEURISTICSCAN;
-    pScanOptions->bIsAggressiveScan = nFlags & SCANFLAG_AGGRESSIVESCAN;
-    pScanOptions->bIsVerbose = nFlags & SCANFLAG_VERBOSE;
-    pScanOptions->bIsAllTypesScan = nFlags & SCANFLAG_ALLTYPESSCAN;
+    pScanOptions->bIsRecursiveScan = nFlags & SF_RECURSIVESCAN;
+    pScanOptions->bIsDeepScan = nFlags & SF_DEEPSCAN;
+    pScanOptions->bIsHeuristicScan = nFlags & SF_HEURISTICSCAN;
+    pScanOptions->bIsAggressiveScan = nFlags & SF_AGGRESSIVESCAN;
+    pScanOptions->bIsVerbose = nFlags & SF_VERBOSE;
+    pScanOptions->bIsAllTypesScan = nFlags & SF_ALLTYPESSCAN;
+    pScanOptions->bResultAsJSON = nFlags & SF_RESULTASJSON;
+    pScanOptions->bResultAsXML = nFlags & SF_RESULTASXML;
+    pScanOptions->bResultAsCSV = nFlags & SF_RESULTASCSV;
 }
 
 quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
@@ -1119,27 +1134,27 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
     quint64 nResult = 0;
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_RECURSIVE).toBool()) {
-        nResult |= SCANFLAG_RECURSIVESCAN;
+        nResult |= SF_RECURSIVESCAN;
     }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_DEEP).toBool()) {
-        nResult |= SCANFLAG_DEEPSCAN;
+        nResult |= SF_DEEPSCAN;
     }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_HEURISTIC).toBool()) {
-        nResult |= SCANFLAG_HEURISTICSCAN;
+        nResult |= SF_HEURISTICSCAN;
     }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE).toBool()) {
-        nResult |= SCANFLAG_AGGRESSIVESCAN;
+        nResult |= SF_AGGRESSIVESCAN;
     }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_VERBOSE).toBool()) {
-        nResult |= SCANFLAG_VERBOSE;
+        nResult |= SF_VERBOSE;
     }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_ALLTYPES).toBool()) {
-        nResult |= SCANFLAG_ALLTYPESSCAN;
+        nResult |= SF_ALLTYPESSCAN;
     }
 
     return nResult;
@@ -1147,12 +1162,26 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
 
 void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags)
 {
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, nFlags & SCANFLAG_RECURSIVESCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_DEEP, nFlags & SCANFLAG_DEEPSCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_HEURISTIC, nFlags & SCANFLAG_HEURISTICSCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SCANFLAG_AGGRESSIVESCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SCANFLAG_VERBOSE);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SCANFLAG_ALLTYPESSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, nFlags & SF_RECURSIVESCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_DEEP, nFlags & SF_DEEPSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_HEURISTIC, nFlags & SF_HEURISTICSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SF_AGGRESSIVESCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SF_VERBOSE);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SF_ALLTYPESSCAN);
+}
+
+XScanEngine::SCAN_OPTIONS XScanEngine::getDefaultOptions(quint64 nFlags)
+{
+    XScanEngine::SCAN_OPTIONS result = {};
+
+    result.bShowType = true;
+    result.bShowVersion = true;
+    result.bShowInfo = true;
+    result.nBufferSize = 2 * 1024 * 1024;
+
+    setScanFlags(&result, nFlags);
+
+    return result;
 }
 
 QMap<quint64, QString> XScanEngine::getDatabases()
