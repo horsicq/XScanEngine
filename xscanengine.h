@@ -160,6 +160,7 @@ public:
     };
 
     XScanEngine(QObject *pParent = nullptr);
+    XScanEngine(const XScanEngine &other); // Copy constructor declaration
 
     void setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);

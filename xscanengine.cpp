@@ -33,6 +33,19 @@ XScanEngine::XScanEngine(QObject *pParent) : QObject(pParent)
 {
 }
 
+XScanEngine::XScanEngine(const XScanEngine &other)
+{
+    this->g_sFileName = other.g_sFileName;
+    this->g_sDirectoryName = other.g_sDirectoryName;
+    this->g_pDevice = other.g_pDevice;
+    this->g_pData = other.g_pData;
+    this->g_nDataSize = other.g_nDataSize;
+    this->g_pScanOptions = other.g_pScanOptions;
+    this->g_pScanResult = other.g_pScanResult;
+    this->g_scanType = other.g_scanType;
+    this->g_pPdStruct = other.g_pPdStruct;
+}
+
 void XScanEngine::setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct)
 {
     g_sFileName = sFileName;
