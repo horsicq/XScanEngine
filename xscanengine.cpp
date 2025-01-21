@@ -200,7 +200,7 @@ Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
         result = Qt::darkMagenta;
     } else if (_sType == "language") {
         result = Qt::darkCyan;
-    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware")) {
+    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware") || (_sType == "corrupted data")) {
         result = Qt::darkRed;
     } else if ((_sType == "debug") || (_sType == "debug data")) {
         result = Qt::darkBlue;
@@ -232,7 +232,7 @@ qint32 XScanEngine::typeToPrio(const QString &sType)
     else if ((_sType == "packer") || (_sType == ".net compressor")) nResult = 100;
     else if (_sType == "joiner") nResult = 110;
     else if ((_sType == "sfx") || (_sType == "installer")) nResult = 120;
-    else if ((_sType == "virus") || (_sType == "malware") || (_sType == "trojan")) nResult = 70;
+    else if ((_sType == "virus") || (_sType == "malware") || (_sType == "trojan") || (_sType == "corrupted data")) nResult = 70;
     else if ((_sType == "debug data") || (_sType == "installer")) nResult = 200;
     else nResult = 1000;
 
@@ -376,6 +376,8 @@ QString XScanEngine::_translate(const QString &sString)
             sResult = tr("Licensing");
         } else if (_sString == "rom") {
             sResult = QString("ROM");
+        } else if (_sString == "corrupted data") {
+            sResult = tr("Corrupted data");
         } else {
             sResult = _sString;
         }
