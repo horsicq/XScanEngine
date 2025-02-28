@@ -177,66 +177,75 @@ QString XScanEngine::createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions
     return sResult;
 }
 
-Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
-{
-    QString _sType = sType;
-    Qt::GlobalColor result = Qt::transparent;
+Qt::GlobalColor XScanEngine::typeToColor(const QString &sType) {
+    static const QMap<QString, Qt::GlobalColor> colorMap = {
+        {"installer", Qt::blue},
+        {"sfx", Qt::blue},
+        {"archive", Qt::blue},
+        {"pe tool", Qt::green},
+        {"apk tool", Qt::green},
+        {"operation system", Qt::darkYellow},
+        {"virtual machine", Qt::darkYellow},
+        {"platform", Qt::darkYellow},
+        {"dos extender", Qt::darkYellow},
+        {"format", Qt::darkGreen},
+        {"sign tool", Qt::darkMagenta},
+        {"certificate", Qt::darkMagenta},
+        {"licensing", Qt::darkMagenta},
+        {"language", Qt::darkCyan},
+        {"virus", Qt::darkRed},
+        {"trojan", Qt::darkRed},
+        {"malware", Qt::darkRed},
+        {"debug", Qt::darkBlue},
+        {"debug data", Qt::darkBlue}
+    };
 
-    _sType = _sType.toLower().remove("~");
-    _sType = _sType.toLower().remove("!");
+    QString _sType = sType.toLower().remove("~").remove("!");
 
-    // TODO more
-    if ((_sType == "installer") || (_sType == "sfx") || (_sType == "archive")) {
-        result = Qt::blue;
-    } else if (isProtection(_sType)) {
-        result = Qt::red;
-    } else if ((_sType == "pe tool") || (_sType == "apk tool")) {
-        result = Qt::green;
-    } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
-        result = Qt::darkYellow;
-    } else if (_sType == "format") {
-        result = Qt::darkGreen;
-    } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
-        result = Qt::darkMagenta;
-    } else if (_sType == "language") {
-        result = Qt::darkCyan;
-    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware") || (_sType == "corrupted data")) {
-        result = Qt::darkRed;
-    } else if ((_sType == "debug") || (_sType == "debug data")) {
-        result = Qt::darkBlue;
-    } else {
-        result = Qt::transparent;
+    if (isProtection(_sType)) {
+        return Qt::red;
     }
 
-    return result;
+    return colorMap.value(_sType, Qt::transparent);
 }
 
-qint32 XScanEngine::typeToPrio(const QString &sType)
-{
-    qint32 nResult = 0;
-    QString _sType = sType;
-    _sType = _sType.toLower().remove("~");
-    _sType = _sType.toLower().remove("!");
+qint32 XScanEngine::typeToPrio(const QString &sType) {
+    static const QMap<QString, qint32> priorityMap = {
+        {"operation system", 10},
+        {"virtual machine", 10},
+        {"format", 12},
+        {"platform", 14},
+        {"dos extender", 14},
+        {"linker", 20},
+        {"compiler", 30},
+        {"language", 40},
+        {"library", 50},
+        {"tool", 60},
+        {"pe tool", 60},
+        {"sign tool", 60},
+        {"apk tool", 60},
+        {"protector", 70},
+        {"cryptor", 70},
+        {"crypter", 70},
+        {".net obfuscator", 80},
+        {"apk obfuscator", 80},
+        {"jar obfuscator", 80},
+        {"dongle protection", 90},
+        {"protection", 90},
+        {"packer", 100},
+        {".net compressor", 100},
+        {"joiner", 110},
+        {"sfx", 120},
+        {"installer", 120},
+        {"virus", 70},
+        {"malware", 70},
+        {"trojan", 70},
+        {"debug data", 200},
+        {"installer", 200}
+    };
 
-    if ((_sType == "operation system") || (_sType == "virtual machine")) nResult = 10;
-    else if (_sType == "format") nResult = 12;
-    else if ((_sType == "platform") || (_sType == "dos extender")) nResult = 14;
-    else if (_sType == "linker") nResult = 20;
-    else if (_sType == "compiler") nResult = 30;
-    else if (_sType == "language") nResult = 40;
-    else if (_sType == "library") nResult = 50;
-    else if ((_sType == "tool") || (_sType == "pe tool") || (_sType == "sign tool") || (_sType == "apk tool")) nResult = 60;
-    else if ((_sType == "protector") || (_sType == "cryptor") || (_sType == "crypter")) nResult = 70;
-    else if ((_sType == ".net obfuscator") || (_sType == "apk obfuscator") || (_sType == "jar obfuscator")) nResult = 80;
-    else if ((_sType == "dongle protection") || (_sType == "protection")) nResult = 90;
-    else if ((_sType == "packer") || (_sType == ".net compressor")) nResult = 100;
-    else if (_sType == "joiner") nResult = 110;
-    else if ((_sType == "sfx") || (_sType == "installer")) nResult = 120;
-    else if ((_sType == "virus") || (_sType == "malware") || (_sType == "trojan") || (_sType == "corrupted data")) nResult = 70;
-    else if ((_sType == "debug data") || (_sType == "installer")) nResult = 200;
-    else nResult = 1000;
-
-    return nResult;
+    QString _sType = sType.toLower().remove("~").remove("!");
+    return priorityMap.value(_sType, 1000);
 }
 
 QString XScanEngine::translateType(const QString &sType)
@@ -275,118 +284,62 @@ QString XScanEngine::translateType(const QString &sType)
     return sResult;
 }
 
-QString XScanEngine::_translate(const QString &sString)
-{
-    QString sResult;
+QString XScanEngine::_translate(const QString &sString) {
+    static const QMap<QString, QString> translationMap = {
+        {"apk obfuscator", "APK obfuscator"},
+        {"apk tool", "APK Tool"},
+        {"archive", "Archive"},
+        {"certificate", "Certificate"},
+        {"compiler", "Compiler"},
+        {"converter", "Converter"},
+        {"crypter", "Crypter"},
+        {"cryptor", "Cryptor"},
+        {"data", "Data"},
+        {"database", "Database"},
+        {"debug data", "Debug data"},
+        {"dongle protection", "Dongle protection"},
+        {"dos extender", "DOS extender"},
+        {"format", "Format"},
+        {"generic", "Generic"},
+        {"image", "Image"},
+        {"installer", "Installer"},
+        {"installer data", "Installer data"},
+        {"jar obfuscator", "JAR obfuscator"},
+        {"joiner", "Joiner"},
+        {"language", "Language"},
+        {"library", "Library"},
+        {"linker", "Linker"},
+        {".net compressor", ".NET compressor"},
+        {".net obfuscator", ".NET obfuscator"},
+        {"operation system", "Operation system"},
+        {"overlay", "Overlay"},
+        {"packer", "Packer"},
+        {"pe tool", "PE Tool"},
+        {"platform", "Platform"},
+        {"player", "Player"},
+        {"protection", "Protection"},
+        {"protector", "Protector"},
+        {"protector data", "Protector data"},
+        {"sfx data", "SFX data"},
+        {"sign tool", "Sign tool"},
+        {"source code", "Source code"},
+        {"stub", "Stub"},
+        {"tool", "Tool"},
+        {"virtual machine", "Virtual machine"},
+        {"virus", "Virus"},
+        {"trojan", "Trojan"},
+        {"malware", "Malware"},
+        {"package", "Package"},
+        {"licensing", "Licensing"},
+        {"rom", "ROM"}
+    };
 
-    if (sString != "") {
-        bool bIsUpper = false;
-        sString.at(0).isUpper();
-        QString _sString = sString.toLower();
+    QString sResult = translationMap.value(sString.toLower(), sString);
 
-        if (_sString == "apk obfuscator") {
-            sResult = QString("APK %1").arg(tr("obfuscator"));
-        } else if (_sString == "apk tool") {
-            sResult = QString("APK %1").arg(tr("Tool"));
-        } else if (_sString == "archive") {
-            sResult = tr("Archive");
-        } else if (_sString == "certificate") {
-            sResult = tr("Certificate");
-        } else if (_sString == "compiler") {
-            sResult = tr("Compiler");
-        } else if (_sString == "converter") {
-            sResult = tr("Converter");
-        } else if (_sString == "crypter") {
-            sResult = tr("Crypter");
-        } else if (_sString == "cryptor") {
-            sResult = tr("Cryptor");
-        } else if (_sString == "data") {
-            sResult = tr("Data");
-        } else if (_sString == "database") {
-            sResult = tr("Database");
-        } else if (_sString == "debug data") {
-            sResult = tr("Debug data");
-        } else if (_sString == "dongle protection") {
-            sResult = QString("Dongle %1").arg(tr("protection"));
-        } else if (_sString == "dos extender") {
-            sResult = QString("DOS %1").arg(tr("extender"));
-        } else if (_sString == "format") {
-            sResult = tr("Format");
-        } else if (_sString == "generic") {
-            sResult = tr("Generic");
-        } else if (_sString == "image") {
-            sResult = tr("Image");
-        } else if (_sString == "installer") {
-            sResult = tr("Installer");
-        } else if (_sString == "installer data") {
-            sResult = tr("Installer data");
-        } else if (_sString == "jar obfuscator") {
-            sResult = QString("JAR %1").arg(tr("obfuscator"));
-        } else if (_sString == "joiner") {
-            sResult = tr("Joiner");
-        } else if (_sString == "language") {
-            sResult = tr("Language");
-        } else if (_sString == "library") {
-            sResult = tr("Library");
-        } else if (_sString == "linker") {
-            sResult = tr("Linker");
-        } else if (_sString == ".net compressor") {
-            sResult = QString(".NET %1").arg(tr("compressor"));
-        } else if (_sString == ".net obfuscator") {
-            sResult = QString(".NET %1").arg(tr("obfuscator"));
-        } else if (_sString == "operation system") {
-            sResult = tr("Operation system");
-        } else if (_sString == "overlay") {
-            sResult = tr("Overlay");
-        } else if (_sString == "packer") {
-            sResult = tr("Packer");
-        } else if (_sString == "pe tool") {
-            sResult = QString("PE %1").arg(tr("Tool"));
-        } else if (_sString == "platform") {
-            sResult = tr("Platform");
-        } else if (_sString == "player") {
-            sResult = tr("Player");
-        } else if (_sString == "protection") {
-            sResult = tr("Protection");
-        } else if (_sString == "protector") {
-            sResult = tr("Protector");
-        } else if (_sString == "protector data") {
-            sResult = tr("Protector data");
-        } else if (_sString == "sfx data") {
-            sResult = QString("SFX %1").arg(tr("data"));
-        } else if (_sString == "sign tool") {
-            sResult = tr("Sign tool");
-        } else if (_sString == "source code") {
-            sResult = tr("Source code");
-        } else if (_sString == "stub") {
-            sResult = tr("Stub");
-        } else if (_sString == "tool") {
-            sResult = tr("Tool");
-        } else if (_sString == "virtual machine") {
-            sResult = tr("Virtual machine");
-        } else if (_sString == "virus") {
-            sResult = tr("Virus");
-        } else if (_sString == "trojan") {
-            sResult = tr("Trojan");
-        } else if (_sString == "malware") {
-            sResult = tr("Malware");
-        } else if (_sString == "package") {
-            sResult = tr("Package");
-        } else if (_sString == "licensing") {
-            sResult = tr("Licensing");
-        } else if (_sString == "rom") {
-            sResult = QString("ROM");
-        } else if (_sString == "corrupted data") {
-            sResult = tr("Corrupted data");
-        } else {
-            sResult = _sString;
-        }
-
-        if (bIsUpper) {
-            sResult[0] = sResult.at(0).toUpper();
-        } else {
-            sResult[0] = sResult.at(0).toLower();
-        }
+    if (sResult[0].isUpper()) {
+        sResult[0] = sResult.at(0).toUpper();
+    } else {
+        sResult[0] = sResult.at(0).toLower();
     }
 
     return sResult;
@@ -598,112 +551,40 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
     XScanEngine::SCANID scanIdMain = {};
 
-    if (stFT.contains(XBinary::FT_PE32)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE32, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_PE32;
-    } else if (stFT.contains(XBinary::FT_PE64)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE64, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_PE64;
-    } else if (stFT.contains(XBinary::FT_ELF32)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF32, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_ELF32;
-    } else if (stFT.contains(XBinary::FT_ELF64)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF64, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_ELF64;
-    } else if (stFT.contains(XBinary::FT_MACHO32)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO32, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_MACHO32;
-    } else if (stFT.contains(XBinary::FT_MACHO64)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO64, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_MACHO64;
-    } else if (stFT.contains(XBinary::FT_LX)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LX, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_LX;
-    } else if (stFT.contains(XBinary::FT_LE)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LE, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_LE;
-    } else if (stFT.contains(XBinary::FT_NE)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NE, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_NE;
-    } else if (stFT.contains(XBinary::FT_DOS16M)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DOS16M, pScanOptions, false, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_DOS16M;
-    } else if (stFT.contains(XBinary::FT_DOS4G)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DOS4G, pScanOptions, false, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_DOS4G;
-    } else if (stFT.contains(XBinary::FT_MSDOS)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_MSDOS;
-    } else if (stFT.contains(XBinary::FT_APK)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_APK, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_APK;
-    } else if (stFT.contains(XBinary::FT_IPA)) {
-        // _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_IPA, pScanOptions, true, pPdStruct);
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_IPA;
-    } else if (stFT.contains(XBinary::FT_JAR)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JAR, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_JAR;
-    } else if (stFT.contains(XBinary::FT_ZIP)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ZIP, pScanOptions, true, pPdStruct);
-        //_processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_ZIP;
-    } else if (stFT.contains(XBinary::FT_DEX)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DEX, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_DEX;
-    } else if (stFT.contains(XBinary::FT_NPM)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NPM, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_NPM;
-    } else if (stFT.contains(XBinary::FT_MACHOFAT)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHOFAT, pScanOptions, false, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_MACHOFAT;
-    } else if (stFT.contains(XBinary::FT_BWDOS16M)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BWDOS16M, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_BWDOS16M;
-    } else if (stFT.contains(XBinary::FT_AMIGAHUNK)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_AMIGAHUNK, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_AMIGAHUNK;
-    } else if (stFT.contains(XBinary::FT_PDF)) {
-        // _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PDF, pScanOptions, true, pPdStruct);
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_PDF;
-    } else if (stFT.contains(XBinary::FT_RAR)) {
-        // _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_RAR, pScanOptions, true, pPdStruct);
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_RAR;
-    } else if (stFT.contains(XBinary::FT_COM) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_COM;
-    } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_ARCHIVE;
-    } else if (stFT.contains(XBinary::FT_BINARY) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_BINARY;
-    } else {
-        XScanEngine::SCAN_RESULT _scanResultCOM = {};
+    QMap<XBinary::FT, std::function<void()>> fileTypeMap = {
+        {XBinary::FT_PE32,    [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE32, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_PE64,    [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE64, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_ELF32,   [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF32, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_ELF64,   [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF64, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_MACHO32, [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO32, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_MACHO64, [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHO64, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_LX,      [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LX, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_LE,      [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_LE, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_NE,      [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NE, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_MSDOS,   [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MSDOS, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_APK,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_APK, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_IPA,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_JAR,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JAR, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_ZIP,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_DEX,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_DEX, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_NPM,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_NPM, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_MACHOFAT,[&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MACHOFAT, pScanOptions, false, pPdStruct); }},
+        {XBinary::FT_BWDOS16M,[&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BWDOS16M, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_AMIGAHUNK,[&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_AMIGAHUNK, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_PDF,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_RAR,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_COM,     [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_ARCHIVE, [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct); }},
+        {XBinary::FT_BINARY,  [&]() { _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct); }}
+    };
 
-        _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, pScanOptions, false, pPdStruct);
-
-        bool bIsCOM = _scanResultCOM.listRecords.count();
-
-        XScanEngine::SCAN_RESULT _scanResultBinary = {};
-        _processDetect(&scanIdMain, &_scanResultBinary, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, !bIsCOM, pPdStruct);
-
-        pScanResult->listRecords.append(_scanResultBinary.listRecords);
-        pScanResult->listErrors.append(_scanResultBinary.listErrors);
-        pScanResult->listDebugRecords.append(_scanResultBinary.listDebugRecords);
-
-        pScanResult->listRecords.append(_scanResultCOM.listRecords);
-        pScanResult->listErrors.append(_scanResultCOM.listErrors);
-        pScanResult->listDebugRecords.append(_scanResultCOM.listDebugRecords);
-
-        if (bInit) {
-            if (bIsCOM) {
-                pScanResult->ftInit = XBinary::FT_COM;
-            } else {
-                pScanResult->ftInit = XBinary::FT_BINARY;
+    for (const auto &fileType : fileTypeMap.keys()) {
+        if (stFT.contains(fileType)) {
+            fileTypeMap[fileType]();
+            if (bInit) {
+                pScanResult->ftInit = fileType;
             }
+            return;
         }
     }
 
