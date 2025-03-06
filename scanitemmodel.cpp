@@ -472,37 +472,25 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
             hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
             CONSOLE_SCREEN_BUFFER_INFO csbi = {};
-
             if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
                 wOldAttribute = csbi.wAttributes;
             }
 
             WORD wAttribute = 0;
 
-            if (pItem->scanStruct().globalColor == Qt::blue) {
-                wAttribute = FOREGROUND_BLUE;
-            } else if (pItem->scanStruct().globalColor == Qt::red) {
-                wAttribute = FOREGROUND_RED;
-            } else if (pItem->scanStruct().globalColor == Qt::green) {
-                wAttribute = FOREGROUND_GREEN;
-            } else if (pItem->scanStruct().globalColor == Qt::yellow) {
-                wAttribute = FOREGROUND_RED | FOREGROUND_GREEN;
-            } else if (pItem->scanStruct().globalColor == Qt::magenta) {
-                wAttribute = FOREGROUND_RED | FOREGROUND_BLUE;
-            } else if (pItem->scanStruct().globalColor == Qt::cyan) {
-                wAttribute = FOREGROUND_GREEN | FOREGROUND_BLUE;
-            } else if (pItem->scanStruct().globalColor == Qt::darkBlue) {
-                wAttribute = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-            } else if (pItem->scanStruct().globalColor == Qt::darkRed) {
-                wAttribute = FOREGROUND_RED | FOREGROUND_INTENSITY;
-            } else if (pItem->scanStruct().globalColor == Qt::darkGreen) {
-                wAttribute = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-            } else if (pItem->scanStruct().globalColor == Qt::darkYellow) {
-                wAttribute = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-            } else if (pItem->scanStruct().globalColor == Qt::darkMagenta) {
-                wAttribute = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-            } else if (pItem->scanStruct().globalColor == Qt::darkCyan) {
-                wAttribute = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+            switch (pItem->scanStruct().globalColor) {
+            case Qt::blue: wAttribute = FOREGROUND_BLUE; break;
+            case Qt::red: wAttribute = FOREGROUND_RED; break;
+            case Qt::green: wAttribute = FOREGROUND_GREEN; break;
+            case Qt::yellow: wAttribute = FOREGROUND_RED | FOREGROUND_GREEN; break;
+            case Qt::magenta: wAttribute = FOREGROUND_RED | FOREGROUND_BLUE; break;
+            case Qt::cyan: wAttribute = FOREGROUND_GREEN | FOREGROUND_BLUE; break;
+            case Qt::darkBlue: wAttribute = FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
+            case Qt::darkRed: wAttribute = FOREGROUND_RED | FOREGROUND_INTENSITY; break;
+            case Qt::darkGreen: wAttribute = FOREGROUND_GREEN | FOREGROUND_INTENSITY; break;
+            case Qt::darkYellow: wAttribute = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY; break;
+            case Qt::darkMagenta: wAttribute = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
+            case Qt::darkCyan: wAttribute = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
             }
 
             if (wAttribute) {
@@ -510,36 +498,33 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
             }
         }
     }
+
 #else
     if (g_scanOptions.bIsHighlight) {
-        if (pItem->scanStruct().globalColor != Qt::transparent) {
-            if (pItem->scanStruct().globalColor == Qt::blue) {
-                printf("\033[0;34m");
-            } else if (pItem->scanStruct().globalColor == Qt::red) {
-                printf("\033[0;31m");
-            } else if (pItem->scanStruct().globalColor == Qt::green) {
-                printf("\033[0;32m");
-            } else if (pItem->scanStruct().globalColor == Qt::yellow) {
-                printf("\033[0;33m");
-            } else if (pItem->scanStruct().globalColor == Qt::magenta) {
-                printf("\033[0;35m");
-            } else if (pItem->scanStruct().globalColor == Qt::cyan) {
-                printf("\033[0;36m");
-            } else if (pItem->scanStruct().globalColor == Qt::darkBlue) {
-                printf("\033[1;34m");
-            } else if (pItem->scanStruct().globalColor == Qt::darkRed) {
-                printf("\033[1;31m");
-            } else if (pItem->scanStruct().globalColor == Qt::darkGreen) {
-                printf("\033[1;32m");
-            } else if (pItem->scanStruct().globalColor == Qt::darkYellow) {
-                printf("\033[1;33m");
-            } else if (pItem->scanStruct().globalColor == Qt::darkMagenta) {
-                printf("\033[1;35m");
-            } else if (pItem->scanStruct().globalColor == Qt::darkCyan) {
-                printf("\033[1;36m");
+        auto color = pItem->scanStruct().globalColor;
+        if (color != Qt::transparent) {
+            static const std::map<QColor, const char*> colorMap = {
+                {Qt::blue, "\033[0;34m"},
+                {Qt::red, "\033[0;31m"},
+                {Qt::green, "\033[0;32m"},
+                {Qt::yellow, "\033[0;33m"},
+                {Qt::magenta, "\033[0;35m"},
+                {Qt::cyan, "\033[0;36m"},
+                {Qt::darkBlue, "\033[1;34m"},
+                {Qt::darkRed, "\033[1;31m"},
+                {Qt::darkGreen, "\033[1;32m"},
+                {Qt::darkYellow, "\033[1;33m"},
+                {Qt::darkMagenta, "\033[1;35m"},
+                {Qt::darkCyan, "\033[1;36m"}
+            };
+
+            auto it = colorMap.find(color);
+            if (it != colorMap.end()) {
+                printf("%s", it->second);
             }
         }
     }
+
 #endif
 
     printf("%s", pItem->data(0).toString().toUtf8().data());
