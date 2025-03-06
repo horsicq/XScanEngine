@@ -906,7 +906,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     options.listFileTypes.append(XBinary::FT_7Z);
                     options.listFileTypes.append(XBinary::FT_CAB);
 
-                    QList<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
+                    QVector<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
                     qint32 nNumberOfRecords = listExtractRecords.count();
                     qint32 nMaxCount = 20;
                     // qint32 nMaxCount = -1;
