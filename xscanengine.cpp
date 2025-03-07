@@ -1038,6 +1038,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                 }
                             }
                             nCount++;
+                        } else {
+                            break;
                         }
                     }
 
