@@ -550,11 +550,13 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     }
 
     if (bMemory) {
+        bufDevice = new QBuffer;
+
         pBuffer = new char[nSize];
 
-        XBinary::read_array(_pDevice, 0, pBuffer, nSize, pPdStruct);
-
-        bufDevice = new QBuffer;
+        if (nSize) {
+            XBinary::read_array(_pDevice, 0, pBuffer, nSize, pPdStruct);
+        }
 
         bufDevice->setData(pBuffer, nSize);
         bufDevice->open(QIODevice::ReadOnly);
@@ -893,6 +895,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
             } else {
                 if (pScanOptions->bIsDeepScan) {
                     XExtractor::OPTIONS options = {};
+                    options.nLimit = 20;
                     options.bHeuristicScan = true;
                     options.fileType = XBinary::FT_BINARY;
                     options.listFileTypes.append(XBinary::FT_PE);
@@ -908,9 +911,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                     QVector<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
                     qint32 nNumberOfRecords = listExtractRecords.count();
-                    qint32 nMaxCount = 20;
-                    // qint32 nMaxCount = -1;
-                    qint32 nCount = 0;
 
                     qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
                     XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
@@ -919,22 +919,18 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                         XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listExtractRecords.at(i).sString);
 
                         if (listExtractRecords.at(i).nOffset != 0) {
-                            if ((nCount < nMaxCount) || (nMaxCount == -1)) {
-                                XScanEngine::SCANID scanIdRegion = scanIdMain;
-                                scanIdRegion.filePart = XBinary::FILEPART_REGION;
-                                scanIdRegion.fileType = listExtractRecords.at(i).fileType;
-                                scanIdRegion.nOffset = listExtractRecords.at(i).nOffset;
-                                scanIdRegion.nSize = listExtractRecords.at(i).nSize;
+                            XScanEngine::SCANID scanIdRegion = scanIdMain;
+                            scanIdRegion.filePart = XBinary::FILEPART_REGION;
+                            scanIdRegion.fileType = listExtractRecords.at(i).fileType;
+                            scanIdRegion.nOffset = listExtractRecords.at(i).nOffset;
+                            scanIdRegion.nSize = listExtractRecords.at(i).nSize;
 
-                                XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                                _options.fileType = XBinary::FT_UNKNOWN;
-                                _options.bIsRecursiveScan = false;
+                            XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+                            _options.fileType = XBinary::FT_UNKNOWN;
+                            _options.bIsRecursiveScan = false;
 
-                                scanProcess(_pDevice, pScanResult, listExtractRecords.at(i).nOffset, listExtractRecords.at(i).nSize, scanIdRegion, &_options, false,
-                                            pPdStruct);
-
-                                nCount++;
-                            }
+                            scanProcess(_pDevice, pScanResult, listExtractRecords.at(i).nOffset, listExtractRecords.at(i).nSize, scanIdRegion, &_options, false,
+                                        pPdStruct);
                         }
                         XBinary::setPdStructCurrent(pPdStruct, _nFreeIndex, i);
                     }
