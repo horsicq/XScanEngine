@@ -26,6 +26,8 @@
 #include "xoptions.h"
 #include <QFutureWatcher>
 
+typedef bool (*SCAN_ENGINE_CALLBACK)(const QString &sCurrentSignature, qint32 nNumberOfSignatures, qint32 nCurrentIndex, void *pUserData);
+
 // TODO pOptions -> pScanOptions
 class XScanEngine : public QObject {
     Q_OBJECT
@@ -153,6 +155,8 @@ public:
         bool bIsSort;
         bool bUseExtraDatabase;
         bool bUseCustomDatabase;
+        SCAN_ENGINE_CALLBACK scanEngineCallback;
+        void *pUserData;
     };
 
     struct SCAN_DATA {
