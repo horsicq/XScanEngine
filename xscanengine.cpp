@@ -974,10 +974,10 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                             _options.bIsRecursiveScan = false;
 
                             if (bShowFileName) {
-                                scanIdArchiveRecord.sInfo = listRecords.at(i).sFileName;
+                                scanIdArchiveRecord.sInfo = listRecords.at(i).spInfo.sRecordName;
                             }
 
-                            qint64 _nUncompressedSize = listRecords.at(i).nUncompressedSize;
+                            qint64 _nUncompressedSize = listRecords.at(i).spInfo.nUncompressedSize;
                             qint64 _nRecordDataSize = baRecordData.size();
 
                             if (_nUncompressedSize && _nRecordDataSize) {
@@ -1039,7 +1039,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     }
 
                     XBinary::setPdStructCurrentIncrement(pPdStruct, _nFreeIndex);
-                    XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listRecords.at(i).sFileName);
+                    XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listRecords.at(i).spInfo.sRecordName);
                 }
 
                 XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
