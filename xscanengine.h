@@ -25,6 +25,7 @@
 #include "xextractor.h"
 #include "xoptions.h"
 #include <QFutureWatcher>
+#include <QLoggingCategory>
 
 typedef bool (*SCAN_ENGINE_CALLBACK)(const QString &sCurrentSignature, qint32 nNumberOfSignatures, qint32 nCurrentIndex, void *pUserData);
 
@@ -170,6 +171,9 @@ public:
     void setData(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(const QString &sDirectoryName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+
+    // void enableDebugLog(bool bState);
+    // static void debugLogFilter(QLoggingCategory *category);
 
     static QString createTypeString(const SCANSTRUCT *pScanStruct);
     static SCANSTRUCT createHeaderScanStruct(const SCANSTRUCT *pScanStruct);

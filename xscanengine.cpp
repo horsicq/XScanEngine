@@ -86,6 +86,18 @@ void XScanEngine::setData(const QString &sDirectoryName, XScanEngine::SCAN_OPTIO
     g_scanType = SCAN_TYPE_DIRECTORY;
 }
 
+// void XScanEngine::enableDebugLog(bool bState)
+// {
+//     if (bState) {
+//         QLoggingCategory::installFilter(debugLogFilter);
+//     }
+// }
+
+// void XScanEngine::debugLogFilter(QLoggingCategory *category)
+// {
+//     qDebug("%s", category->categoryName());
+// }
+
 QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
 {
     QString sResult;
