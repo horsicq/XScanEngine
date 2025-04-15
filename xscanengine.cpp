@@ -98,7 +98,7 @@ void XScanEngine::setData(const QString &sDirectoryName, XScanEngine::SCAN_OPTIO
 //     qDebug("%s", category->categoryName());
 // }
 
-QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
+QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct)
 {
     QString sResult;
 
@@ -106,10 +106,16 @@ QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
         sResult += XBinary::recordFilePartIdToString(pScanStruct->parentId.filePart);
 
         if (pScanStruct->parentId.sVersion != "") {
+            if (pOptions->bFormatResult) {
+                sResult += " ";
+            }
             sResult += QString("(%1)").arg(pScanStruct->parentId.sVersion);
         }
 
         if (pScanStruct->parentId.sInfo != "") {
+            if (pOptions->bFormatResult) {
+                sResult += " ";
+            }
             sResult += QString("[%1]").arg(pScanStruct->parentId.sInfo);
         }
 
@@ -119,8 +125,13 @@ QString XScanEngine::createTypeString(const SCANSTRUCT *pScanStruct)
     sResult += XBinary::fileTypeIdToString(pScanStruct->id.fileType);
 
     if ((pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) && (pScanStruct->parentId.filePart != XBinary::FILEPART_ARCHIVERECORD)) {
-        sResult += QString("[%1=0x%2,%3=0x%4]")
-                       .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+        if (pOptions->bFormatResult) {
+            sResult += QString("[%1 = 0x%2, %3 = 0x%4]")
+            .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+        } else {
+            sResult += QString("[%1=0x%2,%3=0x%4]")
+            .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+        }
     }
 
     return sResult;
@@ -148,6 +159,14 @@ QString XScanEngine::createResultStringEx(SCAN_OPTIONS *pOptions, const SCANSTRU
 
     if (pScanStruct->bIsHeuristic) {
         sResult += "(Heur)";
+        if (pOptions->bFormatResult) {
+            sResult += " ";
+        }
+    }else if (pScanStruct->bIsAHeuristic) {
+        sResult += "(A-Heur)";
+        if (pOptions->bFormatResult) {
+            sResult += " ";
+        }
     }
 
     if (pOptions->bShowType) {
@@ -157,10 +176,16 @@ QString XScanEngine::createResultStringEx(SCAN_OPTIONS *pOptions, const SCANSTRU
     sResult += pScanStruct->sName;
 
     if ((pOptions->bShowVersion) && (pScanStruct->sVersion != "")) {
+        if (pOptions->bFormatResult) {
+            sResult += " ";
+        }
         sResult += QString("(%1)").arg(pScanStruct->sVersion);
     }
 
     if ((pOptions->bShowInfo) && (pScanStruct->sInfo != "")) {
+        if (pOptions->bFormatResult) {
+            sResult += " ";
+        }
         sResult += QString("[%1]").arg(pScanStruct->sInfo);
     }
 
@@ -256,18 +281,15 @@ QString XScanEngine::translateType(const QString &sType)
     QString sResult;
 
     QString _sType = sType;
-    bool bHeur = false;
-    bool bAHeur = false;
 
     if (_sType.size() > 1) {
         if (_sType[0] == QChar('~')) {
-            bHeur = true;
             _sType.remove(0, 1);
         }
+    }
 
+    if (_sType.size() > 1) {
         if (_sType[0] == QChar('!')) {
-            bHeur = false;
-            bAHeur = true;
             _sType.remove(0, 1);
         }
     }
@@ -278,13 +300,33 @@ QString XScanEngine::translateType(const QString &sType)
         sResult[0] = sResult.at(0).toUpper();
     }
 
-    if (bHeur) {
-        sResult = QString("(Heur)%1").arg(sResult);
-    } else if (bAHeur) {
-        sResult = QString("(A-Heur)%1").arg(sResult);
+    return sResult;
+}
+
+bool XScanEngine::isHeurType(const QString &sType)
+{
+    bool bResult = false;
+
+    if (sType.size() > 1) {
+        if (sType[0] == QChar('~')) {
+            bResult = true;
+        }
     }
 
-    return sResult;
+    return bResult;
+}
+
+bool XScanEngine::isAHeurType(const QString &sType)
+{
+    bool bResult = false;
+
+    if (sType.size() > 1) {
+        if (sType[0] == QChar('!')) {
+            bResult = true;
+        }
+    }
+
+    return bResult;
 }
 
 QString XScanEngine::_translate(const QString &sString)
@@ -1137,6 +1179,10 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
         nResult |= SF_RESULTASCSV;
     }
 
+    if (pScanOptions->bFormatResult) {
+        nResult |= SF_FORMATRESULT;
+    }
+
     return nResult;
 }
 
@@ -1151,6 +1197,7 @@ void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
     pScanOptions->bResultAsJSON = nFlags & SF_RESULTASJSON;
     pScanOptions->bResultAsXML = nFlags & SF_RESULTASXML;
     pScanOptions->bResultAsCSV = nFlags & SF_RESULTASCSV;
+    pScanOptions->bFormatResult = nFlags & SF_FORMATRESULT;
 }
 
 quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
@@ -1181,6 +1228,10 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
         nResult |= SF_ALLTYPESSCAN;
     }
 
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FORMATRESULT).toBool()) {
+        nResult |= SF_FORMATRESULT;
+    }
+
     return nResult;
 }
 
@@ -1192,6 +1243,7 @@ void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SF_AGGRESSIVESCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SF_VERBOSE);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SF_ALLTYPESSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FORMATRESULT, nFlags & SF_FORMATRESULT);
 }
 
 XScanEngine::SCAN_OPTIONS XScanEngine::getDefaultOptions(quint64 nFlags)

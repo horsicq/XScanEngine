@@ -59,6 +59,7 @@ public:
 
     struct SCANSTRUCT {
         bool bIsHeuristic;
+        bool bIsAHeuristic;
         bool bIsUnknown;
         SCANID id;
         SCANID parentId;
@@ -110,6 +111,7 @@ public:
         SF_RESULTASJSON = 0x00020000,
         SF_RESULTASTSV = 0x00040000,
         SF_RESULTASCSV = 0x00080000,
+        SF_FORMATRESULT = 0x10000000,
     };
 
     enum DATABASE {
@@ -146,6 +148,7 @@ public:
         bool bShowType;
         bool bShowVersion;
         bool bShowInfo;
+        bool bFormatResult;
         bool bHideUnknown;
         bool bShowEntropy;
         bool bShowFileInfo;
@@ -175,13 +178,15 @@ public:
     // void enableDebugLog(bool bState);
     // static void debugLogFilter(QLoggingCategory *category);
 
-    static QString createTypeString(const SCANSTRUCT *pScanStruct);
+    static QString createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct);
     static SCANSTRUCT createHeaderScanStruct(const SCANSTRUCT *pScanStruct);
     static QString createResultStringEx(XScanEngine::SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct);
     static QString createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
     static Qt::GlobalColor typeToColor(const QString &sType);
     static qint32 typeToPrio(const QString &sType);
     static QString translateType(const QString &sType);
+    static bool isHeurType(const QString &sType);
+    static bool isAHeurType(const QString &sType);
     static QString _translate(const QString &sString);
     static void sortRecords(QList<SCANSTRUCT> *pListRecords);
     static QString getProtection(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);

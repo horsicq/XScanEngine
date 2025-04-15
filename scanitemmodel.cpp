@@ -51,7 +51,7 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
                 mapParents.insert(pListScanStructs->at(i).parentId.sUuid, _pItemParent);
             }
 
-            QString sTypeString = XScanEngine::createTypeString(&pListScanStructs->at(i));
+            QString sTypeString = XScanEngine::createTypeString(pScanOptions, &pListScanStructs->at(i));
 
             ScanItem *pItemMain = new ScanItem(sTypeString, _pItemParent, nNumberOfColumns, true);
             XScanEngine::SCANSTRUCT ss = XScanEngine::createHeaderScanStruct(&pListScanStructs->at(i));
