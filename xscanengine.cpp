@@ -127,10 +127,10 @@ QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *
     if ((pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) && (pScanStruct->parentId.filePart != XBinary::FILEPART_ARCHIVERECORD)) {
         if (pOptions->bFormatResult) {
             sResult += QString("[%1 = 0x%2, %3 = 0x%4]")
-            .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+                           .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
         } else {
             sResult += QString("[%1=0x%2,%3=0x%4]")
-            .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+                           .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
         }
     }
 
@@ -162,7 +162,7 @@ QString XScanEngine::createResultStringEx(SCAN_OPTIONS *pOptions, const SCANSTRU
         if (pOptions->bFormatResult) {
             sResult += " ";
         }
-    }else if (pScanStruct->bIsAHeuristic) {
+    } else if (pScanStruct->bIsAHeuristic) {
         sResult += "(A-Heur)";
         if (pOptions->bFormatResult) {
             sResult += " ";
@@ -237,7 +237,8 @@ Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
         result = Qt::darkMagenta;
     } else if (_sType == "language") {
         result = Qt::darkCyan;
-    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware") || (_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author")) {
+    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware") || (_sType == "corrupted data") || (_sType == "personal data") ||
+               (_sType == "author")) {
         result = Qt::darkRed;
     } else if ((_sType == "debug") || (_sType == "debug data")) {
         result = Qt::darkBlue;
@@ -269,7 +270,8 @@ qint32 XScanEngine::typeToPrio(const QString &sType)
     else if ((_sType == "packer") || (_sType == ".net compressor")) nResult = 100;
     else if (_sType == "joiner") nResult = 110;
     else if ((_sType == "sfx") || (_sType == "installer")) nResult = 120;
-    else if ((_sType == "virus") || (_sType == "malware") || (_sType == "trojan") || (_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author")) nResult = 70;
+    else if ((_sType == "virus") || (_sType == "malware") || (_sType == "trojan") || (_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author"))
+        nResult = 70;
     else if ((_sType == "debug data") || (_sType == "installer")) nResult = 200;
     else nResult = 1000;
 
