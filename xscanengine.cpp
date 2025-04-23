@@ -748,7 +748,13 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     } else {
         XScanEngine::SCAN_RESULT _scanResultCOM = {};
 
-        _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, pScanOptions, false, pPdStruct);
+        {
+            XCOM xcom(_pDevice);
+
+            if (xcom.isValid(pPdStruct)) {
+                _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, pScanOptions, false, pPdStruct);
+            }
+        }
 
         bool bIsCOM = _scanResultCOM.listRecords.count();
 
@@ -971,6 +977,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     // options.listFileTypes.append(XBinary::FT_ZLIB);
                     options.listFileTypes.append(XBinary::FT_7Z);
                     options.listFileTypes.append(XBinary::FT_CAB);
+                    options.listFileTypes.append(XBinary::FT_AR);
 
                     QVector<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
                     qint32 nNumberOfRecords = listExtractRecords.count();
