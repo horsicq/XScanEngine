@@ -732,6 +732,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     } else if (stFT.contains(XBinary::FT_PDF)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PDF, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_PDF;
+    } else if (stFT.contains(XBinary::FT_CFBF)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_CFBF, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_CFBF;
     } else if (stFT.contains(XBinary::FT_RAR)) {
         // _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_RAR, pScanOptions, true, pPdStruct);
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
@@ -972,6 +975,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     options.listFileTypes.append(XBinary::FT_MACHO);
                     options.listFileTypes.append(XBinary::FT_PDF);
                     options.listFileTypes.append(XBinary::FT_ZIP);
+                    options.listFileTypes.append(XBinary::FT_CFBF);
                     options.listFileTypes.append(XBinary::FT_RAR);
                     // options.listFileTypes.append(XBinary::FT_GZIP);
                     // options.listFileTypes.append(XBinary::FT_ZLIB);
