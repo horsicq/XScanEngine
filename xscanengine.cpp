@@ -20,6 +20,65 @@
  */
 #include "xscanengine.h"
 
+XBinary::XCONVERT _TABLE_XScanEngine_RECORD_TYPE[] = {
+    {XScanEngine::RECORD_TYPE_UNKNOWN, "Unknown", QObject::tr("Unknown")},
+    {XScanEngine::RECORD_TYPE_APKOBFUSCATOR, "APK obfuscator", QString("APK %1").arg(QObject::tr("Obfuscator"))},
+    {XScanEngine::RECORD_TYPE_APKTOOL, "APK Tool", QString("APK %1").arg(QObject::tr("Tool"))},
+    {XScanEngine::RECORD_TYPE_ARCHIVE, "Archive", QObject::tr("Archive")},
+    {XScanEngine::RECORD_TYPE_CERTIFICATE, "Certificate", QObject::tr("Certificate")},
+    {XScanEngine::RECORD_TYPE_COMPILER, "Compiler", QObject::tr("Compiler")},
+    {XScanEngine::RECORD_TYPE_COMPRESSOR, "Compressor", QObject::tr("Compressor")},
+    {XScanEngine::RECORD_TYPE_CONVERTER, "Converter", QObject::tr("Converter")},
+    {XScanEngine::RECORD_TYPE_CRYPTER, "Crypter", QObject::tr("Crypter")},
+    {XScanEngine::RECORD_TYPE_CRYPTOR, "Cryptor", QObject::tr("Cryptor")},
+    {XScanEngine::RECORD_TYPE_DATABASE, "Database", QObject::tr("Database")},
+    {XScanEngine::RECORD_TYPE_DEBUGDATA, "Debug data", QObject::tr("Debug data")},
+    {XScanEngine::RECORD_TYPE_DOCUMENT, "Document", QObject::tr("Document")},
+    {XScanEngine::RECORD_TYPE_DONGLEPROTECTION, "Dongle protection", QString("Dongle %1").arg(QObject::tr("Protection"))},
+    {XScanEngine::RECORD_TYPE_DOSEXTENDER, "DOS extender", QString("DOS %1").arg(QObject::tr("Extender"))},
+    {XScanEngine::RECORD_TYPE_FORMAT, "Format", QObject::tr("Format")},
+    {XScanEngine::RECORD_TYPE_GENERIC, "Generic", QObject::tr("Generic")},
+    {XScanEngine::RECORD_TYPE_IMAGE, "Image", QObject::tr("Image")},
+    {XScanEngine::RECORD_TYPE_INSTALLER, "Installer", QObject::tr("Installer")},
+    {XScanEngine::RECORD_TYPE_INSTALLERDATA, "Installer data", QObject::tr("Installer data")},
+    {XScanEngine::RECORD_TYPE_JAROBFUSCATOR, "JAR obfuscator", QString("JAR %1").arg(QObject::tr("Obfuscator"))},
+    {XScanEngine::RECORD_TYPE_JOINER, "Joiner", QObject::tr("Joiner")},
+    {XScanEngine::RECORD_TYPE_LANGUAGE, "Language", QObject::tr("Language")},
+    {XScanEngine::RECORD_TYPE_LIBRARY, "Library", QObject::tr("Library")},
+    {XScanEngine::RECORD_TYPE_LINKER, "Linker", QObject::tr("Linker")},
+    {XScanEngine::RECORD_TYPE_LOADER, "Loader", QObject::tr("Loader")},
+    {XScanEngine::RECORD_TYPE_NETCOMPRESSOR, ".NET compressor", QString(".NET %1").arg(QObject::tr("Compressor"))},
+    {XScanEngine::RECORD_TYPE_NETOBFUSCATOR, ".NET obfuscator", QString(".NET %1").arg(QObject::tr("Obfuscator"))},
+    {XScanEngine::RECORD_TYPE_OBFUSCATOR, "Obfuscator", QObject::tr("Obfuscator")},
+    {XScanEngine::RECORD_TYPE_OPERATIONSYSTEM, "Operation system", QObject::tr("Operation system")},
+    {XScanEngine::RECORD_TYPE_OVERLAY, "Overlay", QObject::tr("Overlay")},
+    {XScanEngine::RECORD_TYPE_PACKER, "Packer", QObject::tr("Packer")},
+    {XScanEngine::RECORD_TYPE_PETOOL, "PE Tool", QString("PE %1").arg(QObject::tr("Tool"))},
+    {XScanEngine::RECORD_TYPE_PLATFORM, "Platform", QObject::tr("Platform")},
+    {XScanEngine::RECORD_TYPE_PLAYER, "Player", QObject::tr("Player")},
+    {XScanEngine::RECORD_TYPE_PROTECTION, "Protection", QObject::tr("Protection")},
+    {XScanEngine::RECORD_TYPE_PROTECTOR, "Protector", QObject::tr("Protector")},
+    {XScanEngine::RECORD_TYPE_PROTECTORDATA, "Protector data", QObject::tr("Protector data")},
+    {XScanEngine::RECORD_TYPE_SFX, "SFX", QString("SFX")},
+    {XScanEngine::RECORD_TYPE_SFXDATA, "SFX data", QString("SFX %1").arg(QObject::tr("data"))},
+    {XScanEngine::RECORD_TYPE_SIGNTOOL, "Sign tool", QObject::tr("Sign tool")},
+    {XScanEngine::RECORD_TYPE_SOURCECODE, "Source code", QObject::tr("Source code")},
+    {XScanEngine::RECORD_TYPE_STUB, "Stub", QObject::tr("Stub")},
+    {XScanEngine::RECORD_TYPE_TOOL, "Tool", QObject::tr("Tool")},
+    {XScanEngine::RECORD_TYPE_VIRTUALMACHINE, "Virtual machine", QObject::tr("Virtual machine")},
+    {XScanEngine::RECORD_TYPE_VIRUS, "Virus", QObject::tr("Virus")},
+    {XScanEngine::RECORD_TYPE_TROJAN, "Trojan", QObject::tr("Trojan")},
+    {XScanEngine::RECORD_TYPE_MALWARE, "Malware", QObject::tr("Malware")},
+    {XScanEngine::RECORD_TYPE_PACKAGE, "Package", QObject::tr("Package")},
+    {XScanEngine::RECORD_TYPE_LICENSING, "Licensing", QObject::tr("Licensing")},
+    {XScanEngine::RECORD_TYPE_ROM, "ROM", QString("ROM")},
+    {XScanEngine::RECORD_TYPE_CORRUPTEDDATA, "Corrupted data", QObject::tr("Corrupted data")},
+    {XScanEngine::RECORD_TYPE_PERSONALDATA, "Personal data", QObject::tr("Personal data")},
+    {XScanEngine::RECORD_TYPE_AUTHOR, "Author", QObject::tr("Author")},
+    {XScanEngine::RECORD_TYPE_CREATOR, "Creator", QObject::tr("Creator")},
+    {XScanEngine::RECORD_TYPE_PRODUCER, "Producer", QObject::tr("Producer")},
+};
+
 bool _sortItems(const XScanEngine::SCANSTRUCT &v1, const XScanEngine::SCANSTRUCT &v2)
 {
     bool bResult = false;
@@ -333,127 +392,7 @@ bool XScanEngine::isAHeurType(const QString &sType)
 
 QString XScanEngine::_translate(const QString &sString)
 {
-    QString sResult;
-
-    if (sString != "") {
-        bool bIsUpper = false;
-        sString.at(0).isUpper();
-        QString _sString = sString.toLower();
-
-        if (_sString == "apk obfuscator") {
-            sResult = QString("APK %1").arg(tr("obfuscator"));
-        } else if (_sString == "apk tool") {
-            sResult = QString("APK %1").arg(tr("Tool"));
-        } else if (_sString == "archive") {
-            sResult = tr("Archive");
-        } else if (_sString == "certificate") {
-            sResult = tr("Certificate");
-        } else if (_sString == "compiler") {
-            sResult = tr("Compiler");
-        } else if (_sString == "converter") {
-            sResult = tr("Converter");
-        } else if (_sString == "crypter") {
-            sResult = tr("Crypter");
-        } else if (_sString == "cryptor") {
-            sResult = tr("Cryptor");
-        } else if (_sString == "data") {
-            sResult = tr("Data");
-        } else if (_sString == "database") {
-            sResult = tr("Database");
-        } else if (_sString == "debug data") {
-            sResult = tr("Debug data");
-        } else if (_sString == "dongle protection") {
-            sResult = QString("Dongle %1").arg(tr("protection"));
-        } else if (_sString == "dos extender") {
-            sResult = QString("DOS %1").arg(tr("extender"));
-        } else if (_sString == "format") {
-            sResult = tr("Format");
-        } else if (_sString == "generic") {
-            sResult = tr("Generic");
-        } else if (_sString == "image") {
-            sResult = tr("Image");
-        } else if (_sString == "installer") {
-            sResult = tr("Installer");
-        } else if (_sString == "installer data") {
-            sResult = tr("Installer data");
-        } else if (_sString == "jar obfuscator") {
-            sResult = QString("JAR %1").arg(tr("obfuscator"));
-        } else if (_sString == "joiner") {
-            sResult = tr("Joiner");
-        } else if (_sString == "language") {
-            sResult = tr("Language");
-        } else if (_sString == "library") {
-            sResult = tr("Library");
-        } else if (_sString == "linker") {
-            sResult = tr("Linker");
-        } else if (_sString == ".net compressor") {
-            sResult = QString(".NET %1").arg(tr("compressor"));
-        } else if (_sString == ".net obfuscator") {
-            sResult = QString(".NET %1").arg(tr("obfuscator"));
-        } else if (_sString == "operation system") {
-            sResult = tr("Operation system");
-        } else if (_sString == "overlay") {
-            sResult = tr("Overlay");
-        } else if (_sString == "packer") {
-            sResult = tr("Packer");
-        } else if (_sString == "pe tool") {
-            sResult = QString("PE %1").arg(tr("Tool"));
-        } else if (_sString == "platform") {
-            sResult = tr("Platform");
-        } else if (_sString == "player") {
-            sResult = tr("Player");
-        } else if (_sString == "protection") {
-            sResult = tr("Protection");
-        } else if (_sString == "protector") {
-            sResult = tr("Protector");
-        } else if (_sString == "protector data") {
-            sResult = tr("Protector data");
-        } else if (_sString == "sfx data") {
-            sResult = QString("SFX %1").arg(tr("data"));
-        } else if (_sString == "sign tool") {
-            sResult = tr("Sign tool");
-        } else if (_sString == "source code") {
-            sResult = tr("Source code");
-        } else if (_sString == "stub") {
-            sResult = tr("Stub");
-        } else if (_sString == "tool") {
-            sResult = tr("Tool");
-        } else if (_sString == "virtual machine") {
-            sResult = tr("Virtual machine");
-        } else if (_sString == "virus") {
-            sResult = tr("Virus");
-        } else if (_sString == "trojan") {
-            sResult = tr("Trojan");
-        } else if (_sString == "malware") {
-            sResult = tr("Malware");
-        } else if (_sString == "package") {
-            sResult = tr("Package");
-        } else if (_sString == "licensing") {
-            sResult = tr("Licensing");
-        } else if (_sString == "rom") {
-            sResult = QString("ROM");
-        } else if (_sString == "corrupted data") {
-            sResult = tr("Corrupted data");
-        } else if (_sString == "personal data") {
-            sResult = tr("Personal data");
-        } else if (_sString == "author") {
-            sResult = tr("Author");
-        } else if (_sString == "creator") {
-            sResult = tr("Creator");
-        } else if (_sString == "producer") {
-            sResult = tr("Producer");
-        } else {
-            sResult = _sString;
-        }
-
-        if (bIsUpper) {
-            sResult[0] = sResult.at(0).toUpper();
-        } else {
-            sResult[0] = sResult.at(0).toLower();
-        }
-    }
-
-    return sResult;
+    return XBinary::XCONVERT_translate(sString, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
 }
 
 void XScanEngine::sortRecords(QList<SCANSTRUCT> *pListRecords)
@@ -1439,4 +1378,10 @@ void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessa
 {
     Q_UNUSED(pOptions)
     emit errorMessage(sInfoMessage);
+}
+
+
+QString XScanEngine::recordTypeIdToString(qint32 nId)
+{
+    return XBinary::XCONVERT_idToTransString(nId, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
 }
