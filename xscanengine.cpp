@@ -928,7 +928,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
                     XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
 
-                    for (qint32 i = 0; (i < nNumberOfRecords) && (!(pPdStruct->bIsStop)); i++) {
+                    for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
                         XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listExtractRecords.at(i).sString);
 
                         if (listExtractRecords.at(i).nOffset != 0) {
