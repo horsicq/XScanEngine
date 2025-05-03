@@ -1380,7 +1380,6 @@ void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessa
     emit errorMessage(sInfoMessage);
 }
 
-
 QString XScanEngine::recordTypeIdToString(qint32 nId)
 {
     return XBinary::XCONVERT_idToTransString(nId, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));

@@ -40,6 +40,7 @@ class XScanEngine : public QObject {
         SCAN_TYPE_FILE,
         SCAN_TYPE_MEMORY
     };
+
 public:
     enum RECORD_TYPE {
         RECORD_TYPE_UNKNOWN = 0,
