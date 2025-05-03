@@ -971,7 +971,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
                 XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
 
-                for (qint32 i = 0; (i < nNumberOfRecords) && (!(pPdStruct->bIsStop)); i++) {
+                for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
                     XArchive::RECORD _record = listRecords.at(i);
                     QByteArray baRecordData = XArchives::decompress(_pDevice, &_record, pPdStruct, 0, 0x200);
 
