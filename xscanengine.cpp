@@ -511,13 +511,6 @@ XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 n
 void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, SCANID parentId, SCAN_OPTIONS *pScanOptions, bool bInit,
                               XBinary::PDSTRUCT *pPdStruct)
 {
-    XBinary::PDSTRUCT pdStructEmpty = {};
-
-    if (!pPdStruct) {
-        pdStructEmpty = XBinary::createPdStruct();
-        pPdStruct = &pdStructEmpty;
-    }
-
     QElapsedTimer *pScanTimer = nullptr;
 
     if (bInit) {
@@ -1327,7 +1320,7 @@ void XScanEngine::process()
 
             XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nTotal);
 
-            for (qint32 i = 0; (i < nTotal) && (!(pPdStruct->bIsStop)); i++) {
+            for (qint32 i = 0; (i < nTotal) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
                 QString sFileName = listFileNames.at(i);
 
                 XBinary::setPdStructCurrent(pPdStruct, _nFreeIndex, i);
