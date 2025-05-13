@@ -28,9 +28,6 @@
 #include <QJsonObject>
 #endif
 #include <QXmlStreamWriter>
-#ifdef Q_OS_WIN
-#include <Windows.h>
-#endif
 #ifdef QT_GUI_LIB
 #include <QApplication>
 #include <QColor>
