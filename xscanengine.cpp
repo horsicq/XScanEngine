@@ -953,7 +953,7 @@ XScanEngine::XScanEngine(QObject *pParent) : QObject(pParent)
 {
 }
 
-XScanEngine::XScanEngine(const XScanEngine &other)
+XScanEngine::XScanEngine(const XScanEngine &other) : QObject(other.parent())
 {
     this->g_sFileName = other.g_sFileName;
     this->g_sDirectoryName = other.g_sDirectoryName;
@@ -1532,12 +1532,18 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         // _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_RAR, pScanOptions, true, pPdStruct);
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_RAR;
+    } else if (stFT.contains(XBinary::FT_JPEG)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JPEG, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_JPEG;
     } else if (stFT.contains(XBinary::FT_COM) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_COM;
     } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_ARCHIVE;
+    } else if (stFT.contains(XBinary::FT_IMAGE) && (stFT.size() == 1)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_IMAGE, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_IMAGE;
     } else if (stFT.contains(XBinary::FT_BINARY) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_BINARY;
