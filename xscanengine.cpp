@@ -508,7 +508,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_MICROSOFTVISUALSTUDIO, QString("Microsoft Visual Studio")},
     {XScanEngine::RECORD_NAME_MICROSOFTWINHELP, QString("Microsoft WinHelp")},
     {XScanEngine::RECORD_NAME_MINGW, QString("MinGW")},
-    {XScanEngine::RECORD_NAME_MINIX,  QString("Minix")},
+    {XScanEngine::RECORD_NAME_MINIX, QString("Minix")},
     {XScanEngine::RECORD_NAME_MINKE, QString("Minke")},
     {XScanEngine::RECORD_NAME_MKFPACK, QString("MKFPack")},
     {XScanEngine::RECORD_NAME_MOBILETENCENTPROTECT, QString("Mobile Tencent Protect")},
@@ -875,8 +875,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_UNKNOWN6, QString("_Unknown")},
     {XScanEngine::RECORD_NAME_UNKNOWN7, QString("_Unknown")},
     {XScanEngine::RECORD_NAME_UNKNOWN8, QString("_Unknown")},
-    {XScanEngine::RECORD_NAME_UNKNOWN9, QString("_Unknown")}
-};
+    {XScanEngine::RECORD_NAME_UNKNOWN9, QString("_Unknown")}};
 
 bool _sortItems(const XScanEngine::SCANSTRUCT &v1, const XScanEngine::SCANSTRUCT &v2)
 {
