@@ -2074,13 +2074,6 @@ void XScanEngine::process()
 {
     XBinary::PDSTRUCT *pPdStruct = g_pPdStruct;
 
-    XBinary::PDSTRUCT pdStructEmpty = {};
-
-    if (!pPdStruct) {
-        pdStructEmpty = XBinary::createPdStruct();
-        pPdStruct = &pdStructEmpty;
-    }
-
     QElapsedTimer scanTimer;
     scanTimer.start();
 
