@@ -1482,9 +1482,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_IMAGE, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_IMAGE;
     } else if (stFT.contains(XBinary::FT_BINARY) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
-        if (bInit) pScanResult->ftInit = XBinary::FT_BINARY;
-    } else {
         XScanEngine::SCAN_RESULT _scanResultCOM = {};
 
         {
@@ -1508,246 +1505,106 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         pScanResult->listErrors.append(_scanResultCOM.listErrors);
         pScanResult->listDebugRecords.append(_scanResultCOM.listDebugRecords);
 
-        if (bInit) {
-            if (bIsCOM) {
-                pScanResult->ftInit = XBinary::FT_COM;
-            } else {
-                pScanResult->ftInit = XBinary::FT_BINARY;
-            }
-        }
+        pScanResult->ftInit = XBinary::FT_BINARY;
     }
 
     if (pScanOptions->bIsRecursiveScan) {
-        if (stFT.contains(XBinary::FT_PE32) || stFT.contains(XBinary::FT_PE64)) {
-            XPE pe(_pDevice);
+        QList<XBinary::FPART> listFileParts = XFormats::getFileParts(pScanResult->ftInit, _pDevice, false, -1, pPdStruct);
 
-            if (pe.isValid()) {
-                XBinary::_MEMORY_MAP memoryMap = pe.getMemoryMap(XBinary::MAPMODE_SECTIONS, pPdStruct);
+        qint32 nMaxCount = 20;
+        qint32 nCount = 0;
 
-                if (pe.isResourcesPresent()) {
-                    QList<XPE::RESOURCE_RECORD> listResources = pe.getResources(&memoryMap, 10000, pPdStruct);
+        qint32 nNumberOfFileParts = listFileParts.count();
 
-                    qint32 nNumberOfRecords = listResources.count();
-                    qint32 nMaxCount = 20;
-                    qint32 nCount = 0;
+        if (nNumberOfFileParts > 0) {
+            for (qint32 i = 0; i < nNumberOfFileParts; i++) {
+                XBinary::FPART filePart = listFileParts.at(i);
 
-                    qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
-                    XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
+                if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nOffset, filePart.nSize)) {
+                    bool bProcess = true;
 
-                    for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
-                        qint64 nResourceOffset = listResources.at(i).nOffset;
-                        qint64 nResourceSize = listResources.at(i).nSize;
-
-                        if (pe.checkOffsetSize(nResourceOffset, nResourceSize)) {
-                            QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, nResourceOffset, nResourceSize, true, pPdStruct);
-
-                            if (isScanable(_stFT)) {
-                                if (nCount < nMaxCount) {
-                                    XScanEngine::SCANID scanIdResource = scanIdMain;
-                                    scanIdResource.filePart = XBinary::FILEPART_RESOURCE;
-                                    scanIdResource.nOffset = nResourceOffset;
-                                    scanIdResource.nSize = nResourceSize;
-
-                                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                                    _options.fileType = XBinary::FT_UNKNOWN;
-                                    _options.bIsRecursiveScan = false;
-
-                                    scanProcess(_pDevice, pScanResult, nResourceOffset, nResourceSize, scanIdResource, &_options, false, pPdStruct);
-                                    nCount++;
-                                }
-                            }
-                        }
-
-                        XBinary::setPdStructCurrentIncrement(pPdStruct, _nFreeIndex);
+                    if (bProcess) {
+                        bProcess = (nCount < nMaxCount);
                     }
 
-                    XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
-                }
-
-                if (pe.isDebugPresent()) {
-                    QList<XPE_DEF::S_IMAGE_DEBUG_DIRECTORY> listDebug = pe.getDebugList(&memoryMap);
-
-                    qint32 nNumberOfRecords = listDebug.count();
-                    qint32 nMaxCount = 20;
-                    qint32 nCount = 0;
-
-                    qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
-                    XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
-
-                    for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
-                        qint64 nRecordOffset = listDebug.at(i).PointerToRawData;
-                        qint64 nRecordSize = listDebug.at(i).SizeOfData;
-                        quint32 nRecordType = listDebug.at(i).Type;
-
-                        if ((nRecordType == 0) || (nRecordType == 2)) {
-                            if (pe.checkOffsetSize(nRecordOffset, nRecordSize)) {
-                                if (nCount < nMaxCount) {
-                                    XScanEngine::SCANID scanIdDebug = scanIdMain;
-                                    scanIdDebug.filePart = XBinary::FILEPART_DEBUGDATA;
-                                    scanIdDebug.nOffset = nRecordOffset;
-                                    scanIdDebug.nSize = nRecordSize;
-
-                                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                                    _options.fileType = XBinary::FT_BINARY;
-                                    _options.bIsRecursiveScan = false;
-
-                                    scanProcess(_pDevice, pScanResult, nRecordOffset, nRecordSize, scanIdDebug, &_options, false, pPdStruct);
-
-                                    nCount++;
-                                }
-                            }
+                    if (bProcess) {
+                        if (filePart.filePart == XBinary::FILEPART_RESOURCE) {
+                            QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, filePart.nOffset, filePart.nSize, true, pPdStruct);
+                            bProcess = isScanable(_stFT);
                         }
-
-                        XBinary::setPdStructCurrentIncrement(pPdStruct, _nFreeIndex);
                     }
 
-                    XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
-                }
+                    if (bProcess) {
+                        XScanEngine::SCANID scanIdSub = scanIdMain;
+                        scanIdSub.filePart = filePart.filePart;
+                        scanIdSub.nOffset = filePart.nOffset;
+                        scanIdSub.nSize = filePart.nSize;
 
-                if (pe.isOverlayPresent(&memoryMap, pPdStruct)) {
-                    XScanEngine::SCANID scanIdOverlay = scanIdMain;
-                    scanIdOverlay.filePart = XBinary::FILEPART_OVERLAY;
-                    scanIdOverlay.nOffset = pe.getOverlayOffset(&memoryMap, pPdStruct);
-                    scanIdOverlay.nSize = pe.getOverlaySize(&memoryMap, pPdStruct);
+                        XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+                        _options.fileType = XBinary::FT_UNKNOWN;
+                        _options.bIsRecursiveScan = false;
 
-                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                    _options.fileType = XBinary::FT_UNKNOWN;
-                    _options.bIsRecursiveScan = false;
-
-                    scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
-                }
-            }
-            // } else if (stFT.contains(XBinary::FT_ELF32) || stFT.contains(XBinary::FT_ELF64)) {
-            //     XELF elf(_pDevice);
-
-            //     if (elf.isValid()) {
-            //         XBinary::_MEMORY_MAP memoryMap = elf.getMemoryMap(XBinary::MAPMODE_SEGMENTS, pPdStruct); // TODO use sections!
-
-            //         if (elf.isOverlayPresent(&memoryMap, pPdStruct)) {
-            //             XScanEngine::SCANID scanIdOverlay = scanIdMain;
-            //             scanIdOverlay.filePart = XBinary::FILEPART_OVERLAY;
-            //             scanIdOverlay.nOffset = elf.getOverlayOffset(&memoryMap, pPdStruct);
-            //             scanIdOverlay.nSize = elf.getOverlaySize(&memoryMap, pPdStruct);
-
-            //             XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-            //             _options.fileType = XBinary::FT_UNKNOWN;
-            //             _options.bIsRecursiveScan = false;
-
-            //             scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
-            //         }
-            //     }
-        } else if (stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX)) {
-            XLE le(_pDevice);
-
-            if (le.isValid()) {
-                XBinary::_MEMORY_MAP memoryMap = le.getMemoryMap(XBinary::MAPMODE_UNKNOWN, pPdStruct);
-
-                if (le.isOverlayPresent(&memoryMap, pPdStruct)) {
-                    XScanEngine::SCANID scanIdOverlay = scanIdMain;
-                    scanIdOverlay.filePart = XBinary::FILEPART_OVERLAY;
-                    scanIdOverlay.nOffset = le.getOverlayOffset(&memoryMap, pPdStruct);
-                    scanIdOverlay.nSize = le.getOverlaySize(&memoryMap, pPdStruct);
-
-                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                    _options.fileType = XBinary::FT_UNKNOWN;
-                    _options.bIsRecursiveScan = false;
-
-                    scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
-                }
-            }
-        } else if (stFT.contains(XBinary::FT_NE)) {
-            XNE ne(_pDevice);
-
-            if (ne.isValid()) {
-                XBinary::_MEMORY_MAP memoryMap = ne.getMemoryMap(XBinary::MAPMODE_UNKNOWN, pPdStruct);
-
-                if (ne.isOverlayPresent(&memoryMap, pPdStruct)) {
-                    XScanEngine::SCANID scanIdOverlay = scanIdMain;
-                    scanIdOverlay.filePart = XBinary::FILEPART_OVERLAY;
-                    scanIdOverlay.nOffset = ne.getOverlayOffset(&memoryMap, pPdStruct);
-                    scanIdOverlay.nSize = ne.getOverlaySize(&memoryMap, pPdStruct);
-
-                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                    _options.fileType = XBinary::FT_UNKNOWN;
-                    _options.bIsRecursiveScan = false;
-
-                    scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
-                }
-            }
-        } else if (stFT.contains(XBinary::FT_MSDOS)) {
-            XMSDOS msdos(_pDevice);
-
-            if (msdos.isValid()) {
-                XBinary::_MEMORY_MAP memoryMap = msdos.getMemoryMap(XBinary::MAPMODE_UNKNOWN, pPdStruct);
-
-                if (msdos.isOverlayPresent(&memoryMap, pPdStruct)) {
-                    XScanEngine::SCANID scanIdOverlay = scanIdMain;
-                    scanIdOverlay.filePart = XBinary::FILEPART_OVERLAY;
-                    scanIdOverlay.nOffset = msdos.getOverlayOffset(&memoryMap, pPdStruct);
-                    scanIdOverlay.nSize = msdos.getOverlaySize(&memoryMap, pPdStruct);
-
-                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                    _options.fileType = XBinary::FT_UNKNOWN;
-                    _options.bIsRecursiveScan = false;
-
-                    scanProcess(_pDevice, pScanResult, scanIdOverlay.nOffset, scanIdOverlay.nSize, scanIdOverlay, &_options, false, pPdStruct);
+                        scanProcess(_pDevice, pScanResult, filePart.nOffset, filePart.nSize, scanIdSub, &_options, false, pPdStruct);
+                        nCount++;
+                    }
                 }
             }
         } else {
             QList<XArchive::RECORD> listRecords;
             XBinary::FT _fileType = XBinary::FT_UNKNOWN;
 
-            if (stFTOriginal.contains(XBinary::FT_ARCHIVE) || stFTOriginal.contains(XBinary::FT_DOS16M) || stFTOriginal.contains(XBinary::FT_DOS4G)) {
+            if (stFTOriginal.contains(XBinary::FT_ARCHIVE)) {
                 _fileType = XBinary::_getPrefFileType(&stFT);
                 listRecords = XArchives::getRecords(_pDevice, _fileType, 20000, pPdStruct);
-            } else {
-                if (pScanOptions->bIsDeepScan) {
-                    XExtractor::OPTIONS options = {};
-                    options.nLimit = 20;
-                    options.bHeuristicScan = true;
-                    options.fileType = XBinary::FT_BINARY;
-                    options.listFileTypes.append(XBinary::FT_PE);
-                    options.listFileTypes.append(XBinary::FT_ELF);
-                    options.listFileTypes.append(XBinary::FT_MACHO);
-                    options.listFileTypes.append(XBinary::FT_PDF);
-                    options.listFileTypes.append(XBinary::FT_ZIP);
-                    options.listFileTypes.append(XBinary::FT_CFBF);
-                    options.listFileTypes.append(XBinary::FT_RAR);
-                    // options.listFileTypes.append(XBinary::FT_GZIP);
-                    // options.listFileTypes.append(XBinary::FT_ZLIB);
-                    options.listFileTypes.append(XBinary::FT_7Z);
-                    options.listFileTypes.append(XBinary::FT_CAB);
-                    options.listFileTypes.append(XBinary::FT_AR);
-
-                    QVector<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
-                    qint32 nNumberOfRecords = listExtractRecords.count();
-
-                    qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
-                    XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
-
-                    for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
-                        XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listExtractRecords.at(i).sString);
-
-                        if (listExtractRecords.at(i).nOffset != 0) {
-                            XScanEngine::SCANID scanIdRegion = scanIdMain;
-                            scanIdRegion.filePart = XBinary::FILEPART_REGION;
-                            scanIdRegion.fileType = listExtractRecords.at(i).fileType;
-                            scanIdRegion.nOffset = listExtractRecords.at(i).nOffset;
-                            scanIdRegion.nSize = listExtractRecords.at(i).nSize;
-
-                            XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                            _options.fileType = XBinary::FT_UNKNOWN;
-                            _options.bIsRecursiveScan = false;
-
-                            scanProcess(_pDevice, pScanResult, listExtractRecords.at(i).nOffset, listExtractRecords.at(i).nSize, scanIdRegion, &_options, false,
-                                        pPdStruct);
-                        }
-                        XBinary::setPdStructCurrent(pPdStruct, _nFreeIndex, i);
-                    }
-
-                    XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
-                }
             }
+            // else {
+            //     if (pScanOptions->bIsDeepScan) {
+            //         XExtractor::OPTIONS options = {};
+            //         options.nLimit = 20;
+            //         options.bHeuristicScan = true;
+            //         options.fileType = XBinary::FT_BINARY;
+            //         options.listFileTypes.append(XBinary::FT_PE);
+            //         options.listFileTypes.append(XBinary::FT_ELF);
+            //         options.listFileTypes.append(XBinary::FT_MACHO);
+            //         options.listFileTypes.append(XBinary::FT_PDF);
+            //         options.listFileTypes.append(XBinary::FT_ZIP);
+            //         options.listFileTypes.append(XBinary::FT_CFBF);
+            //         options.listFileTypes.append(XBinary::FT_RAR);
+            //         // options.listFileTypes.append(XBinary::FT_GZIP);
+            //         // options.listFileTypes.append(XBinary::FT_ZLIB);
+            //         options.listFileTypes.append(XBinary::FT_7Z);
+            //         options.listFileTypes.append(XBinary::FT_CAB);
+            //         options.listFileTypes.append(XBinary::FT_AR);
+
+            //         QVector<XExtractor::RECORD> listExtractRecords = XExtractor::scanDevice(_pDevice, options, pPdStruct);
+            //         qint32 nNumberOfRecords = listExtractRecords.count();
+
+            //         qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
+            //         XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
+
+            //         for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+            //             XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listExtractRecords.at(i).sString);
+
+            //             if (listExtractRecords.at(i).nOffset != 0) {
+            //                 XScanEngine::SCANID scanIdRegion = scanIdMain;
+            //                 scanIdRegion.filePart = XBinary::FILEPART_REGION;
+            //                 scanIdRegion.fileType = listExtractRecords.at(i).fileType;
+            //                 scanIdRegion.nOffset = listExtractRecords.at(i).nOffset;
+            //                 scanIdRegion.nSize = listExtractRecords.at(i).nSize;
+
+            //                 XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+            //                 _options.fileType = XBinary::FT_UNKNOWN;
+            //                 _options.bIsRecursiveScan = false;
+
+            //                 scanProcess(_pDevice, pScanResult, listExtractRecords.at(i).nOffset, listExtractRecords.at(i).nSize, scanIdRegion, &_options, false,
+            //                             pPdStruct);
+            //             }
+            //             XBinary::setPdStructCurrent(pPdStruct, _nFreeIndex, i);
+            //         }
+
+            //         XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
+            //     }
+            // }
 
             if (listRecords.count()) {
                 qint32 nNumberOfRecords = listRecords.count();
