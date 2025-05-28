@@ -1472,8 +1472,32 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     } else if (stFT.contains(XBinary::FT_JPEG)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JPEG, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_JPEG;
-    } else if (stFT.contains(XBinary::FT_COM) && (stFT.size() == 1)) {
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_COM, pScanOptions, true, pPdStruct);
+    } else if (stFT.contains(XBinary::FT_COM)) {
+        XScanEngine::SCAN_RESULT _scanResultCOM = {};
+        XScanEngine::SCAN_RESULT _scanResultBinary = {};
+
+        if (pScanOptions->bIsDeepScan) {
+            _processDetect(&scanIdMain, &_scanResultBinary, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, false, pPdStruct);
+        }
+
+        bool bIsBinary = _scanResultBinary.listRecords.count();
+
+        {
+            XCOM xcom(_pDevice);
+
+            if (xcom.isValid(pPdStruct)) {
+                _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, pScanOptions, !bIsBinary, pPdStruct);
+            }
+        }
+
+        pScanResult->listRecords.append(_scanResultBinary.listRecords);
+        pScanResult->listErrors.append(_scanResultBinary.listErrors);
+        pScanResult->listDebugRecords.append(_scanResultBinary.listDebugRecords);
+
+        pScanResult->listRecords.append(_scanResultCOM.listRecords);
+        pScanResult->listErrors.append(_scanResultCOM.listErrors);
+        pScanResult->listDebugRecords.append(_scanResultCOM.listDebugRecords);
+
         if (bInit) pScanResult->ftInit = XBinary::FT_COM;
     } else if (stFT.contains(XBinary::FT_ARCHIVE) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ARCHIVE, pScanOptions, true, pPdStruct);
@@ -1481,20 +1505,23 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     } else if (stFT.contains(XBinary::FT_IMAGE) && (stFT.size() == 1)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_IMAGE, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_IMAGE;
-    } else if (stFT.contains(XBinary::FT_BINARY) && (stFT.size() == 1)) {
+    } else {
         XScanEngine::SCAN_RESULT _scanResultCOM = {};
+        XScanEngine::SCAN_RESULT _scanResultBinary = {};
 
-        {
+        if (pScanOptions->bIsDeepScan) {
             XCOM xcom(_pDevice);
 
             if (xcom.isValid(pPdStruct)) {
+                XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+                _options.bIsVerbose = false; // do not show Operation System
+
                 _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, pScanOptions, false, pPdStruct);
             }
         }
 
         bool bIsCOM = _scanResultCOM.listRecords.count();
 
-        XScanEngine::SCAN_RESULT _scanResultBinary = {};
         _processDetect(&scanIdMain, &_scanResultBinary, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, !bIsCOM, pPdStruct);
 
         pScanResult->listRecords.append(_scanResultBinary.listRecords);
