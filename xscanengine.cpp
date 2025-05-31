@@ -1514,7 +1514,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
             if (xcom.isValid(pPdStruct)) {
                 XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                _options.bIsVerbose = false; // do not show Operation System
+                _options.bIsVerbose = false;  // do not show Operation System
 
                 _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, &_options, false, pPdStruct);
             }
