@@ -1555,7 +1555,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     }
 
                     if (bProcess) {
-                        if (filePart.filePart == XBinary::FILEPART_RESOURCE) {
+                        if ((filePart.filePart == XBinary::FILEPART_RESOURCE) || (filePart.filePart == XBinary::FILEPART_STREAM)) {
                             QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, filePart.nOffset, filePart.nSize, true, pPdStruct);
                             bProcess = isScanable(_stFT);
                         }
