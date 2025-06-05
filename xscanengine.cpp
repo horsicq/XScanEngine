@@ -1536,47 +1536,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     }
 
     if (pScanOptions->bIsRecursiveScan) {
-        QList<XBinary::FPART> listFileParts = XFormats::getFileParts(pScanResult->ftInit, _pDevice, false, -1, pPdStruct);
-
-        qint32 nMaxCount = 20;
-        qint32 nCount = 0;
-
-        qint32 nNumberOfFileParts = listFileParts.count();
-
-        if (nNumberOfFileParts > 0) {
-            for (qint32 i = 0; i < nNumberOfFileParts; i++) {
-                XBinary::FPART filePart = listFileParts.at(i);
-
-                if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nOffset, filePart.nSize)) {
-                    bool bProcess = true;
-
-                    if (bProcess) {
-                        bProcess = (nCount < nMaxCount);
-                    }
-
-                    if (bProcess) {
-                        if ((filePart.filePart == XBinary::FILEPART_RESOURCE) || (filePart.filePart == XBinary::FILEPART_STREAM)) {
-                            QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, filePart.nOffset, filePart.nSize, true, pPdStruct);
-                            bProcess = isScanable(_stFT);
-                        }
-                    }
-
-                    if (bProcess) {
-                        XScanEngine::SCANID scanIdSub = scanIdMain;
-                        scanIdSub.filePart = filePart.filePart;
-                        scanIdSub.nOffset = filePart.nOffset;
-                        scanIdSub.nSize = filePart.nSize;
-
-                        XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                        _options.fileType = XBinary::FT_UNKNOWN;
-                        _options.bIsRecursiveScan = false;
-
-                        scanProcess(_pDevice, pScanResult, filePart.nOffset, filePart.nSize, scanIdSub, &_options, false, pPdStruct);
-                        nCount++;
-                    }
-                }
-            }
-        } else {
+        {
             QList<XArchive::RECORD> listRecords;
             XBinary::FT _fileType = XBinary::FT_UNKNOWN;
 
@@ -1738,6 +1698,54 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 }
 
                 XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
+            }
+        }
+
+        {
+            QList<XBinary::FPART> listFileParts = XFormats::getFileParts(pScanResult->ftInit, _pDevice, false, -1, pPdStruct);
+
+            qint32 nMaxCount = 20;
+            qint32 nCount = 0;
+
+            qint32 nNumberOfFileParts = listFileParts.count();
+
+            if (nNumberOfFileParts > 0) {
+                for (qint32 i = 0; i < nNumberOfFileParts; i++) {
+                    XBinary::FPART filePart = listFileParts.at(i);
+
+                    if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nOffset, filePart.nSize)) {
+                        bool bProcess = true;
+
+                        if (bProcess) {
+                            bProcess = (nCount < nMaxCount);
+                        }
+
+                        if (bProcess) {
+                            if ((filePart.filePart == XBinary::FILEPART_RESOURCE) || (filePart.filePart == XBinary::FILEPART_STREAM)) {
+                                QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, filePart.nOffset, filePart.nSize, true, pPdStruct);
+                                bProcess = isScanable(_stFT);
+                            }
+                        }
+
+                        if (filePart.filePart == XBinary::FILEPART_OVERLAY) {
+                            bProcess = true; // always scan overlay
+                        }
+
+                        if (bProcess) {
+                            XScanEngine::SCANID scanIdSub = scanIdMain;
+                            scanIdSub.filePart = filePart.filePart;
+                            scanIdSub.nOffset = filePart.nOffset;
+                            scanIdSub.nSize = filePart.nSize;
+
+                            XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+                            _options.fileType = XBinary::FT_UNKNOWN;
+                            _options.bIsRecursiveScan = false;
+
+                            scanProcess(_pDevice, pScanResult, filePart.nOffset, filePart.nSize, scanIdSub, &_options, false, pPdStruct);
+                            nCount++;
+                        }
+                    }
+                }
             }
         }
     }
