@@ -1728,7 +1728,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                         }
 
                         if (filePart.filePart == XBinary::FILEPART_OVERLAY) {
-                            bProcess = true; // always scan overlay
+                            bProcess = true;  // always scan overlay
                         }
 
                         if (bProcess) {
