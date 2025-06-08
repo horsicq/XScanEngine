@@ -886,11 +886,11 @@ bool _sortItems(const XScanEngine::SCANSTRUCT &v1, const XScanEngine::SCANSTRUCT
     return bResult;
 }
 
-XScanEngine::XScanEngine(QObject *pParent) : QObject(pParent)
+XScanEngine::XScanEngine(QObject *pParent) : XThreadObject(pParent)
 {
 }
 
-XScanEngine::XScanEngine(const XScanEngine &other) : QObject(other.parent())
+XScanEngine::XScanEngine(const XScanEngine &other) : XThreadObject(other.parent())
 {
     this->g_sFileName = other.g_sFileName;
     this->g_sDirectoryName = other.g_sDirectoryName;

@@ -26,11 +26,12 @@
 #include "xoptions.h"
 #include <QFutureWatcher>
 #include <QLoggingCategory>
+#include "xthreadobject.h"
 
 typedef bool (*SCAN_ENGINE_CALLBACK)(const QString &sCurrentSignature, qint32 nNumberOfSignatures, qint32 nCurrentIndex, void *pUserData);
 
 // TODO pOptions -> pScanOptions
-class XScanEngine : public QObject {
+class XScanEngine : public XThreadObject {
     Q_OBJECT
 
     enum SCAN_TYPE {
@@ -1078,8 +1079,7 @@ public:
     static quint64 getDatabasesFromGlobalOptions(XOptions *pGlobalOptions);
     static void setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases);
 
-public slots:
-    void process();
+    virtual void process();
 
 protected:
     virtual void _processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions,
@@ -1089,13 +1089,8 @@ protected:
     void _infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessage);
 
 signals:
-    // TODO error and info signals !!!
     void scanFileStarted(const QString &sFileName);
-    void completed(qint64 nElapsedTime);
     void scanResult(const XScanEngine::SCAN_RESULT &scanResult);
-    void errorMessage(const QString &sErrorMessage);
-    void warningMessage(const QString &sWarningMessage);
-    void infoMessage(const QString &sInfoMessage);
 
 private:
     QString g_sFileName;
