@@ -1655,7 +1655,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                             if (XArchives::decompressToDevice(_pDevice, &_record, &buffer, pPdStruct)) {
                                                 scanProcess(&buffer, pScanResult, 0, buffer.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
                                             }
-
+                                        #ifdef QT_DEBUG
+                                            XBinary::dumpToFile("/home/hors/outtmp.bin", buffer.data().data(), _nUncompressedSize);
+                                        #endif
                                             buffer.close();
                                         }
 
