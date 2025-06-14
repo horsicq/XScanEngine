@@ -1602,7 +1602,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 bool bScanAll = false;
                 bool bShowFileName = true;
 
-                if (((_fileType == XBinary::FT_ZLIB) || (_fileType == XBinary::FT_BZIP2) || (_fileType == XBinary::FT_LHA) || (_fileType == XBinary::FT_GZIP) || (_fileType == XBinary::FT_SZDD)) && (nNumberOfRecords == 1)) {
+                if (((_fileType == XBinary::FT_ZLIB) || (_fileType == XBinary::FT_BZIP2) || (_fileType == XBinary::FT_LHA) || (_fileType == XBinary::FT_GZIP) ||
+                     (_fileType == XBinary::FT_SZDD)) &&
+                    (nNumberOfRecords == 1)) {
                     bScanAll = true;
                     bShowFileName = false;
                 } else if ((_fileType == XBinary::FT_MACHOFAT) || (_fileType == XBinary::FT_DOS16M) || (_fileType == XBinary::FT_DOS4G)) {
@@ -1655,9 +1657,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                             if (XArchives::decompressToDevice(_pDevice, &_record, &buffer, pPdStruct)) {
                                                 scanProcess(&buffer, pScanResult, 0, buffer.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
                                             }
-                                        #ifdef QT_DEBUG
+#ifdef QT_DEBUG
                                             XBinary::dumpToFile("/home/hors/outtmp.bin", buffer.data().data(), _nUncompressedSize);
-                                        #endif
+#endif
                                             buffer.close();
                                         }
 
