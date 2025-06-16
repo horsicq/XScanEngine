@@ -1234,7 +1234,7 @@ bool XScanEngine::isScanable(const QSet<XBinary::FT> &stFT)
 {
     return (stFT.contains(XBinary::FT_MSDOS) || stFT.contains(XBinary::FT_NE) || stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX) ||
             stFT.contains(XBinary::FT_PE) || stFT.contains(XBinary::FT_ELF) || stFT.contains(XBinary::FT_MACHO) || stFT.contains(XBinary::FT_DEX) ||
-            stFT.contains(XBinary::FT_ARCHIVE));
+            stFT.contains(XBinary::FT_PDF) || stFT.contains(XBinary::FT_ARCHIVE));
 }
 
 XScanEngine::SCAN_RESULT XScanEngine::scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
@@ -1603,7 +1603,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 bool bShowFileName = true;
 
                 if (((_fileType == XBinary::FT_ZLIB) || (_fileType == XBinary::FT_BZIP2) || (_fileType == XBinary::FT_LHA) || (_fileType == XBinary::FT_GZIP) ||
-                     (_fileType == XBinary::FT_SZDD)) &&
+                     (_fileType == XBinary::FT_SZDD) || (_fileType == XBinary::FT_XZ)) &&
                     (nNumberOfRecords == 1)) {
                     bScanAll = true;
                     bShowFileName = false;
