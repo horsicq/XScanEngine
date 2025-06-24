@@ -1466,8 +1466,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_CFBF, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_CFBF;
     } else if (stFT.contains(XBinary::FT_RAR)) {
-        // _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_RAR, pScanOptions, true, pPdStruct);
-        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, true, pPdStruct);
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_RAR, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_RAR;
     } else if (stFT.contains(XBinary::FT_JPEG)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JPEG, pScanOptions, true, pPdStruct);
