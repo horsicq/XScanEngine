@@ -1969,9 +1969,6 @@ void XScanEngine::process()
 {
     XBinary::PDSTRUCT *pPdStruct = g_pPdStruct;
 
-    QElapsedTimer scanTimer;
-    scanTimer.start();
-
     qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
 
     if (g_scanType == SCAN_TYPE_FILE) {
@@ -2028,8 +2025,6 @@ void XScanEngine::process()
     }
 
     XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
-
-    emit completed(scanTimer.elapsed());
 }
 
 void XScanEngine::_errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMessage)
