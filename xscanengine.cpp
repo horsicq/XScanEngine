@@ -1705,7 +1705,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         }
 
         {
-            QList<XBinary::FPART> listFileParts = XFormats::getFileParts(pScanResult->ftInit, _pDevice, false, -1, pPdStruct);
+            QList<XBinary::FPART> listFileParts = XFormats::getFileParts(pScanResult->ftInit, _pDevice, XBinary::FILEPART_ALL, 20000, false, -1, pPdStruct);
 
             qint32 nMaxCount = 20;
             qint32 nCount = 0;
@@ -1716,7 +1716,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                 for (qint32 i = 0; i < nNumberOfFileParts; i++) {
                     XBinary::FPART filePart = listFileParts.at(i);
 
-                    if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nOffset, filePart.nSize)) {
+                    if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
                         bool bProcess = true;
 
                         if (bProcess) {
@@ -1725,7 +1725,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
                         if (bProcess) {
                             if ((filePart.filePart == XBinary::FILEPART_RESOURCE) || (filePart.filePart == XBinary::FILEPART_STREAM)) {
-                                QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, filePart.nOffset, filePart.nSize, true, pPdStruct);
+                                QSet<XBinary::FT> _stFT = XFormats::getFileTypes(_pDevice, filePart.nFileOffset, filePart.nFileSize, true, pPdStruct);
                                 bProcess = isScanable(_stFT);
                             }
                         }
@@ -1737,14 +1737,14 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                         if (bProcess) {
                             XScanEngine::SCANID scanIdSub = scanIdMain;
                             scanIdSub.filePart = filePart.filePart;
-                            scanIdSub.nOffset = filePart.nOffset;
-                            scanIdSub.nSize = filePart.nSize;
+                            scanIdSub.nOffset = filePart.nFileOffset;
+                            scanIdSub.nSize = filePart.nFileSize;
 
                             XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                             _options.fileType = XBinary::FT_UNKNOWN;
                             _options.bIsRecursiveScan = false;
 
-                            scanProcess(_pDevice, pScanResult, filePart.nOffset, filePart.nSize, scanIdSub, &_options, false, pPdStruct);
+                            scanProcess(_pDevice, pScanResult, filePart.nFileOffset, filePart.nFileSize, scanIdSub, &_options, false, pPdStruct);
                             nCount++;
                         }
                     }
