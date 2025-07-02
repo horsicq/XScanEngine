@@ -1508,7 +1508,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         XScanEngine::SCAN_RESULT _scanResultCOM = {};
         XScanEngine::SCAN_RESULT _scanResultBinary = {};
 
-        if (pScanOptions->bIsDeepScan) {
+        {
             XCOM xcom(_pDevice);
 
             if (xcom.isValid(pPdStruct)) {
@@ -1717,7 +1717,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                     XBinary::FPART filePart = listFileParts.at(i);
 
                     if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
-                        bool bProcess = true;
+                        bool bProcess = false;
 
                         if (bProcess) {
                             bProcess = (nCount < nMaxCount);
@@ -1731,6 +1731,10 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                         }
 
                         if (filePart.filePart == XBinary::FILEPART_OVERLAY) {
+                            bProcess = true;  // always scan overlay
+                        }
+
+                        if (filePart.filePart == XBinary::FILEPART_DEBUGDATA) {
                             bProcess = true;  // always scan overlay
                         }
 
