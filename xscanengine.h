@@ -22,7 +22,6 @@
 #define XSCANENGINE_H
 
 #include "xformats.h"
-#include "xextractor.h"
 #include "xoptions.h"
 #include <QFutureWatcher>
 #include <QLoggingCategory>
