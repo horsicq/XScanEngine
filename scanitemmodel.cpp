@@ -192,16 +192,30 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
             QColor colText;
 
             if (g_scanOptions.bIsHighlight) {
-                if ((pItem->scanStruct().globalColor == Qt::transparent) || (pItem->scanStruct().globalColor == Qt::color0)) {
+                if ((pItem->scanStruct().globalColorRecord.colorBackground == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorBackground == Qt::color0)) {
                     colText = QApplication::palette().text().color();
                 } else {
-                    colText = QColor(pItem->scanStruct().globalColor);
+                    colText = QColor(pItem->scanStruct().globalColorRecord.colorMain);
                 }
             } else {
                 colText = QApplication::palette().text().color();
             }
 
             result = QVariant(colText);
+        } else if (nRole == Qt::BackgroundRole) {
+            QColor colBackground;
+
+            if (g_scanOptions.bIsHighlight) {
+                if ((pItem->scanStruct().globalColorRecord.colorBackground == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorBackground == Qt::color0)) {
+                    colBackground = QApplication::palette().background().color();
+                } else {
+                    colBackground = QColor(pItem->scanStruct().globalColorRecord.colorBackground);
+                }
+            } else {
+                colBackground = QApplication::palette().background().color();
+            }
+
+            result = QVariant(colBackground);
         }
 #endif
     }
@@ -464,9 +478,9 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
     Q_UNUSED(pItem)
 #else
     if (g_scanOptions.bIsHighlight) {
-        XOptions::printConsole(pItem->data(0).toString(), pItem->scanStruct().globalColor);
+        XOptions::printConsole(pItem->data(0).toString(), pItem->scanStruct().globalColorRecord.colorMain, pItem->scanStruct().globalColorRecord.colorBackground);
     } else {
-        XOptions::printConsole(pItem->data(0).toString(), Qt::transparent);
+        XOptions::printConsole(pItem->data(0).toString(), Qt::transparent, Qt::transparent);
     }
 #endif
 }

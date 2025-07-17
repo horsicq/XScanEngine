@@ -936,7 +936,7 @@ public:
         QString varInfo;   // Signature in die scripts
         QString varInfo2;  // Signature File in die scripts
         // QString sResult;   // TODO Check
-        Qt::GlobalColor globalColor;
+        XOptions::GLOBAL_COLOR_RECORD globalColorRecord;
         qint32 nPrio;
         bool bIsProtection;
     };
@@ -1046,7 +1046,7 @@ public:
     static SCANSTRUCT createHeaderScanStruct(const SCANSTRUCT *pScanStruct);
     static QString createResultStringEx(XScanEngine::SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct);
     static QString createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
-    static Qt::GlobalColor typeToColor(const QString &sType);
+    static XOptions::GLOBAL_COLOR_RECORD typeToGlobalColorRecord(const QString &sType);
     static qint32 typeToPrio(const QString &sType);
     static QString translateType(const QString &sType);
     static bool isHeurType(const QString &sType);

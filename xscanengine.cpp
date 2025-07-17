@@ -1005,7 +1005,8 @@ XScanEngine::SCANSTRUCT XScanEngine::createHeaderScanStruct(const SCANSTRUCT *pS
     result.sInfo = "";
     result.varInfo.clear();
     result.varInfo2.clear();
-    result.globalColor = Qt::transparent;
+    result.globalColorRecord.colorMain = Qt::transparent;
+    result.globalColorRecord.colorBackground = Qt::transparent;
 
     return result;
 }
@@ -1071,36 +1072,40 @@ QString XScanEngine::createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions
     return sResult;
 }
 
-Qt::GlobalColor XScanEngine::typeToColor(const QString &sType)
+XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString &sType)
 {
-    QString _sType = sType;
-    Qt::GlobalColor result = Qt::transparent;
+    XOptions::GLOBAL_COLOR_RECORD result = {};
+    result.colorMain = Qt::transparent;
+    result.colorBackground = Qt::transparent;
 
+    QString _sType = sType;
     _sType = _sType.toLower().remove("~");
     _sType = _sType.toLower().remove("!");
 
     // TODO more
     if ((_sType == "installer") || (_sType == "sfx") || (_sType == "archive")) {
-        result = Qt::blue;
+        result.colorMain = Qt::blue;
     } else if (isProtection(_sType)) {
-        result = Qt::red;
+        result.colorMain = Qt::red;
     } else if ((_sType == "pe tool") || (_sType == "apk tool")) {
-        result = Qt::green;
+        result.colorMain = Qt::green;
     } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
-        result = Qt::darkYellow;
+        result.colorMain = Qt::darkYellow;
     } else if (_sType == "format") {
-        result = Qt::darkGreen;
+        result.colorMain = Qt::darkGreen;
     } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
-        result = Qt::darkMagenta;
+        result.colorMain = Qt::darkMagenta;
     } else if (_sType == "language") {
-        result = Qt::darkCyan;
-    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware") || (_sType == "corrupted data") || (_sType == "personal data") ||
-               (_sType == "author")) {
-        result = Qt::darkRed;
+        result.colorMain = Qt::darkCyan;
+    } else if ((_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author")) {
+        result.colorMain = Qt::darkRed;
+    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware")) {
+        result.colorMain = Qt::white;
+        result.colorBackground = Qt::darkRed;
     } else if ((_sType == "debug") || (_sType == "debug data")) {
-        result = Qt::darkBlue;
+        result.colorMain = Qt::darkBlue;
     } else {
-        result = Qt::transparent;
+        result.colorMain = Qt::transparent;
     }
 
     return result;
