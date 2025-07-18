@@ -207,12 +207,12 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
 
             if (g_scanOptions.bIsHighlight) {
                 if ((pItem->scanStruct().globalColorRecord.colorBackground == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorBackground == Qt::color0)) {
-                    colBackground = QApplication::palette().background().color();
+                    colBackground = QApplication::palette().color(QPalette::Window);
                 } else {
                     colBackground = QColor(pItem->scanStruct().globalColorRecord.colorBackground);
                 }
             } else {
-                colBackground = QApplication::palette().background().color();
+                colBackground = QApplication::palette().color(QPalette::Window);
             }
 
             result = QVariant(colBackground);
