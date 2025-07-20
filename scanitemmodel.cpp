@@ -192,7 +192,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
             QColor colText;
 
             if (g_scanOptions.bIsHighlight) {
-                if ((pItem->scanStruct().globalColorRecord.colorBackground == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorBackground == Qt::color0)) {
+                if ((pItem->scanStruct().globalColorRecord.colorMain == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorMain == Qt::color0)) {
                     colText = QApplication::palette().text().color();
                 } else {
                     colText = QColor(pItem->scanStruct().globalColorRecord.colorMain);
