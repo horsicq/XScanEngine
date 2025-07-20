@@ -189,33 +189,25 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
         }
 #ifdef QT_GUI_LIB
         else if (nRole == Qt::ForegroundRole) {
-            QColor colText;
-
             if (g_scanOptions.bIsHighlight) {
                 if ((pItem->scanStruct().globalColorRecord.colorMain == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorMain == Qt::color0)) {
-                    colText = QApplication::palette().text().color();
+                    result = QVariant();
                 } else {
-                    colText = QColor(pItem->scanStruct().globalColorRecord.colorMain);
+                    result = QVariant(QColor(pItem->scanStruct().globalColorRecord.colorMain));
                 }
             } else {
-                colText = QApplication::palette().text().color();
+                result = QVariant();
             }
-
-            result = QVariant(colText);
         } else if (nRole == Qt::BackgroundRole) {
-            QColor colBackground;
-
             if (g_scanOptions.bIsHighlight) {
                 if ((pItem->scanStruct().globalColorRecord.colorBackground == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorBackground == Qt::color0)) {
-                    colBackground = QApplication::palette().color(QPalette::Window);
+                    result = QVariant();
                 } else {
-                    colBackground = QColor(pItem->scanStruct().globalColorRecord.colorBackground);
+                    result = QVariant(QColor(pItem->scanStruct().globalColorRecord.colorBackground));
                 }
             } else {
-                colBackground = QApplication::palette().color(QPalette::Window);
+                result = QVariant();
             }
-
-            result = QVariant(colBackground);
         }
 #endif
     }
