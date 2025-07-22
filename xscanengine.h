@@ -21,6 +21,33 @@
 #ifndef XSCANENGINE_H
 #define XSCANENGINE_H
 
+#include "binary_script.h"
+#include "com_script.h"
+#include "elf_script.h"
+#include "le_script.h"
+#include "lx_script.h"
+#include "mach_script.h"
+#include "msdos_script.h"
+#include "ne_script.h"
+#include "pe_script.h"
+#include "archive_script.h"
+#include "zip_script.h"
+#include "jar_script.h"
+#include "apk_script.h"
+#include "ipa_script.h"
+#include "dex_script.h"
+#include "npm_script.h"
+#include "rar_script.h"
+#include "machofat_script.h"
+#include "amiga_script.h"
+#include "dos16m_script.h"
+#include "dos4g_script.h"
+#include "javaclass_script.h"
+#include "pdf_script.h"
+#include "cfbf_script.h"
+#include "image_script.h"
+#include "jpeg_script.h"
+
 #include "xformats.h"
 #include "xoptions.h"
 #include <QFutureWatcher>
