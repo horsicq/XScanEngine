@@ -465,10 +465,10 @@ bool PE_Script::isExportFunctionPresent(const QString &sFunctionName)
     return XBinary::isStringInListPresent(&g_listExportFunctionNameStrings, sFunctionName, getPdStruct());
 }
 
-bool PE_Script::isExportFunctionPresentExp(const QString &sFunctionName)
-{
-    return XBinary::isStringInListPresentExp(&g_listExportFunctionNameStrings, sFunctionName, getPdStruct());
-}
+// bool PE_Script::isExportFunctionPresentExp(const QString &sFunctionName)
+// {
+//     return XBinary::isStringInListPresentExp(&g_listExportFunctionNameStrings, sFunctionName, getPdStruct());
+// }
 
 qint32 PE_Script::getNumberOfExportFunctions()
 {
