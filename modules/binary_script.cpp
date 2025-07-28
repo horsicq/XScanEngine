@@ -999,7 +999,7 @@ QList<QVariant> Binary_Script::readBytes(qint64 nOffset, qint64 nSize, bool bRep
     qint32 _nSize = baData.size();
     listResult.reserve(_nSize);
 
-    for (qint32 i = 0; i < _nSize; i++) {
+    for (qint32 i = 0; (i < _nSize) && XBinary::isPdStructNotCanceled(g_pPdStruct); i++) {
         if (bReplaceZeroWithSpace && baData.at(i) == 0) {
             listResult.append(32);
         } else {
@@ -1007,6 +1007,59 @@ QList<QVariant> Binary_Script::readBytes(qint64 nOffset, qint64 nSize, bool bRep
             listResult.append(nRecord);
         }
     }
+
+    return listResult;
+}
+
+QList<QVariant> Binary_Script::decompressBytes(qint64 nOffset, qint64 nSize, QString sCompressionMethod)
+{
+    QList<QVariant> listResult;
+
+    XBinary::COMPRESS_METHOD compressionMethod = XBinary::ftStringToCompressMethod(sCompressionMethod);
+
+    if (compressionMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
+        QByteArray baData = XDecompress().decomressToByteArray(g_pBinary->getDevice(), nOffset, nSize, compressionMethod, g_pPdStruct);
+        qint32 _nSize = baData.size();
+        listResult.reserve(_nSize);
+
+        for (qint32 i = 0; (i < _nSize) && XBinary::isPdStructNotCanceled(g_pPdStruct); i++) {
+            quint32 nRecord = (quint8)(baData.at(i));
+            listResult.append(nRecord);
+        }
+    } else {
+        emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method"), sCompressionMethod));
+    }
+
+    return listResult;
+}
+
+qint64 Binary_Script::getCompressedDataSize(qint64 nOffset, qint64 nSize, QString sCompressionMethod)
+{
+    qint64 nResult = 0;
+
+    XBinary::COMPRESS_METHOD compressionMethod = XBinary::ftStringToCompressMethod(sCompressionMethod);
+
+    if (compressionMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
+        nResult = XDecompress().getCompressedDataSize(g_pBinary->getDevice(), nOffset, nSize, compressionMethod, g_pPdStruct);
+    } else {
+        emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method"), sCompressionMethod));
+    }
+
+    return nResult;
+
+}
+
+QList<QString> Binary_Script::getListOfCompressionMethods()
+{
+    QList<QString> listResult;
+
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_STORE));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_BZIP2));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_LZMA));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT214_8));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT214_16));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT215_8));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT215_16));
 
     return listResult;
 }

@@ -22,6 +22,7 @@
 #define BINARY_SCRIPT_H
 
 #include "xformats.h"
+#include "xdecompress.h"
 #include "xdisasmcore.h"
 
 class Binary_Script : public QObject {
@@ -161,6 +162,10 @@ public slots:
     bool isFilePart();
 
     QList<QVariant> readBytes(qint64 nOffset, qint64 nSize, bool bReplaceZeroWithSpace = false);
+
+    QList<QVariant> decompressBytes(qint64 nOffset, qint64 nSize, QString sCompressionMethod);
+    qint64 getCompressedDataSize(qint64 nOffset, qint64 nSize, QString sCompressionMethod);
+    QList<QString> getListOfCompressionMethods();
 
     bool isReleaseBuild();
     bool isDebugBuild();
