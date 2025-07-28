@@ -1046,7 +1046,6 @@ qint64 Binary_Script::getCompressedDataSize(qint64 nOffset, qint64 nSize, QStrin
     }
 
     return nResult;
-
 }
 
 QList<QString> Binary_Script::getListOfCompressionMethods()
