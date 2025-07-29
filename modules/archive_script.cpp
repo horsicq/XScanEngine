@@ -30,6 +30,7 @@ Archive_Script::Archive_Script(XArchive *pArchive, XBinary::FILEPART filePart, O
     if (!bIsArchive) {
         XZip *_pArchive = dynamic_cast<XZip *>(g_pArchive);
         if (_pArchive) g_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
+        g_sCompressMethod = _pArchive->getCompressMethodAsString();
     }
 
     if (!bIsArchive) {
