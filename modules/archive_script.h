@@ -39,7 +39,6 @@ protected:
 private:
     XArchive *g_pArchive;
     QList<XArchive::RECORD> g_listArchiveRecords;
-    QString g_sCompressMethod;
 };
 
 #endif  // ARCHIVE_SCRIPT_H

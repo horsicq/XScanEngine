@@ -53,6 +53,7 @@
 #include <QFutureWatcher>
 #include <QLoggingCategory>
 #include "xthreadobject.h"
+#include "xcompresseddevice.h"
 
 typedef bool (*SCAN_ENGINE_CALLBACK)(const QString &sCurrentSignature, qint32 nNumberOfSignatures, qint32 nCurrentIndex, void *pUserData);
 
@@ -934,11 +935,11 @@ public:
     static QString recordNameIdToString(qint32 nId);
 
     struct SCANID {
-        bool bVirtual;
+        bool bVirtual; // TODO remove
         QString sUuid;
         XBinary::FT fileType;
         XBinary::FILEPART filePart;
-        QString sArch;
+        QString sArch; // TODO remove
         QString sVersion;
         QString sInfo;
         XBinary::MODE mode;
@@ -946,6 +947,8 @@ public:
         QString sType;
         qint64 nSize;
         qint64 nOffset;
+        XBinary::COMPRESS_METHOD compressMethod;
+        QString sOriginalName;
     };
 
     struct SCANSTRUCT {

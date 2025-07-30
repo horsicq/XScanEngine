@@ -1055,6 +1055,8 @@ QList<QString> Binary_Script::getListOfCompressionMethods()
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_STORE));
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_BZIP2));
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_LZMA));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_DEFLATE));
+    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_DEFLATE64));
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT214_8));
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT214_16));
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT215_8));
