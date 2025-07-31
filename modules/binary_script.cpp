@@ -1052,6 +1052,7 @@ QList<QString> Binary_Script::getListOfCompressionMethods()
 {
     QList<QString> listResult;
 
+    // Only without known unpacked size!
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_STORE));
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_BZIP2));
     listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_LZMA));

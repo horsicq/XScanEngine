@@ -1362,10 +1362,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         bufDevice->open(QIODevice::ReadOnly);
 
         bufDevice->setProperty("Memory", true);
-        bufDevice->setProperty("DeviceDirectory", XBinary::getDeviceDirectory(_pDevice));
-        bufDevice->setProperty("DeviceFileBaseName", XBinary::getDeviceFileBaseName(_pDevice));
-        bufDevice->setProperty("DeviceFileCompleteSuffix", XBinary::getDeviceFileCompleteSuffix(_pDevice));
-        bufDevice->setProperty("DeviceFileSuffix", XBinary::getDeviceFileSuffix(_pDevice));
+        bufDevice->setProperty("FileName", XBinary::getDeviceFileName(_pDevice));
 
         _pDevice = bufDevice;
     }
@@ -1752,6 +1749,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     _options.fileType = XBinary::FT_UNKNOWN;
                                     _options.bIsRecursiveScan = false;
 
+                                    compDevice.setProperty("FileName", filePart.sOriginalName);
                                     scanProcess(&compDevice, pScanResult, 0, compDevice.size(), scanIdSub, &_options, false, pPdStruct);
                                     nCount++;
                                 }
