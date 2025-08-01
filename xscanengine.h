@@ -935,11 +935,11 @@ public:
     static QString recordNameIdToString(qint32 nId);
 
     struct SCANID {
-        bool bVirtual; // TODO remove
+        bool bVirtual;  // TODO remove
         QString sUuid;
         XBinary::FT fileType;
         XBinary::FILEPART filePart;
-        QString sArch; // TODO remove
+        QString sArch;  // TODO remove
         QString sVersion;
         QString sInfo;
         XBinary::MODE mode;

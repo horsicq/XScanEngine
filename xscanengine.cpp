@@ -1710,7 +1710,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         }
 
         {
-            QList<XBinary::FPART> listFileParts = XFormats::getFileParts(pScanResult->ftInit, _pDevice, XBinary::FILEPART_RESOURCE | XBinary::FILEPART_OVERLAY | XBinary::FILEPART_STREAM | XBinary::FILEPART_DEBUGDATA, 20000, false, -1, pPdStruct);
+            QList<XBinary::FPART> listFileParts = XFormats::getFileParts(
+                pScanResult->ftInit, _pDevice, XBinary::FILEPART_RESOURCE | XBinary::FILEPART_OVERLAY | XBinary::FILEPART_STREAM | XBinary::FILEPART_DEBUGDATA, 20000,
+                false, -1, pPdStruct);
 
             qint32 nMaxCount = 20;
             qint32 nCount = 0;
@@ -1743,7 +1745,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     scanIdSub.nOffset = filePart.nFileOffset;
                                     scanIdSub.nSize = filePart.nFileSize;
                                     scanIdSub.sOriginalName = filePart.sOriginalName;
-                                    scanIdSub.compressMethod = (XBinary::COMPRESS_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_COMPRESSMETHOD, XBinary::COMPRESS_METHOD_STORE).toUInt();
+                                    scanIdSub.compressMethod =
+                                        (XBinary::COMPRESS_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_COMPRESSMETHOD, XBinary::COMPRESS_METHOD_STORE)
+                                            .toUInt();
 
                                     XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                                     _options.fileType = XBinary::FT_UNKNOWN;
