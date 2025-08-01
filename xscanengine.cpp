@@ -982,6 +982,24 @@ QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *
     sResult += XBinary::fileTypeIdToString(pScanStruct->id.fileType);
 
     if (pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) {
+        QString sVersion;
+
+        if (pScanStruct->parentId.compressMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
+            sVersion = XBinary::appendText(sVersion, XBinary::compressMethodToString(pScanStruct->parentId.compressMethod), ", ");
+        }
+
+        if (pScanStruct->parentId.sOriginalName != "") {
+            sVersion = XBinary::appendText(sVersion, QString("\"%1\"").arg(pScanStruct->parentId.sOriginalName), ", ");
+        }
+
+        if (sVersion != "") {
+            if (pOptions->bFormatResult) {
+                sResult += " ";
+            }
+
+            sResult += QString("(%1)").arg(sVersion);
+        }
+
         if (pOptions->bFormatResult) {
             sResult += QString(" [%1 = 0x%2, %3 = 0x%4]")
                            .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));

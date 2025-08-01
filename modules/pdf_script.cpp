@@ -82,5 +82,5 @@ bool PDF_Script::isValuesHexByKey(const QString &sKey)
 
 QString PDF_Script::getHeaderCommentAsHex()
 {
-    return g_pPDF->getHeaderCommentAsHex();
+    return g_pPDF->getHeaderCommentAsHex(getPdStruct());
 }

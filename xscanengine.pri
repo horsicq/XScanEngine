@@ -89,6 +89,11 @@ SOURCES += \
     include($$PWD/../XOptions/xoptions.pri)
 }
 
+!contains(XCONFIG, xdisasmcode) {
+    XCONFIG += xdisasmcode
+    include($$PWD/../XDisasmCore/xdisasmcode.pri)
+}
+
 DISTFILES += \
     $$PWD/LICENSE \
     $$PWD/README.md \
