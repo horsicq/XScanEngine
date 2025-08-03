@@ -89,9 +89,9 @@ SOURCES += \
     include($$PWD/../XOptions/xoptions.pri)
 }
 
-!contains(XCONFIG, xdisasmcode) {
-    XCONFIG += xdisasmcode
-    include($$PWD/../XDisasmCore/xdisasmcode.pri)
+!contains(XCONFIG, xdisasmcore) {
+    XCONFIG += xdisasmcore
+    include($$PWD/../XDisasmCore/xdisasmcore.pri)
 }
 
 DISTFILES += \
