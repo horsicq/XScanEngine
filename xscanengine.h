@@ -1122,15 +1122,15 @@ signals:
     void scanResult(const XScanEngine::SCAN_RESULT &scanResult);
 
 private:
-    QString g_sFileName;
-    QString g_sDirectoryName;
-    QIODevice *g_pDevice;
-    char *g_pData;
-    qint32 g_nDataSize;
-    XScanEngine::SCAN_OPTIONS *g_pScanOptions;
-    XScanEngine::SCAN_RESULT *g_pScanResult;
-    SCAN_TYPE g_scanType;
-    XBinary::PDSTRUCT *g_pPdStruct;
+    QString m_sFileName;
+    QString m_sDirectoryName;
+    QIODevice *m_pDevice;
+    char *m_pData;
+    qint32 m_nDataSize;
+    XScanEngine::SCAN_OPTIONS *m_pScanOptions;
+    XScanEngine::SCAN_RESULT *m_pScanResult;
+    SCAN_TYPE m_scanType;
+    XBinary::PDSTRUCT *m_pPdStruct;
 };
 
 #endif  // XSCANENGINE_H
