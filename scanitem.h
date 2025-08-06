@@ -39,12 +39,12 @@ public:
     ScanItem *getParentItem();
 
 private:
-    QList<ScanItem *> g_listChildItems;
-    QString g_sString;
-    ScanItem *g_pParentItem;
-    qint32 g_nNumberOfColumns;
-    bool g_bIsParent;
-    XScanEngine::SCANSTRUCT g_scanStruct;
+    QList<ScanItem *> m_listChildItems;
+    QString m_sString;
+    ScanItem *m_pParentItem;
+    qint32 m_nNumberOfColumns;
+    bool m_bIsParent;
+    XScanEngine::SCANSTRUCT m_scanStruct;
 };
 
 #endif  // SCANITEM_H

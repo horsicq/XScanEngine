@@ -892,15 +892,15 @@ XScanEngine::XScanEngine(QObject *pParent) : XThreadObject(pParent)
 
 XScanEngine::XScanEngine(const XScanEngine &other) : XThreadObject(other.parent())
 {
-    this->m_sFileName = other.m_sFileName;
-    this->m_sDirectoryName = other.m_sDirectoryName;
-    this->m_pDevice = other.m_pDevice;
-    this->m_pData = other.m_pData;
-    this->m_nDataSize = other.m_nDataSize;
-    this->m_pScanOptions = other.m_pScanOptions;
-    this->m_pScanResult = other.m_pScanResult;
-    this->m_scanType = other.m_scanType;
-    this->m_pPdStruct = other.m_pPdStruct;
+    m_sFileName = other.m_sFileName;
+    m_sDirectoryName = other.m_sDirectoryName;
+    m_pDevice = other.m_pDevice;
+    m_pData = other.m_pData;
+    m_nDataSize = other.m_nDataSize;
+    m_pScanOptions = other.m_pScanOptions;
+    m_pScanResult = other.m_pScanResult;
+    m_scanType = other.m_scanType;
+    m_pPdStruct = other.m_pPdStruct;
 }
 
 void XScanEngine::setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct)

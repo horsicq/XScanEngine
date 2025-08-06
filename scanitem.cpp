@@ -22,51 +22,51 @@
 
 ScanItem::ScanItem(const QString &sString, ScanItem *pItemParent, qint32 nNumberOfColumns, bool bIsParent)
 {
-    g_pParentItem = pItemParent;
-    g_sString = sString;
-    g_nNumberOfColumns = nNumberOfColumns;
-    g_bIsParent = bIsParent;
-    g_scanStruct = XScanEngine::SCANSTRUCT();
+    m_pParentItem = pItemParent;
+    m_sString = sString;
+    m_nNumberOfColumns = nNumberOfColumns;
+    m_bIsParent = bIsParent;
+    m_scanStruct = XScanEngine::SCANSTRUCT();
 }
 
 ScanItem::~ScanItem()
 {
-    qDeleteAll(g_listChildItems);
+    qDeleteAll(m_listChildItems);
 }
 
 void ScanItem::appendChild(ScanItem *pItemChild)
 {
-    g_listChildItems.append(pItemChild);
+    m_listChildItems.append(pItemChild);
 }
 
 ScanItem *ScanItem::child(int nRow)
 {
-    return g_listChildItems.value(nRow);
+    return m_listChildItems.value(nRow);
 }
 
 int ScanItem::childCount() const
 {
-    return g_listChildItems.count();
+    return m_listChildItems.count();
 }
 
 int ScanItem::columnCount() const
 {
-    return g_nNumberOfColumns;
+    return m_nNumberOfColumns;
 }
 
 QVariant ScanItem::data(int nColumn) const
 {
     QVariant result;
 
-    if (nColumn < g_nNumberOfColumns) {
+    if (nColumn < m_nNumberOfColumns) {
         if (nColumn == 0) {
-            result = g_sString;
+            result = m_sString;
         } else if (nColumn == 1) {
-            if (!g_bIsParent) {
+            if (!m_bIsParent) {
                 result = "S";  // TODO icon
             }
         } else if (nColumn == 2) {
-            if (!g_bIsParent) {
+            if (!m_bIsParent) {
                 result = "?";  // TODO icon
             }
         }
@@ -77,20 +77,20 @@ QVariant ScanItem::data(int nColumn) const
 
 void ScanItem::setScanStruct(const XScanEngine::SCANSTRUCT &scanStruct)
 {
-    this->g_scanStruct = scanStruct;
+    this->m_scanStruct = scanStruct;
 }
 
 XScanEngine::SCANSTRUCT ScanItem::scanStruct() const
 {
-    return g_scanStruct;
+    return m_scanStruct;
 }
 
 int ScanItem::row() const
 {
     int nResult = 0;
 
-    if (g_pParentItem) {
-        nResult = g_pParentItem->g_listChildItems.indexOf(const_cast<ScanItem *>(this));
+    if (m_pParentItem) {
+        nResult = m_pParentItem->m_listChildItems.indexOf(const_cast<ScanItem *>(this));
     }
 
     return nResult;
@@ -98,5 +98,5 @@ int ScanItem::row() const
 
 ScanItem *ScanItem::getParentItem()
 {
-    return g_pParentItem;
+    return m_pParentItem;
 }
