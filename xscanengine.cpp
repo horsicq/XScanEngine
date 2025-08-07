@@ -1493,6 +1493,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     } else if (stFT.contains(XBinary::FT_JPEG)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JPEG, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_JPEG;
+    } else if (stFT.contains(XBinary::FT_PNG)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PNG, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_PNG;
     } else if (stFT.contains(XBinary::FT_JAVACLASS)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_JAVACLASS, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_JAVACLASS;

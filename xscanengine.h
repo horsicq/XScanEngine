@@ -47,6 +47,7 @@
 #include "cfbf_script.h"
 #include "image_script.h"
 #include "jpeg_script.h"
+#include "png_script.h"
 
 #include "xformats.h"
 #include "xoptions.h"

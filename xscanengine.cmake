@@ -85,6 +85,8 @@ set(XSCANENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/modules/cfbf_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/jpeg_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/jpeg_script.h
+    ${CMAKE_CURRENT_LIST_DIR}/modules/png_script.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/modules/png_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/image_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/image_script.h
 )

@@ -36,6 +36,7 @@ HEADERS += \
     $$PWD/modules/pdf_script.h \
     $$PWD/modules/cfbf_script.h \
     $$PWD/modules/jpeg_script.h \
+    $$PWD/modules/png_script.h \
     $$PWD/modules/image_script.h
 
 SOURCES += \
@@ -67,6 +68,7 @@ SOURCES += \
     $$PWD/modules/pdf_script.cpp \
     $$PWD/modules/cfbf_script.cpp \
     $$PWD/modules/jpeg_script.cpp \
+    $$PWD/modules/png_script.cpp \
     $$PWD/modules/image_script.cpp
 
 !contains(XCONFIG, xformats) {
