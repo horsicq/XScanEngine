@@ -2006,7 +2006,6 @@ void XScanEngine::setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 
 
 void XScanEngine::process()
 {
-
     XBinary::PDSTRUCT *pPdStruct = m_pPdStruct;
 
     qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
