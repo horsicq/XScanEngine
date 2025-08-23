@@ -36,6 +36,7 @@ public slots:
     bool isOverlayPresent();
     bool isDexStringPresent(const QString &sString);
     bool isDexItemStringPresent(const QString &sItemString);
+    quint32 getMapItemsHash();
 
 private:
     XDEX *g_pDex;
@@ -44,6 +45,7 @@ private:
     bool g_bIsOverlayPresent;
     QList<QString> g_listStrings;
     QList<QString> g_listItemStrings;
+    quint32 g_MapItemsHash;
 };
 
 #endif  // DEX_SCRIPT_H

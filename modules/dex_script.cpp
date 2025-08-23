@@ -23,6 +23,7 @@
 DEX_Script::DEX_Script(XDEX *pDex, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pDex, filePart, pOptions, pPdStruct)
 {
     this->g_pDex = pDex;
+    g_MapItemsHash = 0;
 
     g_listItems = pDex->getMapItems(pPdStruct);
     g_bIsStringPoolSorted = pDex->isStringPoolSorted(&g_listItems, pPdStruct);
@@ -53,4 +54,13 @@ bool DEX_Script::isDexStringPresent(const QString &sString)
 bool DEX_Script::isDexItemStringPresent(const QString &sItemString)
 {
     return g_pDex->isStringInListPresent(&g_listItemStrings, sItemString, getPdStruct());
+}
+
+quint32 DEX_Script::getMapItemsHash()
+{
+    if (g_MapItemsHash == 0) {
+        g_MapItemsHash = XDEX::getMapItemsHash(&g_listItems, getPdStruct());
+    }
+
+    return g_MapItemsHash;
 }
