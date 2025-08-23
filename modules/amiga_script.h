@@ -38,6 +38,9 @@ private:
     XAmigaHunk *g_pAmiga;
     QList<XAmigaHunk::HUNK> g_listHunks;
     qint32 g_nNumberOfHunks;
+
+protected:
+    XAmigaHunk *getAmiga() const { return g_pAmiga; }
 };
 
 #endif  // AMIGA_SCRIPT_H
