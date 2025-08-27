@@ -81,6 +81,11 @@ SOURCES += \
     include($$PWD/../XArchive/xarchives.pri)
 }
 
+!contains(XCONFIG, xstaticunpacker) {
+    XCONFIG += xstaticunpacker
+    include($$PWD/../XStaticUnpacker/xstaticunpacker.pri)
+}
+
 !contains(XCONFIG, xdex) {
     XCONFIG += xdex
     include($$PWD/../XDEX/xdex.pri)
