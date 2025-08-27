@@ -40,7 +40,10 @@ private:
     qint32 g_nNumberOfHunks;
 
 protected:
-    XAmigaHunk *getAmiga() const { return g_pAmiga; }
+    XAmigaHunk *getAmiga() const
+    {
+        return g_pAmiga;
+    }
 };
 
 #endif  // AMIGA_SCRIPT_H
