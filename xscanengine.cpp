@@ -19,6 +19,53 @@
  * SOFTWARE.
  */
 #include "xscanengine.h"
+QString XScanEngine::heurTypeIdToString(qint32 nId)
+{
+    // Values are defined in global DETECTTYPE enum (nfd_binary.h). We use constants to avoid include cycles.
+    // Keep this mapping synchronized with DETECTTYPE.
+    enum {
+        DETECTTYPE_UNKNOWN = 0,
+        DETECTTYPE_ARCHIVE,
+        DETECTTYPE_CODESECTION,
+        DETECTTYPE_DEXSTRING,
+        DETECTTYPE_DEXTYPE,
+        DETECTTYPE_ENTRYPOINT,
+        DETECTTYPE_ENTRYPOINTSECTION,
+        DETECTTYPE_HEADER,
+        DETECTTYPE_IMPORTHASH,
+        DETECTTYPE_NETANSISTRING,
+        DETECTTYPE_NETUNICODESTRING,
+        DETECTTYPE_OVERLAY,
+        DETECTTYPE_DEBUGDATA,
+        DETECTTYPE_RESOURCES,
+        DETECTTYPE_RICH,
+        DETECTTYPE_SECTIONNAME
+    };
+
+    QString sResult = QObject::tr("Unknown");
+
+    switch (nId) {
+        case DETECTTYPE_UNKNOWN: sResult = QObject::tr("Unknown"); break;
+        case DETECTTYPE_HEADER: sResult = QObject::tr("Header"); break;
+        case DETECTTYPE_OVERLAY: sResult = QObject::tr("Overlay"); break;
+        case DETECTTYPE_DEBUGDATA: sResult = QObject::tr("Debug data"); break;
+        case DETECTTYPE_ENTRYPOINT: sResult = QObject::tr("Entry point"); break;
+        case DETECTTYPE_SECTIONNAME: sResult = QObject::tr("Section name"); break;
+        case DETECTTYPE_IMPORTHASH: sResult = QObject::tr("Import hash"); break;
+        case DETECTTYPE_CODESECTION: sResult = QObject::tr("Code section"); break;
+        case DETECTTYPE_ENTRYPOINTSECTION: sResult = QObject::tr("Entry point section"); break;
+        case DETECTTYPE_NETANSISTRING: sResult = QString(".NET ANSI %1").arg(QObject::tr("String")); break;
+        case DETECTTYPE_NETUNICODESTRING: sResult = QString(".NET Unicode %1").arg(QObject::tr("String")); break;
+        case DETECTTYPE_RICH: sResult = QString("Rich"); break;
+        case DETECTTYPE_ARCHIVE: sResult = QObject::tr("Archive"); break;
+        case DETECTTYPE_RESOURCES: sResult = QObject::tr("Resources"); break;
+        case DETECTTYPE_DEXSTRING: sResult = QString("DEX %1").arg(QObject::tr("String")); break;
+        case DETECTTYPE_DEXTYPE: sResult = QString("DEX %1").arg(QObject::tr("Type")); break;
+        default: break;
+    }
+
+    return sResult;
+}
 
 XBinary::XCONVERT _TABLE_XScanEngine_RECORD_TYPE[] = {
     {XScanEngine::RECORD_TYPE_UNKNOWN, "Unknown", QObject::tr("Unknown")},

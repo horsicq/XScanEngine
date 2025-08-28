@@ -133,6 +133,9 @@ public:
     };
 
     static QString recordTypeIdToString(qint32 nId);
+    // Map heuristic detect type id (DETECTTYPE from NFD_Binary) to a localized string.
+    // Kept here to avoid SpecAbstract dependency; accepts raw id to prevent header cycles.
+    static QString heurTypeIdToString(qint32 nId);
 
     enum RECORD_NAME {
         RECORD_NAME_UNKNOWN = 0,
