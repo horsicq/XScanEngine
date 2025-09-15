@@ -2107,3 +2107,20 @@ QString XScanEngine::recordNameIdToString(qint32 nId)
 {
     return XBinary::XIDSTRING_idToString(nId, _TABLE_XScanEngine_RECORD_NAME, sizeof(_TABLE_XScanEngine_RECORD_NAME) / sizeof(XBinary::XIDSTRING));
 }
+
+bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type, RECORD_NAME name, const QString &sVersion, const QString &sInfo)
+{
+    bool bResult = false;
+
+    if (pListScanStructs) {
+        for (int i = 0; i < pListScanStructs->count(); i++) {
+            const XScanEngine::SCANSTRUCT &ss = pListScanStructs->at(i);
+            if ((ss.nType == (quint32)type) && (ss.nName == (quint32)name) && (ss.sVersion == sVersion) && (ss.sInfo == sInfo)) {
+                bResult = true;
+                break;
+            }
+        }
+    }
+
+    return bResult;
+}

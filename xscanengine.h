@@ -1112,6 +1112,9 @@ public:
     static quint64 getDatabasesFromGlobalOptions(XOptions *pGlobalOptions);
     static void setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases);
 
+    static bool isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type = RECORD_TYPE_UNKNOWN,
+                                    RECORD_NAME name = RECORD_NAME_UNKNOWN, const QString &sVersion = "", const QString &sInfo = "");
+
     virtual void process();
 
 protected:
