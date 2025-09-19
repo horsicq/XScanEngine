@@ -79,8 +79,8 @@ private:
     void _coloredItem(ScanItem *pItem);
 
 private:
-    ScanItem *g_pRootItem;
-    XScanEngine::SCAN_OPTIONS g_scanOptions;
+    ScanItem *m_pRootItem;
+    XScanEngine::SCAN_OPTIONS m_scanOptions;
 };
 
 #endif  // SCANITEMMODEL_H

@@ -23,11 +23,11 @@
 ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, qint32 nNumberOfColumns)
     : QAbstractItemModel(0)
 {
-    g_scanOptions = *pScanOptions;
+    m_scanOptions = *pScanOptions;
 
-    g_pRootItem = new ScanItem(tr("Result"), nullptr, nNumberOfColumns, true);
+    m_pRootItem = new ScanItem(tr("Result"), nullptr, nNumberOfColumns, true);
     XScanEngine::SCANSTRUCT emptySS = {};
-    g_pRootItem->setScanStruct(emptySS);
+    m_pRootItem->setScanStruct(emptySS);
 
     QMap<QString, ScanItem *> mapParents;
 
@@ -38,7 +38,7 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
             ScanItem *_pItemParent = nullptr;
 
             if (pListScanStructs->at(i).parentId.sUuid == "") {
-                _pItemParent = g_pRootItem;
+                _pItemParent = m_pRootItem;
             } else {
                 _pItemParent = mapParents.value(pListScanStructs->at(i).parentId.sUuid);
             }
@@ -46,8 +46,8 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
             if (_pItemParent == nullptr) {
                 // _pItemParent = g_pRootItem;
                 QString sParent = XBinary::fileTypeIdToString(pListScanStructs->at(i).parentId.fileType);
-                _pItemParent = new ScanItem(sParent, g_pRootItem, nNumberOfColumns, true);
-                g_pRootItem->appendChild(_pItemParent);
+                _pItemParent = new ScanItem(sParent, m_pRootItem, nNumberOfColumns, true);
+                m_pRootItem->appendChild(_pItemParent);
                 mapParents.insert(pListScanStructs->at(i).parentId.sUuid, _pItemParent);
             }
 
@@ -82,7 +82,7 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
 
 ScanItemModel::~ScanItemModel()
 {
-    delete g_pRootItem;
+    delete m_pRootItem;
 }
 
 QVariant ScanItemModel::headerData(int nSection, Qt::Orientation orientation, int nRole) const
@@ -90,7 +90,7 @@ QVariant ScanItemModel::headerData(int nSection, Qt::Orientation orientation, in
     QVariant result;
 
     if ((orientation == Qt::Horizontal) && (nRole == Qt::DisplayRole)) {
-        result = g_pRootItem->data(nSection);
+        result = m_pRootItem->data(nSection);
     }
 
     return result;
@@ -104,7 +104,7 @@ QModelIndex ScanItemModel::index(int nRow, int nColumn, const QModelIndex &paren
         ScanItem *pParentItem = nullptr;
 
         if (!parent.isValid()) {
-            pParentItem = g_pRootItem;
+            pParentItem = m_pRootItem;
         } else {
             pParentItem = static_cast<ScanItem *>(parent.internalPointer());
         }
@@ -127,7 +127,7 @@ QModelIndex ScanItemModel::parent(const QModelIndex &index) const
         ScanItem *pChildItem = static_cast<ScanItem *>(index.internalPointer());
         ScanItem *pParentItem = pChildItem->getParentItem();
 
-        if (pParentItem != g_pRootItem) {
+        if (pParentItem != m_pRootItem) {
             result = createIndex(pParentItem->row(), 0, pParentItem);
         }
     }
@@ -143,7 +143,7 @@ int ScanItemModel::rowCount(const QModelIndex &parent) const
         ScanItem *pParentItem = nullptr;
 
         if (!parent.isValid()) {
-            pParentItem = g_pRootItem;
+            pParentItem = m_pRootItem;
         } else {
             pParentItem = static_cast<ScanItem *>(parent.internalPointer());
         }
@@ -161,7 +161,7 @@ int ScanItemModel::columnCount(const QModelIndex &parent) const
     if (parent.isValid()) {
         nResult = static_cast<ScanItem *>(parent.internalPointer())->columnCount();
     } else {
-        nResult = g_pRootItem->columnCount();
+        nResult = m_pRootItem->columnCount();
     }
 
     return nResult;
@@ -233,7 +233,7 @@ QString ScanItemModel::toXML()
 
     xml.setAutoFormatting(true);
 
-    _toXML(&xml, g_pRootItem, 0);
+    _toXML(&xml, m_pRootItem, 0);
 
     return sResult;
 }
@@ -244,7 +244,7 @@ QString ScanItemModel::toJSON()
 #if (QT_VERSION_MAJOR > 4)
     QJsonObject jsonResult;
 
-    _toJSON(&jsonResult, g_pRootItem, 0);
+    _toJSON(&jsonResult, m_pRootItem, 0);
 
     QJsonDocument saveFormat(jsonResult);
 
@@ -260,7 +260,7 @@ QString ScanItemModel::toCSV()
 {
     QString sResult;
 
-    _toCSV(&sResult, g_pRootItem, 0);
+    _toCSV(&sResult, m_pRootItem, 0);
 
     return sResult;
 }
@@ -269,7 +269,7 @@ QString ScanItemModel::toTSV()
 {
     QString sResult;
 
-    _toTSV(&sResult, g_pRootItem, 0);
+    _toTSV(&sResult, m_pRootItem, 0);
 
     return sResult;
 }
@@ -278,14 +278,14 @@ QString ScanItemModel::toFormattedString()
 {
     QString sResult;
 
-    _toFormattedString(&sResult, g_pRootItem, 0);
+    _toFormattedString(&sResult, m_pRootItem, 0);
 
     return sResult;
 }
 
 void ScanItemModel::coloredOutput()
 {
-    _coloredOutput(g_pRootItem, 0);
+    _coloredOutput(m_pRootItem, 0);
 }
 
 QString ScanItemModel::toString(XBinary::FORMATTYPE formatType)
@@ -293,10 +293,10 @@ QString ScanItemModel::toString(XBinary::FORMATTYPE formatType)
     QString sResult;
 
     if (formatType == XBinary::FORMATTYPE_UNKNOWN) {
-        if (g_scanOptions.bResultAsCSV) formatType = XBinary::FORMATTYPE_CSV;
-        else if (g_scanOptions.bResultAsJSON) formatType = XBinary::FORMATTYPE_JSON;
-        else if (g_scanOptions.bResultAsTSV) formatType = XBinary::FORMATTYPE_TSV;
-        else if (g_scanOptions.bResultAsXML) formatType = XBinary::FORMATTYPE_XML;
+        if (m_scanOptions.bResultAsCSV) formatType = XBinary::FORMATTYPE_CSV;
+        else if (m_scanOptions.bResultAsJSON) formatType = XBinary::FORMATTYPE_JSON;
+        else if (m_scanOptions.bResultAsTSV) formatType = XBinary::FORMATTYPE_TSV;
+        else if (m_scanOptions.bResultAsXML) formatType = XBinary::FORMATTYPE_XML;
         else formatType = XBinary::FORMATTYPE_PLAINTEXT;
     }
 
@@ -317,7 +317,7 @@ QString ScanItemModel::toString(XBinary::FORMATTYPE formatType)
 
 ScanItem *ScanItemModel::rootItem()
 {
-    return this->g_pRootItem;
+    return this->m_pRootItem;
 }
 
 void ScanItemModel::_toXML(QXmlStreamWriter *pXml, ScanItem *pItem, qint32 nLevel)
@@ -469,7 +469,7 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
 #ifdef QT_GUI_LIB
     Q_UNUSED(pItem)
 #else
-    if (g_scanOptions.bIsHighlight) {
+    if (m_scanOptions.bIsHighlight) {
         XOptions::printConsole(pItem->data(0).toString(), pItem->scanStruct().globalColorRecord.colorMain, pItem->scanStruct().globalColorRecord.colorBackground);
     } else {
         XOptions::printConsole(pItem->data(0).toString(), Qt::transparent, Qt::transparent);
