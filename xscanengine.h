@@ -1007,6 +1007,7 @@ public:
         SF_RESULTASJSON = 0x00020000,
         SF_RESULTASTSV = 0x00040000,
         SF_RESULTASCSV = 0x00080000,
+        SF_USECACHE = 0x01000000,
         SF_FORMATRESULT = 0x10000000,
     };
 
@@ -1025,6 +1026,7 @@ public:
         bool bIsAggressiveScan;
         bool bIsAllTypesScan;
         qint64 nBufferSize;
+        bool bUseCache;
         bool bShowInternalDetects;
         bool bResultAsXML;
         bool bResultAsJSON;

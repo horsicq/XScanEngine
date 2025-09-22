@@ -1869,6 +1869,10 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
         nResult |= SF_RESULTASCSV;
     }
 
+    if (pScanOptions->bUseCache) {
+        nResult |= SF_USECACHE;
+    }
+
     if (pScanOptions->bFormatResult) {
         nResult |= SF_FORMATRESULT;
     }
@@ -1887,6 +1891,7 @@ void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
     pScanOptions->bResultAsJSON = nFlags & SF_RESULTASJSON;
     pScanOptions->bResultAsXML = nFlags & SF_RESULTASXML;
     pScanOptions->bResultAsCSV = nFlags & SF_RESULTASCSV;
+    pScanOptions->bUseCache = nFlags & SF_USECACHE;
     pScanOptions->bFormatResult = nFlags & SF_FORMATRESULT;
 }
 
@@ -1918,6 +1923,10 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
         nResult |= SF_ALLTYPESSCAN;
     }
 
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_USECACHE).toBool()) {
+        nResult |= SF_USECACHE;
+    }
+
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FORMATRESULT).toBool()) {
         nResult |= SF_FORMATRESULT;
     }
@@ -1933,6 +1942,7 @@ void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SF_AGGRESSIVESCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SF_VERBOSE);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SF_ALLTYPESSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_USECACHE, nFlags & SF_USECACHE);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FORMATRESULT, nFlags & SF_FORMATRESULT);
 }
 

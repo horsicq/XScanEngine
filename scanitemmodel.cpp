@@ -189,7 +189,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
         }
 #ifdef QT_GUI_LIB
         else if (nRole == Qt::ForegroundRole) {
-            if (g_scanOptions.bIsHighlight) {
+            if (m_scanOptions.bIsHighlight) {
                 if ((pItem->scanStruct().globalColorRecord.colorMain == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorMain == Qt::color0)) {
                     result = QVariant();
                 } else {
@@ -199,7 +199,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
                 result = QVariant();
             }
         } else if (nRole == Qt::BackgroundRole) {
-            if (g_scanOptions.bIsHighlight) {
+            if (m_scanOptions.bIsHighlight) {
                 if ((pItem->scanStruct().globalColorRecord.colorBackground == Qt::transparent) || (pItem->scanStruct().globalColorRecord.colorBackground == Qt::color0)) {
                     result = QVariant();
                 } else {
