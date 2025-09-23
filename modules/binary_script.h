@@ -261,7 +261,7 @@ private:
     XBinary *g_pBinary;
     XBinary::FILEPART g_filePart;
     OPTIONS *g_pOptions;
-    XBinary::PDSTRUCT *g_pPdStruct;
+    XBinary::PDSTRUCT *m_pPdStruct;
     XBinary::_MEMORY_MAP g_memoryMap;
     XADDR g_nBaseAddress;
     XDisasmAbstract::DISASM_OPTIONS g_disasmOptions;
