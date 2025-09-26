@@ -2118,7 +2118,8 @@ QString XScanEngine::recordNameIdToString(qint32 nId)
     return XBinary::XIDSTRING_idToString(nId, _TABLE_XScanEngine_RECORD_NAME, sizeof(_TABLE_XScanEngine_RECORD_NAME) / sizeof(XBinary::XIDSTRING));
 }
 
-bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type, RECORD_NAME name, const QString &sVersion, const QString &sInfo)
+bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type, RECORD_NAME name, const QString &sVersion,
+                                      const QString &sInfo)
 {
     bool bResult = false;
 
