@@ -1767,7 +1767,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     scanIdSub.filePart = filePart.filePart;
                                     scanIdSub.nOffset = filePart.nFileOffset;
                                     scanIdSub.nSize = filePart.nFileSize;
-                                    scanIdSub.sOriginalName = filePart.sOriginalName;
+                                    scanIdSub.sOriginalName = filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
                                     scanIdSub.compressMethod =
                                         (XBinary::COMPRESS_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_COMPRESSMETHOD, XBinary::COMPRESS_METHOD_STORE)
                                             .toUInt();
@@ -1776,7 +1776,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     _options.fileType = XBinary::FT_UNKNOWN;
                                     _options.bIsRecursiveScan = false;
 
-                                    compDevice.setProperty("FileName", filePart.sOriginalName);
+                                    compDevice.setProperty("FileName", filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString());
                                     scanProcess(&compDevice, pScanResult, 0, compDevice.size(), scanIdSub, &_options, false, pPdStruct);
                                     nCount++;
                                 }
