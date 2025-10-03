@@ -12,6 +12,7 @@ HEADERS += \
     $$PWD/scanitemmodel.h \
     $$PWD/xscanengine.h \
     $$PWD/modules/amiga_script.h \
+    $$PWD/modules/atarist_script.h \
     $$PWD/modules/archive_script.h \
     $$PWD/modules/binary_script.h \
     $$PWD/modules/com_script.h \
@@ -44,6 +45,7 @@ SOURCES += \
     $$PWD/scanitemmodel.cpp \
     $$PWD/xscanengine.cpp \
     $$PWD/modules/amiga_script.cpp \
+    $$PWD/modules/atarist_script.cpp \
     $$PWD/modules/archive_script.cpp \
     $$PWD/modules/binary_script.cpp \
     $$PWD/modules/com_script.cpp \

@@ -41,6 +41,8 @@ set(XSCANENGINE_SOURCES
 
     ${CMAKE_CURRENT_LIST_DIR}/modules/amiga_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/amiga_script.h
+    ${CMAKE_CURRENT_LIST_DIR}/modules/atarist_script.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/modules/atarist_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/archive_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/archive_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/binary_script.cpp

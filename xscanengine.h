@@ -40,6 +40,7 @@
 #include "rar_script.h"
 #include "machofat_script.h"
 #include "amiga_script.h"
+#include "atarist_script.h"
 #include "dos16m_script.h"
 #include "dos4g_script.h"
 #include "javaclass_script.h"
