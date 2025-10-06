@@ -27,7 +27,6 @@ DEX_Script::DEX_Script(XDEX *pDex, XBinary::FILEPART filePart, OPTIONS *pOptions
 
     g_listItems = pDex->getMapItems(pPdStruct);
     g_bIsStringPoolSorted = pDex->isStringPoolSorted(&g_listItems, pPdStruct);
-    g_bIsOverlayPresent = pDex->isOverlayPresent(getMemoryMap(), pPdStruct);
     g_listStrings = pDex->getStrings(&g_listItems, pPdStruct);
     g_listItemStrings = pDex->getTypeItemStrings(&g_listItems, &g_listStrings, pPdStruct);
 }
@@ -39,11 +38,6 @@ DEX_Script::~DEX_Script()
 bool DEX_Script::isStringPoolSorted()
 {
     return g_bIsStringPoolSorted;
-}
-
-bool DEX_Script::isOverlayPresent()
-{
-    return g_bIsOverlayPresent;
 }
 
 bool DEX_Script::isDexStringPresent(const QString &sString)

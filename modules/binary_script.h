@@ -33,6 +33,7 @@ public:
         bool bIsDeepScan;
         bool bIsHeuristicScan;
         bool bIsAggressiveScan;
+        bool bIsRecursiveScan;
         bool bIsVerbose;
         bool bIsProfiling;
     };
@@ -102,8 +103,11 @@ public slots:
     bool isDeepScan();
     bool isHeuristicScan();
     bool isAggressiveScan();
+    bool isRecursiveScan();
     bool isVerbose();
     bool isProfiling();
+
+    qint64 getStartOffset();
 
     quint8 read_uint8(qint64 nOffset);
     qint16 read_int8(qint64 nOffset);  // qint16 not qint8 / qint8 qjs shows as char

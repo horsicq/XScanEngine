@@ -33,7 +33,6 @@ public:
 
 public slots:
     bool isStringPoolSorted();
-    bool isOverlayPresent();
     bool isDexStringPresent(const QString &sString);
     bool isDexItemStringPresent(const QString &sItemString);
     quint32 getMapItemsHash();
@@ -42,7 +41,6 @@ private:
     XDEX *g_pDex;
     QList<XDEX_DEF::MAP_ITEM> g_listItems;
     bool g_bIsStringPoolSorted;
-    bool g_bIsOverlayPresent;
     QList<QString> g_listStrings;
     QList<QString> g_listItemStrings;
     quint32 g_MapItemsHash;

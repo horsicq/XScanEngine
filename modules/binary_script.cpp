@@ -524,6 +524,11 @@ bool Binary_Script::isAggressiveScan()
     return g_pOptions->bIsAggressiveScan;
 }
 
+bool Binary_Script::isRecursiveScan()
+{
+    return g_pOptions->bIsRecursiveScan;
+}
+
 bool Binary_Script::isVerbose()
 {
     return g_pOptions->bIsVerbose;
@@ -532,6 +537,11 @@ bool Binary_Script::isVerbose()
 bool Binary_Script::isProfiling()
 {
     return g_pOptions->bIsProfiling;
+}
+
+qint64 Binary_Script::getStartOffset()
+{
+    return XIODevice::getInitLocation(g_pBinary->getDevice());
 }
 
 quint8 Binary_Script::read_uint8(qint64 nOffset)
