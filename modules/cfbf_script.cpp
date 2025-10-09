@@ -22,7 +22,7 @@
 
 CFBF_Script::CFBF_Script(XCFBF *pCFBF, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pCFBF, filePart, pOptions, pPdStruct)
 {
-    this->g_pCFBF = pCFBF;
+    this->m_pCFBF = pCFBF;
 }
 
 CFBF_Script::~CFBF_Script()

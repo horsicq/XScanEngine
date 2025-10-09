@@ -23,7 +23,7 @@
 MACHOFAT_Script::MACHOFAT_Script(XMACHOFat *pMachofat, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
     : Archive_Script(pMachofat, filePart, pOptions, pPdStruct)
 {
-    this->g_pMachofat = pMachofat;
+    this->m_pMachofat = pMachofat;
 }
 
 MACHOFAT_Script::~MACHOFAT_Script()

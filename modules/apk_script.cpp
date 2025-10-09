@@ -22,13 +22,13 @@
 
 APK_Script::APK_Script(XAPK *pAPK, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : JAR_Script(pAPK, filePart, pOptions, pPdStruct)
 {
-    this->g_pAPK = pAPK;
+    this->m_pAPK = pAPK;
 
     XArchive::RECORD record = pAPK->getArchiveRecord("AndroidManifest.xml", getArchiveRecords(), pPdStruct);
 
     QByteArray baAndroidManifest = XArchives::decompress(pAPK->getDevice(), &record, pPdStruct);
     if (baAndroidManifest.size() > 0) {
-        g_sAndroidManifest = XAndroidBinary::getDecoded(&baAndroidManifest, pPdStruct);
+        m_sAndroidManifest = XAndroidBinary::getDecoded(&baAndroidManifest, pPdStruct);
     }
 }
 
@@ -38,7 +38,7 @@ APK_Script::~APK_Script()
 
 QString APK_Script::getAndroidManifest()
 {
-    return g_sAndroidManifest;
+    return m_sAndroidManifest;
 }
 
 QString APK_Script::getAndroidManifestRecord(const QString &sRecord)
@@ -46,7 +46,7 @@ QString APK_Script::getAndroidManifestRecord(const QString &sRecord)
     QString sResult;
     QString sRegex = sRecord + "=\"(.*?)\"";
 
-    sResult = XBinary::regExp(sRegex, g_sAndroidManifest, 1);
+    sResult = XBinary::regExp(sRegex, m_sAndroidManifest, 1);
 
     return sResult;
 }

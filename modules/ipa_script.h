@@ -32,7 +32,7 @@ public:
     ~IPA_Script();
 
 private:
-    XIPA *g_pIPA;
+    XIPA *m_pIPA;
 };
 
 #endif  // IPA_SCRIPT_H

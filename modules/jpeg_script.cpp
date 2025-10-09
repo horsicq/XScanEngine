@@ -22,35 +22,35 @@
 
 Jpeg_Script::Jpeg_Script(XJpeg *pJpeg, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Image_Script(pJpeg, filePart, pOptions, pPdStruct)
 {
-    g_pJpeg = pJpeg;
+    m_pJpeg = pJpeg;
 
-    g_listChunks = g_pJpeg->getChunks(pPdStruct);
-    g_osExif = g_pJpeg->getExif(&g_listChunks);
-    g_listExifChunks = XTiff::getExifChunks(pJpeg->getDevice(), g_osExif);
-    g_sExifCameraName = XTiff::getExifCameraName(pJpeg->getDevice(), g_osExif, &g_listExifChunks);
+    m_listChunks = m_pJpeg->getChunks(pPdStruct);
+    m_osExif = m_pJpeg->getExif(&m_listChunks);
+    m_listExifChunks = XTiff::getExifChunks(pJpeg->getDevice(), m_osExif);
+    m_sExifCameraName = XTiff::getExifCameraName(pJpeg->getDevice(), m_osExif, &m_listExifChunks);
 }
 
 QString Jpeg_Script::getComment()
 {
-    return g_pJpeg->getComment(&g_listChunks);
+    return m_pJpeg->getComment(&m_listChunks);
 }
 
 QString Jpeg_Script::getDqtMD5()
 {
-    return g_pJpeg->getDqtMD5(&g_listChunks);
+    return m_pJpeg->getDqtMD5(&m_listChunks);
 }
 
 bool Jpeg_Script::isChunkPresent(qint32 nID)
 {
-    return g_pJpeg->isChunkPresent(&g_listChunks, (qint8)nID);
+    return m_pJpeg->isChunkPresent(&m_listChunks, (qint8)nID);
 }
 
 bool Jpeg_Script::isExifPresent()
 {
-    return g_pJpeg->isExifPresent(g_osExif);
+    return m_pJpeg->isExifPresent(m_osExif);
 }
 
 QString Jpeg_Script::getExifCameraName()
 {
-    return g_sExifCameraName;
+    return m_sExifCameraName;
 }

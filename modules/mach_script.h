@@ -46,16 +46,16 @@ public slots:
     bool isCommandPresent(quint32 nNumber);
 
 private:
-    XMACH *g_pMACH;
-    QString g_sGeneralOptions;
-    QList<XMACH::LIBRARY_RECORD> g_listLibraryRecords;
-    QList<XMACH::SECTION_RECORD> g_listSectionRecords;
-    QList<XMACH::COMMAND_RECORD> g_listCommandRecords;
-    QList<XMACH::SEGMENT_RECORD> g_listSegmentRecords;
-    QList<QString> g_listSectionNameStrings;
-    qint32 g_nNumberOfSections;
-    qint32 g_nNumberOfSegments;
-    qint32 g_nNumberOfCommands;
+    XMACH *m_pMACH;
+    QString m_sGeneralOptions;
+    QList<XMACH::LIBRARY_RECORD> m_listLibraryRecords;
+    QList<XMACH::SECTION_RECORD> m_listSectionRecords;
+    QList<XMACH::COMMAND_RECORD> m_listCommandRecords;
+    QList<XMACH::SEGMENT_RECORD> m_listSegmentRecords;
+    QList<QString> m_listSectionNameStrings;
+    qint32 m_nNumberOfSections;
+    qint32 m_nNumberOfSegments;
+    qint32 m_nNumberOfCommands;
 };
 
 #endif  // MACH_SCRIPT_H

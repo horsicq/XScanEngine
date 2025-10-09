@@ -32,7 +32,7 @@ public:
     ~DOS16M_Script();
 
 private:
-    XDOS16 *g_pXdos16;
+    XDOS16 *m_pXdos16;
 };
 
 #endif  // DOS16M_SCRIPT_H

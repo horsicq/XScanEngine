@@ -32,7 +32,7 @@ public:
     ~MACHOFAT_Script();
 
 private:
-    XMACHOFat *g_pMachofat;
+    XMACHOFat *m_pMachofat;
 };
 
 #endif  // MACHOFAT_SCRIPT_H

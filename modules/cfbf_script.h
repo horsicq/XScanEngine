@@ -32,7 +32,7 @@ public:
     ~CFBF_Script();
 
 private:
-    XCFBF *g_pCFBF;
+    XCFBF *m_pCFBF;
 };
 
 #endif  // CFBF_SCRIPT_H

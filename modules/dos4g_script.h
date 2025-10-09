@@ -31,7 +31,7 @@ public:
     ~DOS4G_Script();
 
 private:
-    XDOS16 *g_pXdos16;
+    XDOS16 *m_pXdos16;
 };
 
 #endif  // DOS4G_SCRIPT_H

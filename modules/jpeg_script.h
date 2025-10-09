@@ -36,11 +36,11 @@ public slots:
     QString getExifCameraName();
 
 private:
-    XJpeg *g_pJpeg;
-    QList<XJpeg::CHUNK> g_listChunks;
-    XBinary::OFFSETSIZE g_osExif;
-    QList<XTiff::CHUNK> g_listExifChunks;
-    QString g_sExifCameraName;
+    XJpeg *m_pJpeg;
+    QList<XJpeg::CHUNK> m_listChunks;
+    XBinary::OFFSETSIZE m_osExif;
+    QList<XTiff::CHUNK> m_listExifChunks;
+    QString m_sExifCameraName;
 };
 
 #endif  // JPEG_SCRIPT_H

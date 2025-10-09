@@ -23,5 +23,5 @@
 Image_Script::Image_Script(XBinary *pImage, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
     : Binary_Script(pImage, filePart, pOptions, pPdStruct)
 {
-    g_pImage = pImage;
+    m_pImage = pImage;
 }

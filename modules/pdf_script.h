@@ -38,8 +38,8 @@ public slots:
     QString getHeaderCommentAsHex();
 
 private:
-    XPDF *g_pPDF;
-    QList<XPDF::XPART> g_listObjects;
+    XPDF *m_pPDF;
+    QList<XPDF::XPART> m_listObjects;
 };
 
 #endif  // PDF_SCRIPT_H

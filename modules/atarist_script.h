@@ -31,12 +31,12 @@ public:
     explicit AtariST_Script(XAtariST *pAtariST, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
 
 private:
-    XAtariST *g_pAtariST;
+    XAtariST *m_pAtariST;
 
 protected:
     XAtariST *getAtariST() const
     {
-        return g_pAtariST;
+        return m_pAtariST;
     }
 };
 

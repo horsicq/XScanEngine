@@ -36,8 +36,8 @@ public slots:
     QString getAndroidManifestRecord(const QString &sRecord);
 
 private:
-    XAPK *g_pAPK;
-    QString g_sAndroidManifest;
+    XAPK *m_pAPK;
+    QString m_sAndroidManifest;
 };
 
 #endif  // APK_SCRIPT_H

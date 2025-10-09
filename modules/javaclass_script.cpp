@@ -23,7 +23,7 @@
 JavaClass_Script::JavaClass_Script(XJavaClass *pJavaClass, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
     : Binary_Script(pJavaClass, filePart, pOptions, pPdStruct)
 {
-    this->g_pJavaClass = pJavaClass;
+    this->m_pJavaClass = pJavaClass;
 }
 
 JavaClass_Script::~JavaClass_Script()

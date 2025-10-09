@@ -32,7 +32,7 @@ public:
     ~NE_Script();
 
 private:
-    XNE *g_pNE;
+    XNE *m_pNE;
 };
 
 #endif  // NE_SCRIPT_H

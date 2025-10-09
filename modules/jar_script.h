@@ -35,8 +35,8 @@ public slots:
     QString getManifestRecord(const QString &sRecord);
 
 private:
-    XZip *g_pZip;
-    QString g_sManifest;
+    XZip *m_pZip;
+    QString m_sManifest;
 };
 
 #endif  // JAR_SCRIPT_H

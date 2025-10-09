@@ -48,16 +48,16 @@ public slots:
 
 private:
     XMSDOS *m_pMSDOS;
-    QList<XMSDOS::MS_RICH_RECORD> g_listRich;
-    qint32 g_nNumberOfRichIDs;
-    qint64 g_nDosStubOffset;
-    qint64 g_nDosStubSize;
-    bool g_bIsDosStubPresent;
-    bool g_bIisRichSignaturePresent;
-    bool g_bIsLE;
-    bool g_bIsLX;
-    bool g_bIsNE;
-    bool g_bIsPE;
+    QList<XMSDOS::MS_RICH_RECORD> m_listRich;
+    qint32 m_nNumberOfRichIDs;
+    qint64 m_nDosStubOffset;
+    qint64 m_nDosStubSize;
+    bool m_bIsDosStubPresent;
+    bool m_bIisRichSignaturePresent;
+    bool m_bIsLE;
+    bool m_bIsLX;
+    bool m_bIsNE;
+    bool m_bIsPE;
 };
 
 #endif  // MSDOS_SCRIPT_H

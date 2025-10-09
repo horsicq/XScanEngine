@@ -42,8 +42,8 @@ public slots:
     quint32 getChunkSize(qint32 nIndex);
 
 private:
-    XPNG *g_pPNG;
-    XPNG::IHDR g_ihdr;
+    XPNG *m_pPNG;
+    XPNG::IHDR m_ihdr;
 };
 
 #endif  // PNG_SCRIPT_H

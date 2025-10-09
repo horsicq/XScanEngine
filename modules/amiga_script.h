@@ -35,14 +35,14 @@ public slots:
     quint16 getHunkIdByNumber(qint32 nNumber);
 
 private:
-    XAmigaHunk *g_pAmiga;
-    QList<XAmigaHunk::HUNK> g_listHunks;
-    qint32 g_nNumberOfHunks;
+    XAmigaHunk *m_pAmiga;
+    QList<XAmigaHunk::HUNK> m_listHunks;
+    qint32 m_nNumberOfHunks;
 
 protected:
     XAmigaHunk *getAmiga() const
     {
-        return g_pAmiga;
+        return m_pAmiga;
     }
 };
 

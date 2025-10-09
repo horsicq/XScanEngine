@@ -22,43 +22,43 @@
 
 PNG_Script::PNG_Script(XPNG *pPNG, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Image_Script(pPNG, filePart, pOptions, pPdStruct)
 {
-    g_pPNG = pPNG;
-    g_ihdr = g_pPNG->getIHDR();
+    m_pPNG = pPNG;
+    m_ihdr = m_pPNG->getIHDR();
 }
 
 quint32 PNG_Script::getWidth()
 {
-    return g_ihdr.nWidth;
+    return m_ihdr.nWidth;
 }
 
 quint32 PNG_Script::getHeight()
 {
-    return g_ihdr.nHeight;
+    return m_ihdr.nHeight;
 }
 
 quint8 PNG_Script::getBitDepth()
 {
-    return g_ihdr.nBitDepth;
+    return m_ihdr.nBitDepth;
 }
 
 quint8 PNG_Script::getColorType()
 {
-    return g_ihdr.nColorType;
+    return m_ihdr.nColorType;
 }
 
 quint8 PNG_Script::getCompression()
 {
-    return g_ihdr.nCompression;
+    return m_ihdr.nCompression;
 }
 
 quint8 PNG_Script::getFilter()
 {
-    return g_ihdr.nFilter;
+    return m_ihdr.nFilter;
 }
 
 quint8 PNG_Script::getInterlace()
 {
-    return g_ihdr.nInterlace;
+    return m_ihdr.nInterlace;
 }
 
 bool PNG_Script::isChunkPresent(const QString &sChunkType)

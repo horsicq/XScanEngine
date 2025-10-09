@@ -22,13 +22,13 @@
 
 DEX_Script::DEX_Script(XDEX *pDex, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pDex, filePart, pOptions, pPdStruct)
 {
-    this->g_pDex = pDex;
-    g_MapItemsHash = 0;
+    this->m_pDex = pDex;
+    m_MapItemsHash = 0;
 
-    g_listItems = pDex->getMapItems(pPdStruct);
-    g_bIsStringPoolSorted = pDex->isStringPoolSorted(&g_listItems, pPdStruct);
-    g_listStrings = pDex->getStrings(&g_listItems, pPdStruct);
-    g_listItemStrings = pDex->getTypeItemStrings(&g_listItems, &g_listStrings, pPdStruct);
+    m_listItems = pDex->getMapItems(pPdStruct);
+    m_bIsStringPoolSorted = pDex->isStringPoolSorted(&m_listItems, pPdStruct);
+    m_listStrings = pDex->getStrings(&m_listItems, pPdStruct);
+    m_listItemStrings = pDex->getTypeItemStrings(&m_listItems, &m_listStrings, pPdStruct);
 }
 
 DEX_Script::~DEX_Script()
@@ -37,24 +37,24 @@ DEX_Script::~DEX_Script()
 
 bool DEX_Script::isStringPoolSorted()
 {
-    return g_bIsStringPoolSorted;
+    return m_bIsStringPoolSorted;
 }
 
 bool DEX_Script::isDexStringPresent(const QString &sString)
 {
-    return g_pDex->isStringInListPresent(&g_listStrings, sString, getPdStruct());
+    return m_pDex->isStringInListPresent(&m_listStrings, sString, getPdStruct());
 }
 
 bool DEX_Script::isDexItemStringPresent(const QString &sItemString)
 {
-    return g_pDex->isStringInListPresent(&g_listItemStrings, sItemString, getPdStruct());
+    return m_pDex->isStringInListPresent(&m_listItemStrings, sItemString, getPdStruct());
 }
 
 quint32 DEX_Script::getMapItemsHash()
 {
-    if (g_MapItemsHash == 0) {
-        g_MapItemsHash = XDEX::getMapItemsHash(&g_listItems, getPdStruct());
+    if (m_MapItemsHash == 0) {
+        m_MapItemsHash = XDEX::getMapItemsHash(&m_listItems, getPdStruct());
     }
 
-    return g_MapItemsHash;
+    return m_MapItemsHash;
 }

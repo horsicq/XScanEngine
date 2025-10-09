@@ -31,7 +31,7 @@ public:
     ~ZIP_Script();
 
 private:
-    XZip *g_pZip;
+    XZip *m_pZip;
 };
 
 #endif  // ZIP_SCRIPT_H

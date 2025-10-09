@@ -22,9 +22,9 @@
 
 JAR_Script::JAR_Script(XZip *pZip, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : ZIP_Script(pZip, filePart, pOptions, pPdStruct)
 {
-    this->g_pZip = pZip;
+    this->m_pZip = pZip;
 
-    g_sManifest = pZip->decompress(getArchiveRecords(), "META-INF/MANIFEST.MF", pPdStruct);
+    m_sManifest = pZip->decompress(getArchiveRecords(), "META-INF/MANIFEST.MF", pPdStruct);
 }
 
 JAR_Script::~JAR_Script()
@@ -33,7 +33,7 @@ JAR_Script::~JAR_Script()
 
 QString JAR_Script::getManifest()
 {
-    return g_sManifest;
+    return m_sManifest;
 }
 
 QString JAR_Script::getManifestRecord(const QString &sRecord)
@@ -41,7 +41,7 @@ QString JAR_Script::getManifestRecord(const QString &sRecord)
     QString sResult;
     QString sRegex = sRecord + ": (.*?)\n";
 
-    sResult = XBinary::regExp(sRegex, g_sManifest, 1).remove("\r");
+    sResult = XBinary::regExp(sRegex, m_sManifest, 1).remove("\r");
 
     return sResult;
 }

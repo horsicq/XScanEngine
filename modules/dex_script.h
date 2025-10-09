@@ -38,12 +38,12 @@ public slots:
     quint32 getMapItemsHash();
 
 private:
-    XDEX *g_pDex;
-    QList<XDEX_DEF::MAP_ITEM> g_listItems;
-    bool g_bIsStringPoolSorted;
-    QList<QString> g_listStrings;
-    QList<QString> g_listItemStrings;
-    quint32 g_MapItemsHash;
+    XDEX *m_pDex;
+    QList<XDEX_DEF::MAP_ITEM> m_listItems;
+    bool m_bIsStringPoolSorted;
+    QList<QString> m_listStrings;
+    QList<QString> m_listItemStrings;
+    quint32 m_MapItemsHash;
 };
 
 #endif  // DEX_SCRIPT_H

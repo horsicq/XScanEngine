@@ -31,7 +31,7 @@ public:
     ~RAR_Script();
 
 private:
-    XRar *g_pRar;
+    XRar *m_pRar;
 };
 
 #endif  // RAR_SCRIPT_H

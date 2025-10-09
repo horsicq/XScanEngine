@@ -23,5 +23,5 @@
 AtariST_Script::AtariST_Script(XAtariST *pAtariST, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
     : Binary_Script(pAtariST, filePart, pOptions, pPdStruct)
 {
-    g_pAtariST = pAtariST;
+    m_pAtariST = pAtariST;
 }

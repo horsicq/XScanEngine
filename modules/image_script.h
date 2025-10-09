@@ -29,7 +29,7 @@ public:
     explicit Image_Script(XBinary *pImage, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
 
 private:
-    XBinary *g_pImage;
+    XBinary *m_pImage;
 };
 
 #endif  // IMAGE_SCRIPT_H

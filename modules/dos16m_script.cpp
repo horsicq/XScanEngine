@@ -23,7 +23,7 @@
 DOS16M_Script::DOS16M_Script(XDOS16 *pXdos16, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
     : Archive_Script(pXdos16, filePart, pOptions, pPdStruct)
 {
-    this->g_pXdos16 = pXdos16;
+    this->m_pXdos16 = pXdos16;
 }
 
 DOS16M_Script::~DOS16M_Script()

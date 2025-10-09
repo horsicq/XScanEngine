@@ -32,7 +32,7 @@ public:
     ~JavaClass_Script();
 
 private:
-    XJavaClass *g_pJavaClass;
+    XJavaClass *m_pJavaClass;
 };
 
 #endif  // JAVACLASS_SCRIPT_H

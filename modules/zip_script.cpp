@@ -22,7 +22,7 @@
 
 ZIP_Script::ZIP_Script(XZip *pZip, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Archive_Script(pZip, filePart, pOptions, pPdStruct)
 {
-    this->g_pZip = pZip;
+    this->m_pZip = pZip;
 }
 
 ZIP_Script::~ZIP_Script()

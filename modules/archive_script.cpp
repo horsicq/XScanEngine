@@ -23,52 +23,52 @@
 Archive_Script::Archive_Script(XArchive *pArchive, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
     : Binary_Script(pArchive, filePart, pOptions, pPdStruct)
 {
-    g_pArchive = pArchive;
+    m_pArchive = pArchive;
 
     bool bIsArchive = false;
 
     if (!bIsArchive) {
-        XZip *_pArchive = dynamic_cast<XZip *>(g_pArchive);
-        if (_pArchive) g_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
+        XZip *_pArchive = dynamic_cast<XZip *>(m_pArchive);
+        if (_pArchive) m_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
     }
 
     if (!bIsArchive) {
-        XTGZ *_pArchive = dynamic_cast<XTGZ *>(g_pArchive);
-        if (_pArchive) g_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
+        XTGZ *_pArchive = dynamic_cast<XTGZ *>(m_pArchive);
+        if (_pArchive) m_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
     }
 
     if (!bIsArchive) {
-        XTAR *_pArchive = dynamic_cast<XTAR *>(g_pArchive);
-        if (_pArchive) g_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
+        XTAR *_pArchive = dynamic_cast<XTAR *>(m_pArchive);
+        if (_pArchive) m_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
     }
 
     if (!bIsArchive) {
-        XDOS16 *_pArchive = dynamic_cast<XDOS16 *>(g_pArchive);
-        if (_pArchive) g_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
+        XDOS16 *_pArchive = dynamic_cast<XDOS16 *>(m_pArchive);
+        if (_pArchive) m_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
     }
 
     if (!bIsArchive) {
-        XMACHOFat *_pArchive = dynamic_cast<XMACHOFat *>(g_pArchive);
-        if (_pArchive) g_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
+        XMACHOFat *_pArchive = dynamic_cast<XMACHOFat *>(m_pArchive);
+        if (_pArchive) m_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
     }
 
     if (!bIsArchive) {
-        XRar *_pArchive = dynamic_cast<XRar *>(g_pArchive);
-        if (_pArchive) g_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
+        XRar *_pArchive = dynamic_cast<XRar *>(m_pArchive);
+        if (_pArchive) m_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
     }
 }
 
 bool Archive_Script::isArchiveRecordPresent(const QString &sArchiveRecord)
 {
-    return XArchive::isArchiveRecordPresent(sArchiveRecord, &g_listArchiveRecords, getPdStruct());
+    return XArchive::isArchiveRecordPresent(sArchiveRecord, &m_listArchiveRecords, getPdStruct());
 }
 
 bool Archive_Script::isArchiveRecordPresentExp(const QString &sArchiveRecord)
 {
-    return XArchive::isArchiveRecordPresentExp(sArchiveRecord, &g_listArchiveRecords, getPdStruct());
+    return XArchive::isArchiveRecordPresentExp(sArchiveRecord, &m_listArchiveRecords, getPdStruct());
 }
 
 QList<XArchive::RECORD> *Archive_Script::getArchiveRecords()
 {
-    return &g_listArchiveRecords;
+    return &m_listArchiveRecords;
 }

@@ -22,7 +22,7 @@
 
 IPA_Script::IPA_Script(XIPA *pIPA, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : JAR_Script(pIPA, filePart, pOptions, pPdStruct)
 {
-    this->g_pIPA = pIPA;
+    this->m_pIPA = pIPA;
 }
 
 IPA_Script::~IPA_Script()

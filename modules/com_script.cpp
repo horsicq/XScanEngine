@@ -22,7 +22,7 @@
 
 COM_Script::COM_Script(XCOM *pCOM, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pCOM, filePart, pOptions, pPdStruct)
 {
-    this->g_pCOM = pCOM;
+    this->m_pCOM = pCOM;
 }
 
 COM_Script::~COM_Script()

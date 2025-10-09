@@ -22,64 +22,64 @@
 
 Binary_Script::Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
 {
-    this->g_pBinary = pBinary;
-    this->g_filePart = filePart;
+    this->m_pBinary = pBinary;
+    this->m_filePart = filePart;
     this->m_pPdStruct = pPdStruct;
-    this->g_pOptions = pOptions;
+    this->m_pOptions = pOptions;
 
     connect(pBinary, SIGNAL(errorMessage(QString)), this, SIGNAL(errorMessage(QString)));
     connect(pBinary, SIGNAL(infoMessage(QString)), this, SIGNAL(infoMessage(QString)));
 
-    g_nSize = pBinary->getSize();
-    g_memoryMap = pBinary->getMemoryMap(XBinary::MAPMODE_UNKNOWN, pPdStruct);
-    g_nBaseAddress = pBinary->getBaseAddress();
+    m_nSize = pBinary->getSize();
+    m_memoryMap = pBinary->getMemoryMap(XBinary::MAPMODE_UNKNOWN, pPdStruct);
+    m_nBaseAddress = pBinary->getBaseAddress();
 
-    g_nEntryPointOffset = pBinary->getEntryPointOffset(&g_memoryMap);
-    g_nEntryPointAddress = pBinary->getEntryPointAddress(&g_memoryMap);
-    g_nOverlayOffset = pBinary->getOverlayOffset(&g_memoryMap, pPdStruct);
-    g_nOverlaySize = pBinary->getOverlaySize(&g_memoryMap, pPdStruct);
-    g_bIsOverlayPresent = pBinary->isOverlayPresent(&g_memoryMap, pPdStruct);
-    g_bIsBigEndian = pBinary->isBigEndian();
+    m_nEntryPointOffset = pBinary->getEntryPointOffset(&m_memoryMap);
+    m_nEntryPointAddress = pBinary->getEntryPointAddress(&m_memoryMap);
+    m_nOverlayOffset = pBinary->getOverlayOffset(&m_memoryMap, pPdStruct);
+    m_nOverlaySize = pBinary->getOverlaySize(&m_memoryMap, pPdStruct);
+    m_bIsOverlayPresent = pBinary->isOverlayPresent(&m_memoryMap, pPdStruct);
+    m_bIsBigEndian = pBinary->isBigEndian();
 
-    g_sHeaderSignature = pBinary->getSignature(0, 256);  // TODO const
-    g_nHeaderSignatureSize = g_sHeaderSignature.size() / 2;
+    m_sHeaderSignature = pBinary->getSignature(0, 256);  // TODO const
+    m_nHeaderSignatureSize = m_sHeaderSignature.size() / 2;
 
-    g_sEntryPointSignature = pBinary->getSignature(g_nEntryPointOffset, 256);  // TODO const
-    g_nEntryPointSignatureSize = g_sEntryPointSignature.size();
+    m_sEntryPointSignature = pBinary->getSignature(m_nEntryPointOffset, 256);  // TODO const
+    m_nEntryPointSignatureSize = m_sEntryPointSignature.size();
 
-    if (g_nOverlayOffset > 0) {
-        g_sOverlaySignature = pBinary->getSignature(g_nOverlayOffset, 256);  // TODO const
-        g_nOverlaySignatureSize = g_sOverlaySignature.size();
+    if (m_nOverlayOffset > 0) {
+        m_sOverlaySignature = pBinary->getSignature(m_nOverlayOffset, 256);  // TODO const
+        m_nOverlaySignatureSize = m_sOverlaySignature.size();
     }
 
-    g_sFileDirectory = XBinary::getDeviceDirectory(pBinary->getDevice());
-    g_sFileBaseName = XBinary::getDeviceFileBaseName(pBinary->getDevice());
-    g_sFileCompleteSuffix = XBinary::getDeviceFileCompleteSuffix(pBinary->getDevice());
-    g_sFileSuffix = XBinary::getDeviceFileSuffix(pBinary->getDevice());
+    m_sFileDirectory = XBinary::getDeviceDirectory(pBinary->getDevice());
+    m_sFileBaseName = XBinary::getDeviceFileBaseName(pBinary->getDevice());
+    m_sFileCompleteSuffix = XBinary::getDeviceFileCompleteSuffix(pBinary->getDevice());
+    m_sFileSuffix = XBinary::getDeviceFileSuffix(pBinary->getDevice());
 
-    g_bIsPlainText = pBinary->isPlainTextType();
-    g_bIsUTF8Text = pBinary->isUTF8TextType();
+    m_bIsPlainText = pBinary->isPlainTextType();
+    m_bIsUTF8Text = pBinary->isUTF8TextType();
     XBinary::UNICODE_TYPE unicodeType = pBinary->getUnicodeType();
 
     if (unicodeType != XBinary::UNICODE_TYPE_NONE) {
-        g_sHeaderString = pBinary->read_unicodeString(2, qMin(g_nSize, (qint64)0x1000), (unicodeType == XBinary::UNICODE_TYPE_BE));
-        g_bIsUnicodeText = true;
-    } else if (g_bIsUTF8Text) {
-        g_sHeaderString = pBinary->read_utf8String(3, qMin(g_nSize, (qint64)0x1000));
-    } else if (g_bIsPlainText) {
-        g_sHeaderString = pBinary->read_ansiString(0, qMin(g_nSize, (qint64)0x1000));
+        m_sHeaderString = pBinary->read_unicodeString(2, qMin(m_nSize, (qint64)0x1000), (unicodeType == XBinary::UNICODE_TYPE_BE));
+        m_bIsUnicodeText = true;
+    } else if (m_bIsUTF8Text) {
+        m_sHeaderString = pBinary->read_utf8String(3, qMin(m_nSize, (qint64)0x1000));
+    } else if (m_bIsPlainText) {
+        m_sHeaderString = pBinary->read_ansiString(0, qMin(m_nSize, (qint64)0x1000));
     }
 
-    g_bIsSigned = pBinary->isSigned();
-    g_fileFormatInfo = pBinary->getFileFormatInfo(pPdStruct);
-    g_sFileFormatInfoString = XBinary::getFileFormatInfoString(&g_fileFormatInfo);
+    m_bIsSigned = pBinary->isSigned();
+    m_fileFormatInfo = pBinary->getFileFormatInfo(pPdStruct);
+    m_sFileFormatInfoString = XBinary::getFileFormatInfoString(&m_fileFormatInfo);
 
-    g_bIsFmtChecking = false;
-    g_bIsFmtCheckingDeep = false;
+    m_bIsFmtChecking = false;
+    m_bIsFmtCheckingDeep = false;
 
-    g_disasmOptions = {};
-    g_disasmOptions.bIsUppercase = true;
-    g_disasmCore.setMode(XBinary::getDisasmMode(&g_memoryMap));
+    m_disasmOptions = {};
+    m_disasmOptions.bIsUppercase = true;
+    m_disasmCore.setMode(XBinary::getDisasmMode(&m_memoryMap));
 }
 
 Binary_Script::~Binary_Script()
@@ -88,7 +88,7 @@ Binary_Script::~Binary_Script()
 
 qint64 Binary_Script::getSize()
 {
-    return g_nSize;
+    return m_nSize;
 }
 
 bool Binary_Script::compare(const QString &sSignature, qint64 nOffset)
@@ -99,11 +99,11 @@ bool Binary_Script::compare(const QString &sSignature, qint64 nOffset)
 
     qint32 nSignatureSize = _sSignature.size();
 
-    if ((nSignatureSize + nOffset < g_nHeaderSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
+    if ((nSignatureSize + nOffset < m_nHeaderSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
         (!_sSignature.contains('%')) && (!_sSignature.contains('*'))) {
-        bResult = g_pBinary->compareSignatureStrings(g_sHeaderSignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
+        bResult = m_pBinary->compareSignatureStrings(m_sHeaderSignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
     } else {
-        bResult = g_pBinary->compareSignature(&g_memoryMap, _sSignature, nOffset, m_pPdStruct);
+        bResult = m_pBinary->compareSignature(&m_memoryMap, _sSignature, nOffset, m_pPdStruct);
     }
 
     return bResult;
@@ -117,11 +117,11 @@ bool Binary_Script::compareEP(const QString &sSignature, qint64 nOffset)
 
     qint32 nSignatureSize = sSignature.size();
 
-    if ((nSignatureSize + nOffset < g_nEntryPointSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
+    if ((nSignatureSize + nOffset < m_nEntryPointSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
         (!_sSignature.contains('%')) && (!_sSignature.contains('*'))) {
-        bResult = g_pBinary->compareSignatureStrings(g_sEntryPointSignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
+        bResult = m_pBinary->compareSignatureStrings(m_sEntryPointSignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
     } else {
-        bResult = g_pBinary->compareEntryPoint(&g_memoryMap, _sSignature, nOffset);  // TODO m_pPdStruct
+        bResult = m_pBinary->compareEntryPoint(&m_memoryMap, _sSignature, nOffset);  // TODO m_pPdStruct
     }
 
     return bResult;
@@ -129,47 +129,47 @@ bool Binary_Script::compareEP(const QString &sSignature, qint64 nOffset)
 
 quint8 Binary_Script::readByte(qint64 nOffset)
 {
-    return g_pBinary->read_uint8(nOffset);
+    return m_pBinary->read_uint8(nOffset);
 }
 
 qint16 Binary_Script::readSByte(qint64 nOffset)
 {
-    return g_pBinary->read_int8(nOffset);
+    return m_pBinary->read_int8(nOffset);
 }
 
 quint16 Binary_Script::readWord(qint64 nOffset)
 {
-    return g_pBinary->read_uint16(nOffset);
+    return m_pBinary->read_uint16(nOffset);
 }
 
 qint16 Binary_Script::readSWord(qint64 nOffset)
 {
-    return g_pBinary->read_int16(nOffset);
+    return m_pBinary->read_int16(nOffset);
 }
 
 quint32 Binary_Script::readDword(qint64 nOffset)
 {
-    return g_pBinary->read_uint32(nOffset);
+    return m_pBinary->read_uint32(nOffset);
 }
 
 qint32 Binary_Script::readSDword(qint64 nOffset)
 {
-    return g_pBinary->read_int32(nOffset);
+    return m_pBinary->read_int32(nOffset);
 }
 
 quint64 Binary_Script::readQword(qint64 nOffset)
 {
-    return g_pBinary->read_uint64(nOffset);
+    return m_pBinary->read_uint64(nOffset);
 }
 
 qint64 Binary_Script::readSQword(qint64 nOffset)
 {
-    return g_pBinary->read_int64(nOffset);
+    return m_pBinary->read_int64(nOffset);
 }
 
 QString Binary_Script::getString(qint64 nOffset, qint64 nMaxSize)
 {
-    return g_pBinary->read_ansiString(nOffset, nMaxSize);
+    return m_pBinary->read_ansiString(nOffset, nMaxSize);
 }
 
 qint64 Binary_Script::findSignature(qint64 nOffset, qint64 nSize, const QString &sSignature)
@@ -182,7 +182,7 @@ qint64 Binary_Script::findSignature(qint64 nOffset, qint64 nSize, const QString 
 
     _fixOffsetAndSize(&nOffset, &nSize);
 
-    nResult = g_pBinary->find_signature(&g_memoryMap, nOffset, nSize, sSignature, &nResultSize, m_pPdStruct);
+    nResult = m_pBinary->find_signature(&m_memoryMap, nOffset, nSize, sSignature, &nResultSize, m_pPdStruct);
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("find_signature[%1]: %2 %3").arg(sSignature, XBinary::valueToHexEx(nOffset), XBinary::valueToHexEx(nSize)));
@@ -199,7 +199,7 @@ qint64 Binary_Script::findString(qint64 nOffset, qint64 nSize, const QString &sS
 
     _fixOffsetAndSize(&nOffset, &nSize);
 
-    nResult = g_pBinary->find_ansiString(nOffset, nSize, sString, m_pPdStruct);
+    nResult = m_pBinary->find_ansiString(nOffset, nSize, sString, m_pPdStruct);
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("findString[%1]: %2 %3").arg(sString, XBinary::valueToHexEx(nOffset), XBinary::valueToHexEx(nSize)));
@@ -216,7 +216,7 @@ qint64 Binary_Script::findByte(qint64 nOffset, qint64 nSize, quint8 nValue)
 
     _fixOffsetAndSize(&nOffset, &nSize);
 
-    nResult = g_pBinary->find_uint8(nOffset, nSize, nValue, m_pPdStruct);
+    nResult = m_pBinary->find_uint8(nOffset, nSize, nValue, m_pPdStruct);
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("findByte[%1]: %2 %3").arg(XBinary::valueToHex(nValue), XBinary::valueToHexEx(nOffset), XBinary::valueToHexEx(nSize)));
@@ -233,7 +233,7 @@ qint64 Binary_Script::findWord(qint64 nOffset, qint64 nSize, quint16 nValue)
 
     _fixOffsetAndSize(&nOffset, &nSize);
 
-    nResult = g_pBinary->find_uint16(nOffset, nSize, nValue, m_pPdStruct);
+    nResult = m_pBinary->find_uint16(nOffset, nSize, nValue, m_pPdStruct);
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("findWord[%1]: %2 %3").arg(XBinary::valueToHex(nValue), XBinary::valueToHexEx(nOffset), XBinary::valueToHexEx(nSize)));
@@ -250,7 +250,7 @@ qint64 Binary_Script::findDword(qint64 nOffset, qint64 nSize, quint32 nValue)
 
     _fixOffsetAndSize(&nOffset, &nSize);
 
-    nResult = g_pBinary->find_uint32(nOffset, nSize, nValue, m_pPdStruct);
+    nResult = m_pBinary->find_uint32(nOffset, nSize, nValue, m_pPdStruct);
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("findDword[%1]: %2 %3").arg(XBinary::valueToHex(nValue), XBinary::valueToHexEx(nOffset), XBinary::valueToHexEx(nSize)));
@@ -261,27 +261,27 @@ qint64 Binary_Script::findDword(qint64 nOffset, qint64 nSize, quint32 nValue)
 
 qint64 Binary_Script::getEntryPointOffset()
 {
-    return g_nEntryPointOffset;
+    return m_nEntryPointOffset;
 }
 
 qint64 Binary_Script::getOverlayOffset()
 {
-    return g_nOverlayOffset;
+    return m_nOverlayOffset;
 }
 
 qint64 Binary_Script::getOverlaySize()
 {
-    return g_nOverlaySize;
+    return m_nOverlaySize;
 }
 
 qint64 Binary_Script::getAddressOfEntryPoint()
 {
-    return g_nEntryPointAddress;
+    return m_nEntryPointAddress;
 }
 
 bool Binary_Script::isOverlayPresent()
 {
-    return g_bIsOverlayPresent;
+    return m_bIsOverlayPresent;
 }
 
 bool Binary_Script::compareOverlay(const QString &sSignature, qint64 nOffset)
@@ -292,11 +292,11 @@ bool Binary_Script::compareOverlay(const QString &sSignature, qint64 nOffset)
 
     qint32 nSignatureSize = sSignature.size();
 
-    if ((nSignatureSize + nOffset < g_nOverlaySignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
+    if ((nSignatureSize + nOffset < m_nOverlaySignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
         (!_sSignature.contains('%')) && (!_sSignature.contains('*'))) {
-        bResult = g_pBinary->compareSignatureStrings(g_sOverlaySignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
+        bResult = m_pBinary->compareSignatureStrings(m_sOverlaySignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
     } else {
-        bResult = g_pBinary->compareOverlay(&g_memoryMap, _sSignature, nOffset, m_pPdStruct);
+        bResult = m_pBinary->compareOverlay(&m_memoryMap, _sSignature, nOffset, m_pPdStruct);
     }
 
     return bResult;
@@ -308,7 +308,7 @@ bool Binary_Script::isSignaturePresent(qint64 nOffset, qint64 nSize, const QStri
 
     QElapsedTimer *pTimer = _startProfiling();
 
-    bResult = g_pBinary->isSignaturePresent(&g_memoryMap, nOffset, nSize, sSignature, m_pPdStruct);
+    bResult = m_pBinary->isSignaturePresent(&m_memoryMap, nOffset, nSize, sSignature, m_pPdStruct);
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("isSignaturePresent[%1]: %2 %3").arg(sSignature, XBinary::valueToHexEx(nOffset), XBinary::valueToHexEx(nSize)));
@@ -319,7 +319,7 @@ bool Binary_Script::isSignaturePresent(qint64 nOffset, qint64 nSize, const QStri
 
 quint32 Binary_Script::swapBytes(quint32 nValue)
 {
-    return g_pBinary->swapBytes(nValue);
+    return m_pBinary->swapBytes(nValue);
 }
 
 QString Binary_Script::getGeneralOptions()
@@ -329,25 +329,25 @@ QString Binary_Script::getGeneralOptions()
 
 qint64 Binary_Script::RVAToOffset(qint64 nRVA)
 {
-    return g_pBinary->addressToOffset(&g_memoryMap, nRVA + g_nBaseAddress);
+    return m_pBinary->addressToOffset(&m_memoryMap, nRVA + m_nBaseAddress);
 }
 
 qint64 Binary_Script::VAToOffset(qint64 nVA)
 {
-    return g_pBinary->addressToOffset(&g_memoryMap, nVA);
+    return m_pBinary->addressToOffset(&m_memoryMap, nVA);
 }
 
 qint64 Binary_Script::OffsetToVA(qint64 nOffset)
 {
-    return g_pBinary->offsetToAddress(&g_memoryMap, nOffset);
+    return m_pBinary->offsetToAddress(&m_memoryMap, nOffset);
 }
 
 qint64 Binary_Script::OffsetToRVA(qint64 nOffset)
 {
-    qint64 nResult = g_pBinary->offsetToAddress(&g_memoryMap, nOffset);
+    qint64 nResult = m_pBinary->offsetToAddress(&m_memoryMap, nOffset);
 
     if (nResult != -1) {
-        nResult -= g_nBaseAddress;
+        nResult -= m_nBaseAddress;
     }
 
     return nResult;
@@ -355,57 +355,57 @@ qint64 Binary_Script::OffsetToRVA(qint64 nOffset)
 
 QString Binary_Script::getFileDirectory()
 {
-    return g_sFileDirectory;
+    return m_sFileDirectory;
 }
 
 QString Binary_Script::getFileBaseName()
 {
-    return g_sFileBaseName;
+    return m_sFileBaseName;
 }
 
 QString Binary_Script::getFileCompleteSuffix()
 {
-    return g_sFileCompleteSuffix;
+    return m_sFileCompleteSuffix;
 }
 
 QString Binary_Script::getFileSuffix()
 {
-    return g_sFileSuffix;
+    return m_sFileSuffix;
 }
 
 QString Binary_Script::getSignature(qint64 nOffset, qint64 nSize)
 {
-    return g_pBinary->getSignature(nOffset, nSize);
+    return m_pBinary->getSignature(nOffset, nSize);
 }
 
 double Binary_Script::calculateEntropy(qint64 nOffset, qint64 nSize)
 {
-    return g_pBinary->getBinaryStatus(XBinary::BSTATUS_ENTROPY, nOffset, nSize, m_pPdStruct);
+    return m_pBinary->getBinaryStatus(XBinary::BSTATUS_ENTROPY, nOffset, nSize, m_pPdStruct);
 }
 
 QString Binary_Script::calculateMD5(qint64 nOffset, qint64 nSize)
 {
-    return g_pBinary->getHash(XBinary::HASH_MD5, nOffset, nSize, m_pPdStruct);
+    return m_pBinary->getHash(XBinary::HASH_MD5, nOffset, nSize, m_pPdStruct);
 }
 
 quint32 Binary_Script::calculateCRC32(qint64 nOffset, qint64 nSize)
 {
-    return g_pBinary->_getCRC32(nOffset, nSize, 0, g_pBinary->_getCRC32Table_EDB88320(), m_pPdStruct);
+    return m_pBinary->_getCRC32(nOffset, nSize, 0, m_pBinary->_getCRC32Table_EDB88320(), m_pPdStruct);
 }
 
 quint16 Binary_Script::crc16(qint64 nOffset, qint64 nSize, quint16 nInit)
 {
-    return g_pBinary->_getCRC16(nOffset, nSize, nInit, m_pPdStruct);
+    return m_pBinary->_getCRC16(nOffset, nSize, nInit, m_pPdStruct);
 }
 
 quint32 Binary_Script::crc32(qint64 nOffset, qint64 nSize, quint32 nInit)
 {
-    return g_pBinary->_getCRC32(nOffset, nSize, nInit, g_pBinary->_getCRC32Table_EDB88320(), m_pPdStruct);
+    return m_pBinary->_getCRC32(nOffset, nSize, nInit, m_pBinary->_getCRC32Table_EDB88320(), m_pPdStruct);
 }
 
 quint32 Binary_Script::adler32(qint64 nOffset, qint64 nSize)
 {
-    return g_pBinary->getAdler32(nOffset, nSize, m_pPdStruct);
+    return m_pBinary->getAdler32(nOffset, nSize, m_pPdStruct);
 }
 
 bool Binary_Script::isSignatureInSectionPresent(quint32 nNumber, const QString &sSignature)
@@ -421,7 +421,7 @@ bool Binary_Script::isSignatureInSectionPresent(quint32 nNumber, const QString &
         _nNumber++;
     }
 
-    bResult = g_pBinary->isSignatureInFilePartPresent(&g_memoryMap, _nNumber, sSignature, m_pPdStruct);
+    bResult = m_pBinary->isSignatureInFilePartPresent(&m_memoryMap, _nNumber, sSignature, m_pPdStruct);
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("isSignatureInSectionPresent[%1]: %2 ").arg(sSignature, QString::number(nNumber)));
@@ -432,7 +432,7 @@ bool Binary_Script::isSignatureInSectionPresent(quint32 nNumber, const QString &
 
 qint64 Binary_Script::getImageBase()
 {
-    return g_memoryMap.nModuleAddress;
+    return m_memoryMap.nModuleAddress;
 }
 
 QString Binary_Script::upperCase(const QString &sString)
@@ -447,39 +447,39 @@ QString Binary_Script::lowerCase(const QString &sString)
 
 bool Binary_Script::isPlainText()
 {
-    return g_bIsPlainText;
+    return m_bIsPlainText;
 }
 
 bool Binary_Script::isUTF8Text()
 {
-    return g_bIsUTF8Text;
+    return m_bIsUTF8Text;
 }
 
 bool Binary_Script::isUnicodeText()
 {
-    return g_bIsUnicodeText;
+    return m_bIsUnicodeText;
 }
 
 bool Binary_Script::isText()
 {
-    return g_bIsPlainText | g_bIsUTF8Text | g_bIsUnicodeText;
+    return m_bIsPlainText | m_bIsUTF8Text | m_bIsUnicodeText;
 }
 
 QString Binary_Script::getHeaderString()
 {
-    return g_sHeaderString;
+    return m_sHeaderString;
 }
 
 qint32 Binary_Script::getDisasmLength(qint64 nAddress)
 {
-    return g_disasmCore.disAsm(g_pBinary->getDevice(), XBinary::addressToOffset(&g_memoryMap, nAddress), nAddress, g_disasmOptions).nSize;
+    return m_disasmCore.disAsm(m_pBinary->getDevice(), XBinary::addressToOffset(&m_memoryMap, nAddress), nAddress, m_disasmOptions).nSize;
 }
 
 QString Binary_Script::getDisasmString(qint64 nAddress)
 {
-    qint64 nOffset = XBinary::addressToOffset(&g_memoryMap, nAddress);
+    qint64 nOffset = XBinary::addressToOffset(&m_memoryMap, nAddress);
 
-    XDisasmAbstract::DISASM_RESULT _disasmResult = g_disasmCore.disAsm(g_pBinary->getDevice(), nOffset, nAddress, g_disasmOptions);
+    XDisasmAbstract::DISASM_RESULT _disasmResult = m_disasmCore.disAsm(m_pBinary->getDevice(), nOffset, nAddress, m_disasmOptions);
 
     QString sResult = _disasmResult.sMnemonic;
     if (_disasmResult.sOperands != "") {
@@ -491,134 +491,134 @@ QString Binary_Script::getDisasmString(qint64 nAddress)
 
 qint64 Binary_Script::getDisasmNextAddress(qint64 nAddress)
 {
-    return g_disasmCore.disAsm(g_pBinary->getDevice(), XBinary::addressToOffset(&g_memoryMap, nAddress), nAddress, g_disasmOptions).nNextAddress;
+    return m_disasmCore.disAsm(m_pBinary->getDevice(), XBinary::addressToOffset(&m_memoryMap, nAddress), nAddress, m_disasmOptions).nNextAddress;
 }
 
 bool Binary_Script::is16()
 {
-    return XBinary::is16(&g_memoryMap);
+    return XBinary::is16(&m_memoryMap);
 }
 
 bool Binary_Script::is32()
 {
-    return XBinary::is32(&g_memoryMap);
+    return XBinary::is32(&m_memoryMap);
 }
 
 bool Binary_Script::is64()
 {
-    return XBinary::is64(&g_memoryMap);
+    return XBinary::is64(&m_memoryMap);
 }
 
 bool Binary_Script::isDeepScan()
 {
-    return g_pOptions->bIsDeepScan;
+    return m_pOptions->bIsDeepScan;
 }
 
 bool Binary_Script::isHeuristicScan()
 {
-    return g_pOptions->bIsHeuristicScan;
+    return m_pOptions->bIsHeuristicScan;
 }
 
 bool Binary_Script::isAggressiveScan()
 {
-    return g_pOptions->bIsAggressiveScan;
+    return m_pOptions->bIsAggressiveScan;
 }
 
 bool Binary_Script::isRecursiveScan()
 {
-    return g_pOptions->bIsRecursiveScan;
+    return m_pOptions->bIsRecursiveScan;
 }
 
 bool Binary_Script::isVerbose()
 {
-    return g_pOptions->bIsVerbose;
+    return m_pOptions->bIsVerbose;
 }
 
 bool Binary_Script::isProfiling()
 {
-    return g_pOptions->bIsProfiling;
+    return m_pOptions->bIsProfiling;
 }
 
 qint64 Binary_Script::getStartOffset()
 {
-    return XIODevice::getInitLocation(g_pBinary->getDevice());
+    return XIODevice::getInitLocation(m_pBinary->getDevice());
 }
 
 quint8 Binary_Script::read_uint8(qint64 nOffset)
 {
-    return g_pBinary->read_uint8(nOffset);
+    return m_pBinary->read_uint8(nOffset);
 }
 
 qint16 Binary_Script::read_int8(qint64 nOffset)
 {
-    return g_pBinary->read_int8(nOffset);
+    return m_pBinary->read_int8(nOffset);
 }
 
 quint16 Binary_Script::read_uint16(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_uint16(nOffset, bIsBigEndian);
+    return m_pBinary->read_uint16(nOffset, bIsBigEndian);
 }
 
 qint16 Binary_Script::read_int16(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_int16(nOffset, bIsBigEndian);
+    return m_pBinary->read_int16(nOffset, bIsBigEndian);
 }
 
 quint32 Binary_Script::read_uint32(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_uint32(nOffset, bIsBigEndian);
+    return m_pBinary->read_uint32(nOffset, bIsBigEndian);
 }
 
 qint32 Binary_Script::read_int32(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_int32(nOffset, bIsBigEndian);
+    return m_pBinary->read_int32(nOffset, bIsBigEndian);
 }
 
 quint64 Binary_Script::read_uint64(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_uint64(nOffset, bIsBigEndian);
+    return m_pBinary->read_uint64(nOffset, bIsBigEndian);
 }
 
 qint64 Binary_Script::read_int64(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_int64(nOffset, bIsBigEndian);
+    return m_pBinary->read_int64(nOffset, bIsBigEndian);
 }
 
 QString Binary_Script::read_ansiString(qint64 nOffset, qint64 nMaxSize)
 {
-    return g_pBinary->read_ansiString(nOffset, nMaxSize);
+    return m_pBinary->read_ansiString(nOffset, nMaxSize);
 }
 
 QString Binary_Script::read_unicodeString(qint64 nOffset, qint64 nMaxSize)
 {
-    return g_pBinary->read_unicodeString(nOffset, nMaxSize);
+    return m_pBinary->read_unicodeString(nOffset, nMaxSize);
 }
 
 QString Binary_Script::read_utf8String(qint64 nOffset, qint64 nMaxSize)
 {
-    return g_pBinary->read_utf8String(nOffset, nMaxSize);
+    return m_pBinary->read_utf8String(nOffset, nMaxSize);
 }
 
 QString Binary_Script::read_ucsdString(qint64 nOffset)
 {
-    return g_pBinary->read_ucsdString(nOffset);
+    return m_pBinary->read_ucsdString(nOffset);
 }
 
 QString Binary_Script::read_codePageString(qint64 nOffset, qint64 nMaxByteSize, const QString &sCodePage)
 {
-    return g_pBinary->read_codePageString(nOffset, nMaxByteSize, sCodePage);
+    return m_pBinary->read_codePageString(nOffset, nMaxByteSize, sCodePage);
 }
 
 QString Binary_Script::bytesCountToString(quint64 nValue)
 {
-    return g_pBinary->bytesCountToString(nValue);
+    return m_pBinary->bytesCountToString(nValue);
 }
 
 qint64 Binary_Script::find_ansiString(qint64 nOffset, qint64 nSize, const QString &sString)
 {
     qint64 nResult = -1;
 
-    nResult = g_pBinary->find_ansiString(nOffset, nSize, sString, m_pPdStruct);
+    nResult = m_pBinary->find_ansiString(nOffset, nSize, sString, m_pPdStruct);
 
     return nResult;
 }
@@ -627,7 +627,7 @@ qint64 Binary_Script::find_unicodeString(qint64 nOffset, qint64 nSize, const QSt
 {
     qint64 nResult = -1;
 
-    nResult = g_pBinary->find_unicodeString(nOffset, nSize, sString, g_bIsBigEndian, m_pPdStruct);
+    nResult = m_pBinary->find_unicodeString(nOffset, nSize, sString, m_bIsBigEndian, m_pPdStruct);
 
     return nResult;
 }
@@ -636,91 +636,91 @@ qint64 Binary_Script::find_utf8String(qint64 nOffset, qint64 nSize, const QStrin
 {
     qint64 nResult = -1;
 
-    nResult = g_pBinary->find_utf8String(nOffset, nSize, sString, m_pPdStruct);
+    nResult = m_pBinary->find_utf8String(nOffset, nSize, sString, m_pPdStruct);
 
     return nResult;
 }
 
 QString Binary_Script::read_UUID_bytes(qint64 nOffset)
 {
-    return g_pBinary->read_UUID_bytes(nOffset);
+    return m_pBinary->read_UUID_bytes(nOffset);
 }
 
 QString Binary_Script::read_UUID(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_UUID(nOffset, bIsBigEndian);
+    return m_pBinary->read_UUID(nOffset, bIsBigEndian);
 }
 
 float Binary_Script::read_float(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_float(nOffset, bIsBigEndian);
+    return m_pBinary->read_float(nOffset, bIsBigEndian);
 }
 
 double Binary_Script::read_double(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_double(nOffset, bIsBigEndian);
+    return m_pBinary->read_double(nOffset, bIsBigEndian);
 }
 
 float Binary_Script::read_float16(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_float16(nOffset, bIsBigEndian);
+    return m_pBinary->read_float16(nOffset, bIsBigEndian);
 }
 
 float Binary_Script::read_float32(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_float(nOffset, bIsBigEndian);
+    return m_pBinary->read_float(nOffset, bIsBigEndian);
 }
 
 double Binary_Script::read_float64(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_double(nOffset, bIsBigEndian);
+    return m_pBinary->read_double(nOffset, bIsBigEndian);
 }
 
 quint32 Binary_Script::read_uint24(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_uint24(nOffset, bIsBigEndian);
+    return m_pBinary->read_uint24(nOffset, bIsBigEndian);
 }
 
 qint32 Binary_Script::read_int24(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_int24(nOffset, bIsBigEndian);
+    return m_pBinary->read_int24(nOffset, bIsBigEndian);
 }
 
 quint8 Binary_Script::read_bcd_uint8(qint64 nOffset)
 {
-    return g_pBinary->read_bcd_uint8(nOffset);
+    return m_pBinary->read_bcd_uint8(nOffset);
 }
 
 quint16 Binary_Script::read_bcd_uint16(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_bcd_uint16(nOffset, bIsBigEndian);
+    return m_pBinary->read_bcd_uint16(nOffset, bIsBigEndian);
 }
 
 quint16 Binary_Script::read_bcd_uint32(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_bcd_uint32(nOffset, bIsBigEndian);
+    return m_pBinary->read_bcd_uint32(nOffset, bIsBigEndian);
 }
 
 quint16 Binary_Script::read_bcd_uint64(qint64 nOffset, bool bIsBigEndian)
 {
-    return g_pBinary->read_bcd_uint64(nOffset, bIsBigEndian);
+    return m_pBinary->read_bcd_uint64(nOffset, bIsBigEndian);
 }
 
 QString Binary_Script::getOperationSystemName()
 {
-    return XBinary::osNameIdToString(g_fileFormatInfo.osName);
+    return XBinary::osNameIdToString(m_fileFormatInfo.osName);
 }
 
 QString Binary_Script::getOperationSystemVersion()
 {
-    return g_fileFormatInfo.sOsVersion;
+    return m_fileFormatInfo.sOsVersion;
 }
 
 QString Binary_Script::getOperationSystemOptions()
 {
-    QString sResult = QString("%1, %2, %3").arg(g_fileFormatInfo.sArch, XBinary::modeIdToString(g_fileFormatInfo.mode), g_fileFormatInfo.sType);
+    QString sResult = QString("%1, %2, %3").arg(m_fileFormatInfo.sArch, XBinary::modeIdToString(m_fileFormatInfo.mode), m_fileFormatInfo.sType);
 
-    if (g_fileFormatInfo.endian == XBinary::ENDIAN_BIG) {
+    if (m_fileFormatInfo.endian == XBinary::ENDIAN_BIG) {
         if (sResult != "") {
             sResult.append(", ");
         }
@@ -732,23 +732,23 @@ QString Binary_Script::getOperationSystemOptions()
 
 QString Binary_Script::getFileFormatName()
 {
-    // return XBinary::getFileFormatString(&g_fileFormatInfo);
-    return XBinary::fileTypeIdToString(g_fileFormatInfo.fileType);
+    // return XBinary::getFileFormatString(&m_fileFormatInfo);
+    return XBinary::fileTypeIdToString(m_fileFormatInfo.fileType);
 }
 
 QString Binary_Script::getFileFormatVersion()
 {
-    return g_fileFormatInfo.sVersion;
+    return m_fileFormatInfo.sVersion;
 }
 
 QString Binary_Script::getFileFormatOptions()
 {
-    return g_sFileFormatInfoString;
+    return m_sFileFormatInfoString;
 }
 
 bool Binary_Script::isSigned()
 {
-    return g_bIsSigned;
+    return m_bIsSigned;
 }
 
 QString Binary_Script::cleanString(const QString &sString)
@@ -873,9 +873,9 @@ QList<QVariant> Binary_Script::BA(qint64 nOffset, qint64 nSize, bool bReplaceZer
 
 void Binary_Script::_fixOffsetAndSize(qint64 *pnOffset, qint64 *pnSize)
 {
-    if ((*pnOffset) < g_nSize) {
-        if ((*pnOffset) + (*pnSize) > g_nSize) {
-            *pnSize = g_nSize - (*pnOffset);
+    if ((*pnOffset) < m_nSize) {
+        if ((*pnOffset) + (*pnSize) > m_nSize) {
+            *pnSize = m_nSize - (*pnOffset);
         }
     }
 }
@@ -884,7 +884,7 @@ QElapsedTimer *Binary_Script::_startProfiling()
 {
     QElapsedTimer *pResult = nullptr;
 
-    if (g_pOptions->bIsProfiling) {
+    if (m_pOptions->bIsProfiling) {
         pResult = new QElapsedTimer;
         pResult->start();
     }
@@ -894,7 +894,7 @@ QElapsedTimer *Binary_Script::_startProfiling()
 
 void Binary_Script::_finishProfiling(QElapsedTimer *pElapsedTimer, const QString &sInfo)
 {
-    if (g_pOptions->bIsProfiling) {
+    if (m_pOptions->bIsProfiling) {
         qint64 nElapsed = pElapsedTimer->elapsed();
         delete pElapsedTimer;
 
@@ -904,15 +904,15 @@ void Binary_Script::_finishProfiling(QElapsedTimer *pElapsedTimer, const QString
 
 bool Binary_Script::_loadFmtChecking(bool bDeep, XBinary::PDSTRUCT *pPdStruct)
 {
-    if ((!g_bIsFmtCheckingDeep) && bDeep) {
-        g_bIsFmtCheckingDeep = true;
-        g_bIsFmtChecking = true;
-        g_listFmtMsg = g_pBinary->checkFileFormat(true, pPdStruct);
-        g_listFormatMessages = g_pBinary->getFileFormatMessages(&g_listFmtMsg);
-    } else if (!g_bIsFmtChecking) {
-        g_bIsFmtChecking = true;
-        g_listFmtMsg = g_pBinary->checkFileFormat(false, pPdStruct);
-        g_listFormatMessages = g_pBinary->getFileFormatMessages(&g_listFmtMsg);
+    if ((!m_bIsFmtCheckingDeep) && bDeep) {
+        m_bIsFmtCheckingDeep = true;
+        m_bIsFmtChecking = true;
+        m_listFmtMsg = m_pBinary->checkFileFormat(true, pPdStruct);
+        m_listFormatMessages = m_pBinary->getFileFormatMessages(&m_listFmtMsg);
+    } else if (!m_bIsFmtChecking) {
+        m_bIsFmtChecking = true;
+        m_listFmtMsg = m_pBinary->checkFileFormat(false, pPdStruct);
+        m_listFormatMessages = m_pBinary->getFileFormatMessages(&m_listFmtMsg);
     }
 
     return true;
@@ -926,7 +926,7 @@ qint64 Binary_Script::startTiming()
 
     nResult = XBinary::random32();
 
-    g_mapProfiling.insert(nResult, pElapsedTimer);
+    m_mapProfiling.insert(nResult, pElapsedTimer);
 
     return nResult;
 }
@@ -935,12 +935,12 @@ qint64 Binary_Script::endTiming(qint64 nHandle, const QString &sInfo)
 {
     qint64 nResult = 0;
 
-    if (g_mapProfiling.contains(nHandle)) {
-        QElapsedTimer *pElapsedTimer = g_mapProfiling.value(nHandle);
+    if (m_mapProfiling.contains(nHandle)) {
+        QElapsedTimer *pElapsedTimer = m_mapProfiling.value(nHandle);
 
         _finishProfiling(pElapsedTimer, sInfo);
 
-        g_mapProfiling.remove(nHandle);
+        m_mapProfiling.remove(nHandle);
     } else {
         emit errorMessage(QString("%1: %2").arg(tr("Invalid handle"), QString::number(nHandle)));
     }
@@ -950,7 +950,7 @@ qint64 Binary_Script::endTiming(qint64 nHandle, const QString &sInfo)
 
 qint64 Binary_Script::detectZLIB(qint64 nOffset, qint64 nSize)
 {
-    qint64 nResult = XFormats::getFileFormatSize(XBinary::FT_ZLIB, g_pBinary->getDevice(), false, -1, m_pPdStruct, nOffset, nSize);
+    qint64 nResult = XFormats::getFileFormatSize(XBinary::FT_ZLIB, m_pBinary->getDevice(), false, -1, m_pPdStruct, nOffset, nSize);
 
     if (nResult) {
         return nResult;
@@ -961,7 +961,7 @@ qint64 Binary_Script::detectZLIB(qint64 nOffset, qint64 nSize)
 
 qint64 Binary_Script::detectGZIP(qint64 nOffset, qint64 nSize)
 {
-    qint64 nResult = XFormats::getFileFormatSize(XBinary::FT_GZIP, g_pBinary->getDevice(), false, -1, m_pPdStruct, nOffset, nSize);
+    qint64 nResult = XFormats::getFileFormatSize(XBinary::FT_GZIP, m_pBinary->getDevice(), false, -1, m_pPdStruct, nOffset, nSize);
 
     if (nResult) {
         return nResult;
@@ -972,7 +972,7 @@ qint64 Binary_Script::detectGZIP(qint64 nOffset, qint64 nSize)
 
 qint64 Binary_Script::detectZIP(qint64 nOffset, qint64 nSize)
 {
-    qint64 nResult = XFormats::getFileFormatSize(XBinary::FT_ZIP, g_pBinary->getDevice(), false, -1, m_pPdStruct, nOffset, nSize);
+    qint64 nResult = XFormats::getFileFormatSize(XBinary::FT_ZIP, m_pBinary->getDevice(), false, -1, m_pPdStruct, nOffset, nSize);
 
     if (nResult) {
         return nResult;
@@ -983,29 +983,29 @@ qint64 Binary_Script::detectZIP(qint64 nOffset, qint64 nSize)
 
 bool Binary_Script::isOverlay()
 {
-    return (g_filePart == XBinary::FILEPART_OVERLAY);
+    return (m_filePart == XBinary::FILEPART_OVERLAY);
 }
 
 bool Binary_Script::isResource()
 {
-    return (g_filePart == XBinary::FILEPART_RESOURCE);
+    return (m_filePart == XBinary::FILEPART_RESOURCE);
 }
 
 bool Binary_Script::isDebugData()
 {
-    return (g_filePart == XBinary::FILEPART_DEBUGDATA);
+    return (m_filePart == XBinary::FILEPART_DEBUGDATA);
 }
 
 bool Binary_Script::isFilePart()
 {
-    return (g_filePart != XBinary::FILEPART_HEADER);
+    return (m_filePart != XBinary::FILEPART_HEADER);
 }
 
 QList<QVariant> Binary_Script::readBytes(qint64 nOffset, qint64 nSize, bool bReplaceZeroWithSpace)
 {
     QList<QVariant> listResult;
 
-    QByteArray baData = g_pBinary->read_array(nOffset, nSize, m_pPdStruct);
+    QByteArray baData = m_pBinary->read_array(nOffset, nSize, m_pPdStruct);
     qint32 _nSize = baData.size();
     listResult.reserve(_nSize);
 
@@ -1028,7 +1028,7 @@ QList<QVariant> Binary_Script::decompressBytes(qint64 nOffset, qint64 nSize, QSt
     XBinary::COMPRESS_METHOD compressionMethod = XBinary::ftStringToCompressMethod(sCompressionMethod);
 
     if (compressionMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
-        QByteArray baData = XDecompress().decomressToByteArray(g_pBinary->getDevice(), nOffset, nSize, compressionMethod, m_pPdStruct);
+        QByteArray baData = XDecompress().decomressToByteArray(m_pBinary->getDevice(), nOffset, nSize, compressionMethod, m_pPdStruct);
         qint32 _nSize = baData.size();
         listResult.reserve(_nSize);
 
@@ -1050,7 +1050,7 @@ qint64 Binary_Script::getCompressedDataSize(qint64 nOffset, qint64 nSize, QStrin
     XBinary::COMPRESS_METHOD compressionMethod = XBinary::ftStringToCompressMethod(sCompressionMethod);
 
     if (compressionMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
-        nResult = XDecompress().getCompressedDataSize(g_pBinary->getDevice(), nOffset, nSize, compressionMethod, m_pPdStruct);
+        nResult = XDecompress().getCompressedDataSize(m_pBinary->getDevice(), nOffset, nSize, compressionMethod, m_pPdStruct);
     } else {
         emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method"), sCompressionMethod));
     }
@@ -1078,89 +1078,89 @@ QList<QString> Binary_Script::getListOfCompressionMethods()
 
 bool Binary_Script::isReleaseBuild()
 {
-    return g_pBinary->isReleaseBuild();
+    return m_pBinary->isReleaseBuild();
 }
 
 bool Binary_Script::isDebugBuild()
 {
-    return g_pBinary->isDebugBuild();
+    return m_pBinary->isDebugBuild();
 }
 
 QStringList Binary_Script::getFormatMessages()
 {
     _loadFmtChecking(true, m_pPdStruct);
 
-    return g_listFormatMessages;
+    return m_listFormatMessages;
 }
 
 bool Binary_Script::isChecksumCorrect()
 {
     _loadFmtChecking(true, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_CHECKSUM, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_CHECKSUM, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isEntryPointCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_ENTRYPOINT, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_ENTRYPOINT, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isSectionAlignmentCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_SECTIONALIGNMENT, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_SECTIONALIGNMENT, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isFileAlignmentCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_FILEALIGNMENT, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_FILEALIGNMENT, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isHeaderCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_HEADER, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_HEADER, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isRelocsTableCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_RELOCSTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_RELOCSTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isImportTableCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_IMPORTTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_IMPORTTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isExportTableCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_EXPORTTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_EXPORTTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isResourcesTableCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_RESOURCESTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_RESOURCESTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 bool Binary_Script::isSectionsTableCorrect()
 {
     _loadFmtChecking(false, m_pPdStruct);
-    return !(XBinary::isFmtMsgCodePresent(&g_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_SECTIONSTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
+    return !(XBinary::isFmtMsgCodePresent(&m_listFmtMsg, XBinary::FMT_MSG_CODE_INVALID_SECTIONSTABLE, XBinary::FMT_MSG_TYPE_ERROR, m_pPdStruct));
 }
 
 XBinary::_MEMORY_MAP *Binary_Script::getMemoryMap()
 {
-    return &g_memoryMap;
+    return &m_memoryMap;
 }
 
 XADDR Binary_Script::getBaseAddress()
 {
-    return g_nBaseAddress;
+    return m_nBaseAddress;
 }
 
 XBinary::PDSTRUCT *Binary_Script::getPdStruct()

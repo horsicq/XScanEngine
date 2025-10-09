@@ -37,8 +37,8 @@ protected:
     QList<XArchive::RECORD> *getArchiveRecords();
 
 private:
-    XArchive *g_pArchive;
-    QList<XArchive::RECORD> g_listArchiveRecords;
+    XArchive *m_pArchive;
+    QList<XArchive::RECORD> m_listArchiveRecords;
 };
 
 #endif  // ARCHIVE_SCRIPT_H

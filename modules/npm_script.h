@@ -39,8 +39,8 @@ public slots:
     QString getPackageJsonRecord(const QString &sRecord);
 
 private:
-    XNPM *g_pNpm;
-    QString g_sPackageJson;
+    XNPM *m_pNpm;
+    QString m_sPackageJson;
 };
 
 #endif  // NPM_SCRIPT_H

@@ -60,18 +60,18 @@ public slots:
     QString getRunPath();
 
 private:
-    XELF *g_pELF;
-    XELF_DEF::Elf_Ehdr g_elfHeader;
-    quint32 g_nStringTableSection;
-    QByteArray g_baStringTable;
-    QList<XELF_DEF::Elf_Shdr> g_listSectionHeaders;
-    QList<XELF_DEF::Elf_Phdr> g_listProgramHeaders;
-    QList<XELF::NOTE> g_listNotes;
-    QList<XELF::SECTION_RECORD> g_listSectionRecords;
-    QString g_sGeneralOptions;
-    QList<QString> g_listLibraryNames;
-    QList<XELF::TAG_STRUCT> g_listTagStruct;
-    QString g_sRunPath;
+    XELF *m_pELF;
+    XELF_DEF::Elf_Ehdr m_elfHeader;
+    quint32 m_nStringTableSection;
+    QByteArray m_baStringTable;
+    QList<XELF_DEF::Elf_Shdr> m_listSectionHeaders;
+    QList<XELF_DEF::Elf_Phdr> m_listProgramHeaders;
+    QList<XELF::NOTE> m_listNotes;
+    QList<XELF::SECTION_RECORD> m_listSectionRecords;
+    QString m_sGeneralOptions;
+    QList<QString> m_listLibraryNames;
+    QList<XELF::TAG_STRUCT> m_listTagStruct;
+    QString m_sRunPath;
 };
 
 #endif  // ELF_SCRIPT_H
