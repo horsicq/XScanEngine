@@ -282,6 +282,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_CODEWALL, QString("CodeWall")},
     {XScanEngine::RECORD_NAME_COFF, QString("COFF")},
     {XScanEngine::RECORD_NAME_COMEXSIGNAPK, QString("COMEX SignApk")},
+    {XScanEngine::RECORD_NAME_COMICBOOKARCHIVE, QString("Comic Book Archive")},
     {XScanEngine::RECORD_NAME_COMPOUNDFILEBINARYFORMAT, QString("Compound File Binary Format")},
     {XScanEngine::RECORD_NAME_CONFUSER, QString("Confuser")},
     {XScanEngine::RECORD_NAME_CONFUSEREX, QString("ConfuserEx")},
