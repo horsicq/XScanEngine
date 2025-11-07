@@ -19,6 +19,12 @@
  * SOFTWARE.
  */
 #include "xscanengine.h"
+#include <QDir>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+
 QString XScanEngine::heurTypeIdToString(qint32 nId)
 {
     // Values are defined in global DETECTTYPE enum (nfd_binary.h). We use constants to avoid include cycles.
@@ -1614,124 +1620,124 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
     }
 
     if (pScanOptions->bIsRecursiveScan) {
-        {
-            QList<XArchive::RECORD> listRecords;
-            XBinary::FT _fileType = XBinary::FT_UNKNOWN;
+        // {
+        //     QList<XArchive::RECORD> listRecords;
+        //     XBinary::FT _fileType = XBinary::FT_UNKNOWN;
 
-            if (stFTOriginal.contains(XBinary::FT_ARCHIVE) && (!stFTOriginal.contains(XBinary::FT_ZIP))) {
-                _fileType = XBinary::_getPrefFileType(&stFT);
-                listRecords = XArchives::getRecords(_pDevice, _fileType, 20000, pPdStruct);
-            }
+        //     if (stFTOriginal.contains(XBinary::FT_ARCHIVE) && (!stFTOriginal.contains(XBinary::FT_ZIP))) {
+        //         _fileType = XBinary::_getPrefFileType(&stFT);
+        //         listRecords = XArchives::getRecords(_pDevice, _fileType, 20000, pPdStruct);
+        //     }
 
-            if (listRecords.count()) {
-                qint32 nNumberOfRecords = listRecords.count();
-                qint32 nMaxCount = 20;
-                // qint32 nMaxCount = -1;
-                qint32 nCount = 0;
+        //     if (listRecords.count()) {
+        //         qint32 nNumberOfRecords = listRecords.count();
+        //         qint32 nMaxCount = 20;
+        //         // qint32 nMaxCount = -1;
+        //         qint32 nCount = 0;
 
-                bool bScanAll = false;
-                bool bShowFileName = true;
+        //         bool bScanAll = false;
+        //         bool bShowFileName = true;
 
-                if (((_fileType == XBinary::FT_ZLIB) || (_fileType == XBinary::FT_BZIP2) || (_fileType == XBinary::FT_LHA) || (_fileType == XBinary::FT_GZIP) ||
-                     (_fileType == XBinary::FT_SZDD) || (_fileType == XBinary::FT_XZ)) &&
-                    (nNumberOfRecords == 1)) {
-                    bScanAll = true;
-                    bShowFileName = false;
-                } else if ((_fileType == XBinary::FT_MACHOFAT) || (_fileType == XBinary::FT_DOS16M) || (_fileType == XBinary::FT_DOS4G)) {
-                    bScanAll = true;
-                }
+        //         if (((_fileType == XBinary::FT_ZLIB) || (_fileType == XBinary::FT_BZIP2) || (_fileType == XBinary::FT_LHA) || (_fileType == XBinary::FT_GZIP) ||
+        //              (_fileType == XBinary::FT_SZDD) || (_fileType == XBinary::FT_XZ)) &&
+        //             (nNumberOfRecords == 1)) {
+        //             bScanAll = true;
+        //             bShowFileName = false;
+        //         } else if ((_fileType == XBinary::FT_MACHOFAT) || (_fileType == XBinary::FT_DOS16M) || (_fileType == XBinary::FT_DOS4G)) {
+        //             bScanAll = true;
+        //         }
 
-                qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
-                XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
+        //         qint32 _nFreeIndex = XBinary::getFreeIndex(pPdStruct);
+        //         XBinary::setPdStructInit(pPdStruct, _nFreeIndex, nNumberOfRecords);
 
-                for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
-                    XArchive::RECORD _record = listRecords.at(i);
-                    QByteArray baRecordData = XArchives::decompress(_pDevice, &_record, pPdStruct, 0, 0x200);
+        //         for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+        //             XArchive::RECORD _record = listRecords.at(i);
+        //             QByteArray baRecordData = XArchives::decompress(_pDevice, &_record, pPdStruct, 0, 0x200);
 
-                    QSet<XBinary::FT> _stFT = XFormats::getFileTypes(&baRecordData, true);
+        //             QSet<XBinary::FT> _stFT = XFormats::getFileTypes(&baRecordData, true);
 
-                    if (bScanAll || isScanable(_stFT)) {
-                        if ((nCount < nMaxCount) || (nMaxCount == -1)) {
-                            XScanEngine::SCANID scanIdArchiveRecord = scanIdMain;
-                            scanIdArchiveRecord.filePart = XBinary::FILEPART_STREAM;
-                            scanIdArchiveRecord.fileType = _fileType;
+        //             if (bScanAll || isScanable(_stFT)) {
+        //                 if ((nCount < nMaxCount) || (nMaxCount == -1)) {
+        //                     XScanEngine::SCANID scanIdArchiveRecord = scanIdMain;
+        //                     scanIdArchiveRecord.filePart = XBinary::FILEPART_STREAM;
+        //                     scanIdArchiveRecord.fileType = _fileType;
 
-                            XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                            _options.fileType = XBinary::FT_UNKNOWN;
-                            _options.bIsRecursiveScan = false;
+        //                     XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+        //                     _options.fileType = XBinary::FT_UNKNOWN;
+        //                     _options.bIsRecursiveScan = false;
 
-                            if (bShowFileName) {
-                                scanIdArchiveRecord.sInfo = listRecords.at(i).spInfo.sRecordName;
-                            }
+        //                     if (bShowFileName) {
+        //                         scanIdArchiveRecord.sInfo = listRecords.at(i).spInfo.sRecordName;
+        //                     }
 
-                            qint64 _nUncompressedSize = listRecords.at(i).spInfo.nUncompressedSize;
-                            qint64 _nRecordDataSize = baRecordData.size();
+        //                     qint64 _nUncompressedSize = listRecords.at(i).spInfo.nUncompressedSize;
+        //                     qint64 _nRecordDataSize = baRecordData.size();
 
-                            if (_nUncompressedSize && _nRecordDataSize) {
-                                if (_nUncompressedSize > _nRecordDataSize) {
-                                    bool _bMemory = false;
+        //                     if (_nUncompressedSize && _nRecordDataSize) {
+        //                         if (_nUncompressedSize > _nRecordDataSize) {
+        //                             bool _bMemory = false;
 
-                                    if (pScanOptions->nBufferSize) {
-                                        if (_nUncompressedSize <= pScanOptions->nBufferSize) {
-                                            _bMemory = true;
-                                        }
-                                    }
+        //                             if (pScanOptions->nBufferSize) {
+        //                                 if (_nUncompressedSize <= pScanOptions->nBufferSize) {
+        //                                     _bMemory = true;
+        //                                 }
+        //                             }
 
-                                    if (_bMemory) {
-                                        char *pArchBuffer = new char[_nUncompressedSize];
+        //                             if (_bMemory) {
+        //                                 char *pArchBuffer = new char[_nUncompressedSize];
 
-                                        QBuffer buffer;
-                                        buffer.setData(pArchBuffer, _nUncompressedSize);
+        //                                 QBuffer buffer;
+        //                                 buffer.setData(pArchBuffer, _nUncompressedSize);
 
-                                        if (buffer.open(QIODevice::ReadWrite)) {
-                                            if (XArchives::decompressToDevice(_pDevice, &_record, &buffer, pPdStruct)) {
-                                                scanProcess(&buffer, pScanResult, 0, buffer.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
-                                            }
+        //                                 if (buffer.open(QIODevice::ReadWrite)) {
+        //                                     if (XArchives::decompressToDevice(_pDevice, &_record, &buffer, pPdStruct)) {
+        //                                         scanProcess(&buffer, pScanResult, 0, buffer.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
+        //                                     }
 
-                                            buffer.close();
-                                        }
+        //                                     buffer.close();
+        //                                 }
 
-                                        delete[] pArchBuffer;
-                                    } else {
-                                        QTemporaryFile fileTemp;
+        //                                 delete[] pArchBuffer;
+        //                             } else {
+        //                                 QTemporaryFile fileTemp;
 
-                                        if (fileTemp.open()) {
-                                            QString sTempFileName = fileTemp.fileName();
+        //                                 if (fileTemp.open()) {
+        //                                     QString sTempFileName = fileTemp.fileName();
 
-                                            if (XArchives::decompressToFile(_pDevice, &_record, sTempFileName, pPdStruct)) {
-                                                QFile file;
-                                                file.setFileName(sTempFileName);
+        //                                     if (XArchives::decompressToFile(_pDevice, &_record, sTempFileName, pPdStruct)) {
+        //                                         QFile file;
+        //                                         file.setFileName(sTempFileName);
 
-                                                if (file.open(QIODevice::ReadOnly)) {
-                                                    scanProcess(&file, pScanResult, 0, file.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
-                                                    file.close();
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    QBuffer buffer(&baRecordData);
+        //                                         if (file.open(QIODevice::ReadOnly)) {
+        //                                             scanProcess(&file, pScanResult, 0, file.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
+        //                                             file.close();
+        //                                         }
+        //                                     }
+        //                                 }
+        //                             }
+        //                         } else {
+        //                             QBuffer buffer(&baRecordData);
 
-                                    if (buffer.open(QIODevice::ReadOnly)) {
-                                        scanProcess(&buffer, pScanResult, 0, buffer.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
+        //                             if (buffer.open(QIODevice::ReadOnly)) {
+        //                                 scanProcess(&buffer, pScanResult, 0, buffer.size(), scanIdArchiveRecord, &_options, false, pPdStruct);
 
-                                        buffer.close();
-                                    }
-                                }
-                            }
-                            nCount++;
-                        } else {
-                            break;
-                        }
-                    }
+        //                                 buffer.close();
+        //                             }
+        //                         }
+        //                     }
+        //                     nCount++;
+        //                 } else {
+        //                     break;
+        //                 }
+        //             }
 
-                    XBinary::setPdStructCurrentIncrement(pPdStruct, _nFreeIndex);
-                    XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listRecords.at(i).spInfo.sRecordName);
-                }
+        //             XBinary::setPdStructCurrentIncrement(pPdStruct, _nFreeIndex);
+        //             XBinary::setPdStructStatus(pPdStruct, _nFreeIndex, listRecords.at(i).spInfo.sRecordName);
+        //         }
 
-                XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
-            }
-        }
+        //         XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
+        //     }
+        // }
 
         {
             QList<XBinary::FPART> listFileParts = XFormats::getFileParts(
@@ -2138,4 +2144,145 @@ bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanS
     }
 
     return bResult;
+}
+
+XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryName)
+{
+    TEST_RESULT result = {};
+    result.nTotal = 0;
+    result.nErrors = 0;
+
+    QString sJsonFileName = sDirectoryName + QDir::separator() + "tests.json";
+    QFile jsonFile(sJsonFileName);
+
+    if (!jsonFile.exists()) {
+        _errorMessage(nullptr, QString("JSON file not found: %1").arg(sJsonFileName));
+        result.nErrors++;
+        return result;
+    }
+
+    if (!jsonFile.open(QIODevice::ReadOnly)) {
+        _errorMessage(nullptr, QString("Cannot open JSON file: %1").arg(sJsonFileName));
+        result.nErrors++;
+        return result;
+    }
+
+    QByteArray baJsonData = jsonFile.readAll();
+    jsonFile.close();
+
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(baJsonData);
+
+    if (jsonDoc.isNull() || !jsonDoc.isObject()) {
+        _errorMessage(nullptr, QString("Invalid JSON format in: %1").arg(sJsonFileName));
+        result.nErrors++;
+        return result;
+    }
+
+    QJsonObject jsonObject = jsonDoc.object();
+    QJsonArray testCases = jsonObject.value("testCases").toArray();
+
+    if (testCases.isEmpty()) {
+        _errorMessage(nullptr, QString("No test cases found in: %1").arg(sJsonFileName));
+        result.nErrors++;
+        return result;
+    }
+
+    quint64 nScanFlags = 0;
+    if (jsonObject.contains("defaultScanFlags")) {
+        QJsonObject defaultScanFlagsObj = jsonObject.value("defaultScanFlags").toObject();
+        if (defaultScanFlagsObj.value("recursiveScan").toBool()) nScanFlags |= SF_RECURSIVESCAN;
+        if (defaultScanFlagsObj.value("deepScan").toBool()) nScanFlags |= SF_DEEPSCAN;
+        if (defaultScanFlagsObj.value("heuristicScan").toBool()) nScanFlags |= SF_HEURISTICSCAN;
+        if (defaultScanFlagsObj.value("aggressiveScan").toBool()) nScanFlags |= SF_AGGRESSIVESCAN;
+        if (defaultScanFlagsObj.value("verbose").toBool()) nScanFlags |= SF_VERBOSE;
+        if (defaultScanFlagsObj.value("allTypes").toBool()) nScanFlags |= SF_ALLTYPESSCAN;
+    }
+
+    for (qint32 i = 0; i < testCases.size(); i++) {
+        QJsonObject testCase = testCases.at(i).toObject();
+        QString sZipPath = testCase.value("zipPath").toString();
+        QString sExpectedDetect = testCase.value("expectedDetect").toString();
+
+        if (sZipPath.isEmpty()) {
+            _warningMessage(nullptr, QString("Test case %1: Missing zipPath").arg(i + 1));
+            result.nErrors++;
+            continue;
+        }
+
+        QString sFullZipPath = sDirectoryName + QDir::separator() + sZipPath;
+        QFile zipFile(sFullZipPath);
+
+        if (!zipFile.exists()) {
+            _errorMessage(nullptr, QString("Test case %1: ZIP file not found: %2").arg(i + 1).arg(sFullZipPath));
+            result.nErrors++;
+            result.nTotal++;
+            continue;
+        }
+
+        // zipRecord.compressInfo.compressMethod = XArchive::COMPRESS_METHOD_DEFLATE;
+        // zipRecord.sPassword = "DetectItEasy";
+
+        // XBinary::createFileBuffer();
+
+        // XZip xzip(&zipFile);
+
+        // if (!xzip.isValid()) {
+        //     _errorMessage(nullptr, QString("Test case %1: Cannot open ZIP file: %2").arg(i + 1).arg(sFullZipPath));
+        //     result.nErrors++;
+        //     result.nTotal++;
+        //     continue;
+        // }
+
+
+        QByteArray baDecompressed;
+        // QByteArray baDecompressed = xzip.decompress(&listArchiveRecords.first(), nullptr);
+        // xzip.close();
+
+        // if (baDecompressed.isEmpty()) {
+        //     _errorMessage(nullptr, QString("Test case %1: Failed to decompress file from ZIP: %2").arg(i + 1).arg(sFullZipPath));
+        //     result.nErrors++;
+        //     result.nTotal++;
+        //     continue;
+        // }
+
+        // Use per-test-case scan flags if available, otherwise use default
+        quint64 nTestScanFlags = nScanFlags;
+        if (testCase.contains("scanFlags")) {
+            QJsonObject testScanFlagsObj = testCase.value("scanFlags").toObject();
+            nTestScanFlags = 0;
+            if (testScanFlagsObj.value("recursiveScan").toBool()) nTestScanFlags |= SF_RECURSIVESCAN;
+            if (testScanFlagsObj.value("deepScan").toBool()) nTestScanFlags |= SF_DEEPSCAN;
+            if (testScanFlagsObj.value("heuristicScan").toBool()) nTestScanFlags |= SF_HEURISTICSCAN;
+            if (testScanFlagsObj.value("aggressiveScan").toBool()) nTestScanFlags |= SF_AGGRESSIVESCAN;
+            if (testScanFlagsObj.value("verbose").toBool()) nTestScanFlags |= SF_VERBOSE;
+            if (testScanFlagsObj.value("allTypes").toBool()) nTestScanFlags |= SF_ALLTYPESSCAN;
+        }
+
+        SCAN_OPTIONS scanOptions = getDefaultOptions(nTestScanFlags);
+        QBuffer buffer(&baDecompressed);
+
+        if (!buffer.open(QIODevice::ReadOnly)) {
+            _errorMessage(nullptr, QString("Test case %1: Cannot open decompressed buffer").arg(i + 1));
+            result.nErrors++;
+            result.nTotal++;
+            continue;
+        }
+
+        SCAN_RESULT scanResult = scanDevice(&buffer, &scanOptions, nullptr);
+        buffer.close();
+
+        QString sActualDetect = createShortResultString(&scanOptions, scanResult);
+
+        if (sExpectedDetect.isEmpty() || sActualDetect.contains(sExpectedDetect, Qt::CaseInsensitive)) {
+            _infoMessage(nullptr, QString("Test case %1 PASSED: %2 -> %3").arg(i + 1).arg(sZipPath).arg(sActualDetect));
+        } else {
+            _errorMessage(nullptr,
+                          QString("Test case %1 FAILED: %2\n  Expected: %3\n  Got: %4").arg(i + 1).arg(sZipPath).arg(sExpectedDetect).arg(sActualDetect));
+            result.nErrors++;
+        }
+
+        result.nTotal++;
+    }
+
+    return result;
 }

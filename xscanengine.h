@@ -1067,6 +1067,11 @@ public:
         QString sSignaturePath;
     };
 
+    struct TEST_RESULT {
+        qint32 nTotal;
+        qint32 nErrors;
+    };
+
     XScanEngine(QObject *pParent = nullptr);
     XScanEngine(const XScanEngine &other);  // Copy constructor declaration
 
@@ -1116,6 +1121,8 @@ public:
 
     static bool isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type = RECORD_TYPE_UNKNOWN,
                                     RECORD_NAME name = RECORD_NAME_UNKNOWN, const QString &sVersion = "", const QString &sInfo = "");
+
+    TEST_RESULT testDirectory(const QString &sDirectoryName);
 
     virtual void process();
 
