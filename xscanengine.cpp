@@ -2233,7 +2233,6 @@ XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryNam
         //     continue;
         // }
 
-
         QByteArray baDecompressed;
         // QByteArray baDecompressed = xzip.decompress(&listArchiveRecords.first(), nullptr);
         // xzip.close();
@@ -2276,8 +2275,7 @@ XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryNam
         if (sExpectedDetect.isEmpty() || sActualDetect.contains(sExpectedDetect, Qt::CaseInsensitive)) {
             _infoMessage(nullptr, QString("Test case %1 PASSED: %2 -> %3").arg(i + 1).arg(sZipPath).arg(sActualDetect));
         } else {
-            _errorMessage(nullptr,
-                          QString("Test case %1 FAILED: %2\n  Expected: %3\n  Got: %4").arg(i + 1).arg(sZipPath).arg(sExpectedDetect).arg(sActualDetect));
+            _errorMessage(nullptr, QString("Test case %1 FAILED: %2\n  Expected: %3\n  Got: %4").arg(i + 1).arg(sZipPath).arg(sExpectedDetect).arg(sActualDetect));
             result.nErrors++;
         }
 
