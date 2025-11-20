@@ -52,6 +52,7 @@
 
 #include "xformats.h"
 #include "xoptions.h"
+#include "xzip.h"
 #include <QFutureWatcher>
 #include <QLoggingCategory>
 #include "xthreadobject.h"
@@ -1067,9 +1068,23 @@ public:
         QString sSignaturePath;
     };
 
+    struct TEST_SUCCESS_RECORD {
+        QString sZipPath;
+        QString sExpectedDetect;
+        qint64 nScanTime;
+    };
+
+    struct TEST_FAILED_RECORD {
+        QString sZipPath;
+        QString sExpectedDetect;
+        QString sErrorMessage;
+    };
+
     struct TEST_RESULT {
         qint32 nTotal;
         qint32 nErrors;
+        QList<TEST_SUCCESS_RECORD> listSuccess;
+        QList<TEST_FAILED_RECORD> listFailed;
     };
 
     XScanEngine(QObject *pParent = nullptr);
@@ -1122,7 +1137,8 @@ public:
     static bool isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type = RECORD_TYPE_UNKNOWN,
                                     RECORD_NAME name = RECORD_NAME_UNKNOWN, const QString &sVersion = "", const QString &sInfo = "");
 
-    TEST_RESULT testDirectory(const QString &sDirectoryName);
+    TEST_RESULT test(const QString &sDirectoryName);
+    static bool addTestCase(const QString &sJsonPath, const QString &sFilePath, const QString &sExpectedDetect);
 
     virtual void process();
 

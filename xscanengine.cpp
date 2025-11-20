@@ -19,11 +19,15 @@
  * SOFTWARE.
  */
 #include "xscanengine.h"
+#include <QCryptographicHash>
+#include <QFileInfo>
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QCryptographicHash>
+#include <QFileInfo>
 
 QString XScanEngine::heurTypeIdToString(qint32 nId)
 {
@@ -2146,7 +2150,7 @@ bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanS
     return bResult;
 }
 
-XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryName)
+XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
 {
     TEST_RESULT result = {};
     result.nTotal = 0;
@@ -2204,6 +2208,12 @@ XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryNam
         QString sExpectedDetect = testCase.value("expectedDetect").toString();
 
         if (sZipPath.isEmpty()) {
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = QString("<empty>");
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = QString("Missing zipPath in test case");
+            result.listFailed.append(failedRecord);
+
             _warningMessage(nullptr, QString("Test case %1: Missing zipPath").arg(i + 1));
             result.nErrors++;
             continue;
@@ -2213,6 +2223,12 @@ XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryNam
         QFile zipFile(sFullZipPath);
 
         if (!zipFile.exists()) {
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = sZipPath;
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = QString("ZIP file not found: %1").arg(sFullZipPath);
+            result.listFailed.append(failedRecord);
+
             _errorMessage(nullptr, QString("Test case %1: ZIP file not found: %2").arg(i + 1).arg(sFullZipPath));
             result.nErrors++;
             result.nTotal++;
@@ -2261,6 +2277,12 @@ XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryNam
         QBuffer buffer(&baDecompressed);
 
         if (!buffer.open(QIODevice::ReadOnly)) {
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = sZipPath;
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = QString("Cannot open decompressed buffer");
+            result.listFailed.append(failedRecord);
+
             _errorMessage(nullptr, QString("Test case %1: Cannot open decompressed buffer").arg(i + 1));
             result.nErrors++;
             result.nTotal++;
@@ -2273,8 +2295,20 @@ XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryNam
         QString sActualDetect = createShortResultString(&scanOptions, scanResult);
 
         if (sExpectedDetect.isEmpty() || sActualDetect.contains(sExpectedDetect, Qt::CaseInsensitive)) {
-            _infoMessage(nullptr, QString("Test case %1 PASSED: %2 -> %3").arg(i + 1).arg(sZipPath).arg(sActualDetect));
+            TEST_SUCCESS_RECORD successRecord = {};
+            successRecord.sZipPath = sZipPath;
+            successRecord.sExpectedDetect = sExpectedDetect;
+            successRecord.nScanTime = scanResult.nScanTime;
+            result.listSuccess.append(successRecord);
+
+            _infoMessage(nullptr, QString("Test case %1 PASSED: %2 -> %3 (Time: %4ms)").arg(i + 1).arg(sZipPath).arg(sActualDetect).arg(scanResult.nScanTime));
         } else {
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = sZipPath;
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = QString("Detection mismatch: Expected '%1', Got '%2'").arg(sExpectedDetect).arg(sActualDetect);
+            result.listFailed.append(failedRecord);
+
             _errorMessage(nullptr, QString("Test case %1 FAILED: %2\n  Expected: %3\n  Got: %4").arg(i + 1).arg(sZipPath).arg(sExpectedDetect).arg(sActualDetect));
             result.nErrors++;
         }
@@ -2283,4 +2317,160 @@ XScanEngine::TEST_RESULT XScanEngine::testDirectory(const QString &sDirectoryNam
     }
 
     return result;
+}
+
+bool XScanEngine::addTestCase(const QString &sJsonPath, const QString &sFilePath, const QString &sExpectedDetect)
+{
+    // Validate input paths
+    if (sJsonPath.isEmpty() || sFilePath.isEmpty()) {
+        return false;
+    }
+
+    QFile sourceFile(sFilePath);
+    if (!sourceFile.exists()) {
+        return false;
+    }
+
+    QFileInfo jsonFileInfo(sJsonPath);
+    QString sJsonDir = jsonFileInfo.absolutePath();
+    QString sFilesDir = sJsonDir + QDir::separator() + "files";
+
+    // Create files directory if it doesn't exist
+    QDir dir;
+    if (!dir.exists(sFilesDir)) {
+        if (!dir.mkpath(sFilesDir)) {
+            return false;
+        }
+    }
+
+    // Calculate MD5 hash of the file
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    hash.addData(&sourceFile);
+    QString sMd5 = hash.result().toHex();
+    sourceFile.close();
+
+    // Get file extension
+    QFileInfo sourceFileInfo(sFilePath);
+    QString sExtension = sourceFileInfo.suffix();
+    QString sFileNameInZip = sMd5;
+    if (!sExtension.isEmpty()) {
+        sFileNameInZip += "." + sExtension;
+    }
+
+    QString sZipFileName = sFilesDir + QDir::separator() + sMd5 + ".zip";
+
+    // Create encrypted ZIP file with the source file
+    QFile zipFile(sZipFileName);
+    if (!zipFile.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+
+    XZip xzip;
+    XBinary::PDSTRUCT pdStruct = {};
+    pdStruct.bIsStop = false;
+
+    XBinary::PACK_STATE state = {};
+
+    // Configure pack properties with password
+    QMap<XBinary::PACK_PROP, QVariant> mapProperties;
+    mapProperties[XBinary::PACK_PROP_COMPRESSMETHOD] = XArchive::COMPRESS_METHOD_DEFLATE;
+    mapProperties[XBinary::PACK_PROP_ENCRYPTIONMETHOD] = XBinary::CRYPTO_METHOD_ZIPCRYPTO;
+    mapProperties[XBinary::PACK_PROP_PASSWORD] = "DetectItEasy";
+    mapProperties[XBinary::PACK_PROP_PATHMODE] = XBinary::PATH_MODE_BASENAME;
+    mapProperties[XBinary::PACK_PROP_COMPRESSIONLEVEL] = 9;
+
+    // Initialize packing
+    if (!xzip.initPack(&state, &zipFile, mapProperties, &pdStruct)) {
+        zipFile.close();
+        QFile::remove(sZipFileName);
+        return false;
+    }
+
+    // Add the source file to the archive
+    // Create a temporary copy with the MD5 name for adding to archive
+    QString sTempFile = sFilesDir + QDir::separator() + sFileNameInZip;
+    if (QFile::exists(sTempFile)) {
+        QFile::remove(sTempFile);
+    }
+
+    if (!QFile::copy(sFilePath, sTempFile)) {
+        xzip.finishPack(&state, &pdStruct);
+        zipFile.close();
+        QFile::remove(sZipFileName);
+        return false;
+    }
+
+    // Add the file to the archive
+    if (!xzip.addFile(&state, sTempFile, &pdStruct)) {
+        QFile::remove(sTempFile);
+        xzip.finishPack(&state, &pdStruct);
+        zipFile.close();
+        QFile::remove(sZipFileName);
+        return false;
+    }
+
+    // Clean up temporary file
+    QFile::remove(sTempFile);
+
+    // Finish packing
+    if (!xzip.finishPack(&state, &pdStruct)) {
+        zipFile.close();
+        QFile::remove(sZipFileName);
+        return false;
+    }
+
+    zipFile.close();
+
+    // Read existing JSON or create new one
+    QJsonObject jsonObject;
+    QFile jsonFile(sJsonPath);
+
+    if (jsonFile.exists()) {
+        if (!jsonFile.open(QIODevice::ReadOnly)) {
+            QFile::remove(sZipFileName);
+            return false;
+        }
+
+        QByteArray baJsonData = jsonFile.readAll();
+        jsonFile.close();
+
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(baJsonData);
+        if (!jsonDoc.isNull() && jsonDoc.isObject()) {
+            jsonObject = jsonDoc.object();
+        }
+    }
+
+    // Ensure testCases array exists
+    QJsonArray testCases;
+    if (jsonObject.contains("testCases") && jsonObject.value("testCases").isArray()) {
+        testCases = jsonObject.value("testCases").toArray();
+    }
+
+    // Add new test case
+    QJsonObject newTestCase;
+    newTestCase["zipPath"] = "files/" + sMd5 + ".zip";
+    newTestCase["expectedDetect"] = sExpectedDetect;
+
+    testCases.append(newTestCase);
+    jsonObject["testCases"] = testCases;
+
+    // Add default description if not present
+    if (!jsonObject.contains("description")) {
+        jsonObject["description"] = "XScanEngine test configuration file";
+    }
+
+    // Write updated JSON
+    if (!jsonFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return false;
+    }
+
+    QJsonDocument jsonDocOut(jsonObject);
+    jsonFile.write(jsonDocOut.toJson(QJsonDocument::Indented));
+    jsonFile.close();
+
+    return true;
 }
