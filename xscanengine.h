@@ -1028,7 +1028,7 @@ public:
         bool bIsRecursiveScan;
         bool bIsAggressiveScan;
         bool bIsAllTypesScan;
-        qint64 nBufferSize;
+        qint64 nBufferSize; // TODO use global in pdstruct
         bool bUseCache;
         bool bShowInternalDetects;
         bool bResultAsXML;
