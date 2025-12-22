@@ -1431,7 +1431,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         pBuffer = new char[nSize];
 
         if (nSize) {
-            XBinary::read_array(_pDevice, 0, pBuffer, nSize, pPdStruct);
+            XBinary::read_array_process(_pDevice, 0, pBuffer, nSize, pPdStruct);
         }
 
         bufDevice->setData(pBuffer, nSize);

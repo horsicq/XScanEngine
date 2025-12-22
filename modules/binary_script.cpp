@@ -1005,7 +1005,7 @@ QList<QVariant> Binary_Script::readBytes(qint64 nOffset, qint64 nSize, bool bRep
 {
     QList<QVariant> listResult;
 
-    QByteArray baData = m_pBinary->read_array(nOffset, nSize, m_pPdStruct);
+    QByteArray baData = m_pBinary->read_array_process(nOffset, nSize, m_pPdStruct);
     qint32 _nSize = baData.size();
     listResult.reserve(_nSize);
 
