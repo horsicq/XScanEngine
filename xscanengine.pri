@@ -32,6 +32,7 @@ HEADERS += \
     $$PWD/modules/dex_script.h \
     $$PWD/modules/npm_script.h \
     $$PWD/modules/rar_script.h \
+    $$PWD/modules/iso9660_script.h \
     $$PWD/modules/machofat_script.h \
     $$PWD/modules/javaclass_script.h \
     $$PWD/modules/pdf_script.h \
@@ -65,6 +66,7 @@ SOURCES += \
     $$PWD/modules/dex_script.cpp \
     $$PWD/modules/npm_script.cpp \
     $$PWD/modules/rar_script.cpp \
+    $$PWD/modules/iso9660_script.cpp \
     $$PWD/modules/machofat_script.cpp \
     $$PWD/modules/javaclass_script.cpp \
     $$PWD/modules/pdf_script.cpp \

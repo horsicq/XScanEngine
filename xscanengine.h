@@ -38,6 +38,7 @@
 #include "dex_script.h"
 #include "npm_script.h"
 #include "rar_script.h"
+#include "iso9660_script.h"
 #include "machofat_script.h"
 #include "amiga_script.h"
 #include "atarist_script.h"
