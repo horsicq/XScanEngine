@@ -30,8 +30,28 @@ public:
     explicit ISO9660_Script(XISO9660 *pISO, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
     ~ISO9660_Script();
 
+public slots:
+    QString getSystemIdentifier();
+    QString getVolumeIdentifier();
+    QString getVolumeSetIdentifier();
+    QString getPublisherIdentifier();
+    QString getDataPreparerIdentifier();
+    QString getApplicationIdentifier();
+    QString getCopyrightFileIdentifier();
+    QString getAbstractFileIdentifier();
+    QString getBibliographicFileIdentifier();
+
 private:
     XISO9660 *m_pISO;
+    QString g_sSystemIdentifier;
+    QString g_sVolumeIdentifier;
+    QString g_sVolumeSetIdentifier;
+    QString g_sPublisherIdentifier;
+    QString g_sDataPreparerIdentifier;
+    QString g_sApplicationIdentifier;
+    QString g_sCopyrightFileIdentifier;
+    QString g_sAbstractFileIdentifier;
+    QString g_sBibliographicFileIdentifier;
 };
 
 #endif  // ISO9660_SCRIPT_H

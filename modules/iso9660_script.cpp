@@ -24,8 +24,63 @@ ISO9660_Script::ISO9660_Script(XISO9660 *pISO, XBinary::FILEPART filePart, OPTIO
     : Archive_Script(pISO, filePart, pOptions, pPdStruct)
 {
     this->m_pISO = pISO;
+
+    g_sSystemIdentifier = m_pISO->getSystemIdentifier();
+    g_sVolumeIdentifier = m_pISO->getVolumeIdentifier();
+    g_sVolumeSetIdentifier = m_pISO->getVolumeSetIdentifier();
+    g_sPublisherIdentifier = m_pISO->getPublisherIdentifier();
+    g_sDataPreparerIdentifier = m_pISO->getDataPreparerIdentifier();
+    g_sApplicationIdentifier = m_pISO->getApplicationIdentifier();
+    g_sCopyrightFileIdentifier = m_pISO->getCopyrightFileIdentifier();
+    g_sAbstractFileIdentifier = m_pISO->getAbstractFileIdentifier();
+    g_sBibliographicFileIdentifier = m_pISO->getBibliographicFileIdentifier();
 }
 
 ISO9660_Script::~ISO9660_Script()
 {
+}
+
+QString ISO9660_Script::getSystemIdentifier()
+{
+    return g_sSystemIdentifier;
+}
+
+QString ISO9660_Script::getVolumeIdentifier()
+{
+    return g_sVolumeIdentifier;
+}
+
+QString ISO9660_Script::getVolumeSetIdentifier()
+{
+    return g_sVolumeSetIdentifier;
+}
+
+QString ISO9660_Script::getPublisherIdentifier()
+{
+    return g_sPublisherIdentifier;
+}
+
+QString ISO9660_Script::getDataPreparerIdentifier()
+{
+    return g_sDataPreparerIdentifier;
+}
+
+QString ISO9660_Script::getApplicationIdentifier()
+{
+    return g_sApplicationIdentifier;
+}
+
+QString ISO9660_Script::getCopyrightFileIdentifier()
+{
+    return g_sCopyrightFileIdentifier;
+}
+
+QString ISO9660_Script::getAbstractFileIdentifier()
+{
+    return g_sAbstractFileIdentifier;
+}
+
+QString ISO9660_Script::getBibliographicFileIdentifier()
+{
+    return g_sBibliographicFileIdentifier;
 }
