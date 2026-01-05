@@ -31,8 +31,12 @@ public:
     explicit PYC_Script(XPYC *pPYC, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
     ~PYC_Script();
 
+public slots:
+    bool isConstPresent(const QString &sConstValue);
+
 private:
     XPYC *m_pPYC;
+    XPYC::CODE_OBJECT m_codeObject;
 };
 
 #endif  // PYC_SCRIPT_H

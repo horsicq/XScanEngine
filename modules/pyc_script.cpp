@@ -24,8 +24,14 @@ PYC_Script::PYC_Script(XPYC *pPYC, XBinary::FILEPART filePart, OPTIONS *pOptions
     : Binary_Script(pPYC, filePart, pOptions, pPdStruct)
 {
     this->m_pPYC = pPYC;
+    this->m_codeObject = pPYC->getCodeObject(pPdStruct);
 }
 
 PYC_Script::~PYC_Script()
 {
+}
+
+bool PYC_Script::isConstPresent(const QString &sConstValue)
+{
+    return XPYC::isConstPresent(&m_codeObject, sConstValue, getPdStruct());
 }
