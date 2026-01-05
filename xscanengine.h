@@ -45,6 +45,7 @@
 #include "dos16m_script.h"
 #include "dos4g_script.h"
 #include "javaclass_script.h"
+#include "pyc_script.h"
 #include "pdf_script.h"
 #include "cfbf_script.h"
 #include "image_script.h"

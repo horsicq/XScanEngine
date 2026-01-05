@@ -87,6 +87,8 @@ set(XSCANENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/modules/machofat_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/javaclass_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/javaclass_script.h
+    ${CMAKE_CURRENT_LIST_DIR}/modules/pyc_script.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/modules/pyc_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/pdf_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/pdf_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/cfbf_script.cpp

@@ -35,6 +35,7 @@ HEADERS += \
     $$PWD/modules/iso9660_script.h \
     $$PWD/modules/machofat_script.h \
     $$PWD/modules/javaclass_script.h \
+    $$PWD/modules/pyc_script.h \
     $$PWD/modules/pdf_script.h \
     $$PWD/modules/cfbf_script.h \
     $$PWD/modules/jpeg_script.h \
@@ -69,6 +70,7 @@ SOURCES += \
     $$PWD/modules/iso9660_script.cpp \
     $$PWD/modules/machofat_script.cpp \
     $$PWD/modules/javaclass_script.cpp \
+    $$PWD/modules/pyc_script.cpp \
     $$PWD/modules/pdf_script.cpp \
     $$PWD/modules/cfbf_script.cpp \
     $$PWD/modules/jpeg_script.cpp \
