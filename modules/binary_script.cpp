@@ -1025,9 +1025,9 @@ QList<QVariant> Binary_Script::decompressBytes(qint64 nOffset, qint64 nSize, QSt
 {
     QList<QVariant> listResult;
 
-    XBinary::COMPRESS_METHOD compressionMethod = XBinary::ftStringToCompressMethod(sCompressionMethod);
+    XBinary::HANDLE_METHOD compressionMethod = XBinary::ftStringToHandleMethod(sCompressionMethod);
 
-    if (compressionMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
+    if (compressionMethod != XBinary::HANDLE_METHOD_UNKNOWN) {
         QByteArray baData = XDecompress().decomressToByteArray(m_pBinary->getDevice(), nOffset, nSize, compressionMethod, m_pPdStruct);
         qint32 _nSize = baData.size();
         listResult.reserve(_nSize);
@@ -1047,9 +1047,9 @@ qint64 Binary_Script::getCompressedDataSize(qint64 nOffset, qint64 nSize, QStrin
 {
     qint64 nResult = 0;
 
-    XBinary::COMPRESS_METHOD compressionMethod = XBinary::ftStringToCompressMethod(sCompressionMethod);
+    XBinary::HANDLE_METHOD compressionMethod = XBinary::ftStringToHandleMethod(sCompressionMethod);
 
-    if (compressionMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
+    if (compressionMethod != XBinary::HANDLE_METHOD_UNKNOWN) {
         nResult = XDecompress().getCompressedDataSize(m_pBinary->getDevice(), nOffset, nSize, compressionMethod, m_pPdStruct);
     } else {
         emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method"), sCompressionMethod));
@@ -1063,15 +1063,15 @@ QList<QString> Binary_Script::getListOfCompressionMethods()
     QList<QString> listResult;
 
     // Only without known unpacked size!
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_STORE));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_BZIP2));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_LZMA));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_DEFLATE));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_DEFLATE64));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT214_8));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT214_16));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT215_8));
-    listResult.append(XBinary::compressMethodToFtString(XBinary::COMPRESS_METHOD_IT215_16));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_STORE));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_BZIP2));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_LZMA));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_DEFLATE));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_DEFLATE64));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_IT214_8));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_IT214_16));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_IT215_8));
+    listResult.append(XBinary::handleMethodToFtString(XBinary::HANDLE_METHOD_IT215_16));
 
     return listResult;
 }

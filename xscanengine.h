@@ -954,7 +954,7 @@ public:
         QString sType;
         qint64 nSize;
         qint64 nOffset;
-        XBinary::COMPRESS_METHOD compressMethod;
+        XBinary::HANDLE_METHOD compressMethod;
         QString sOriginalName;
     };
 

@@ -1042,8 +1042,8 @@ QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *
     if (pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) {
         QString sVersion;
 
-        if (pScanStruct->parentId.compressMethod != XBinary::COMPRESS_METHOD_UNKNOWN) {
-            sVersion = XBinary::appendText(sVersion, XBinary::compressMethodToString(pScanStruct->parentId.compressMethod), ", ");
+        if (pScanStruct->parentId.compressMethod != XBinary::HANDLE_METHOD_UNKNOWN) {
+            sVersion = XBinary::appendText(sVersion, XBinary::handleMethodToString(pScanStruct->parentId.compressMethod), ", ");
         }
 
         if (pScanStruct->parentId.sOriginalName != "") {
@@ -1783,7 +1783,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     scanIdSub.nSize = filePart.nFileSize;
                                     scanIdSub.sOriginalName = filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
                                     scanIdSub.compressMethod =
-                                        (XBinary::COMPRESS_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_COMPRESSMETHOD, XBinary::COMPRESS_METHOD_STORE)
+                                        (XBinary::HANDLE_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_HANDLEMETHOD1, XBinary::HANDLE_METHOD_STORE)
                                             .toUInt();
 
                                     XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
@@ -2238,7 +2238,7 @@ XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
             continue;
         }
 
-        // zipRecord.compressInfo.compressMethod = XArchive::COMPRESS_METHOD_DEFLATE;
+        // zipRecord.compressInfo.compressMethod = XArchive::HANDLE_METHOD_DEFLATE;
         // zipRecord.sPassword = "DetectItEasy";
 
         // XBinary::createFileBuffer();
@@ -2380,7 +2380,7 @@ bool XScanEngine::addTestCase(const QString &sJsonPath, const QString &sFilePath
 
     // Configure pack properties with password
     QMap<XBinary::PACK_PROP, QVariant> mapProperties;
-    mapProperties[XBinary::PACK_PROP_COMPRESSMETHOD] = XArchive::COMPRESS_METHOD_DEFLATE;
+    mapProperties[XBinary::PACK_PROP_COMPRESSMETHOD] = XArchive::HANDLE_METHOD_DEFLATE;
     mapProperties[XBinary::PACK_PROP_ENCRYPTIONMETHOD] = XBinary::CRYPTO_METHOD_ZIPCRYPTO;
     mapProperties[XBinary::PACK_PROP_PASSWORD] = "DetectItEasy";
     mapProperties[XBinary::PACK_PROP_PATHMODE] = XBinary::PATH_MODE_BASENAME;
