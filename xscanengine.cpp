@@ -1783,8 +1783,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     scanIdSub.nSize = filePart.nFileSize;
                                     scanIdSub.sOriginalName = filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
                                     scanIdSub.compressMethod =
-                                        (XBinary::HANDLE_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_HANDLEMETHOD1, XBinary::HANDLE_METHOD_STORE)
-                                            .toUInt();
+                                        (XBinary::HANDLE_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_HANDLEMETHOD1, XBinary::HANDLE_METHOD_STORE).toUInt();
 
                                     XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                                     _options.fileType = XBinary::FT_UNKNOWN;
