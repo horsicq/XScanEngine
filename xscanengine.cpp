@@ -77,6 +77,15 @@ QString XScanEngine::heurTypeIdToString(qint32 nId)
     return sResult;
 }
 
+XBinary::XCONVERT _TABLE_XScanEngine_SCANENGINETYPE[] = {
+    {XScanEngine::SCANENGINETYPE_UNKNOWN, "Unknown", QObject::tr("Unknown")},
+    {XScanEngine::SCANENGINETYPE_AUTO, "Auto", QObject::tr("Auto")},
+    {XScanEngine::SCANENGINETYPE_DIE, "DiE", QString("DiE")},
+    {XScanEngine::SCANENGINETYPE_NFD, "Nauz File Detector", QString("Nauz File Detector")},
+    {XScanEngine::SCANENGINETYPE_YARA, "YARA", QString("YARA")},
+    {XScanEngine::SCANENGINETYPE_PEID, "PEiD", QString("PEiD")},
+};
+
 XBinary::XCONVERT _TABLE_XScanEngine_RECORD_TYPE[] = {
     {XScanEngine::RECORD_TYPE_UNKNOWN, "Unknown", QObject::tr("Unknown")},
     {XScanEngine::RECORD_TYPE_APKOBFUSCATOR, "APK obfuscator", QString("APK %1").arg(QObject::tr("Obfuscator"))},
@@ -2029,6 +2038,55 @@ void XScanEngine::setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_DATABASE_CUSTOM_ENABLED, nDatabases & DATABASE_CUSTOM);
 }
 
+QMap<quint64, QString> XScanEngine::getFileTypes()
+{
+    QMap<quint64, QString> mapResult;
+
+    // Generic
+    mapResult.insert((quint64)XBinary::FT_BINARY, tr("Binary"));
+    mapResult.insert((quint64)XBinary::FT_COM, tr("COM"));
+
+    // Archives (meta-type and specific)
+    mapResult.insert((quint64)XBinary::FT_ARCHIVE, tr("Archive"));
+    mapResult.insert((quint64)XBinary::FT_ZIP, tr("ZIP"));
+    mapResult.insert((quint64)XBinary::FT_JAR, tr("JAR"));
+    mapResult.insert((quint64)XBinary::FT_APK, tr("APK"));
+    mapResult.insert((quint64)XBinary::FT_IPA, tr("IPA"));
+    mapResult.insert((quint64)XBinary::FT_NPM, tr("NPM"));
+    mapResult.insert((quint64)XBinary::FT_RAR, tr("RAR"));
+    mapResult.insert((quint64)XBinary::FT_ISO9660, tr("ISO9660"));
+
+    // Executable formats
+    mapResult.insert((quint64)XBinary::FT_MSDOS, tr("MS-DOS"));
+    mapResult.insert((quint64)XBinary::FT_NE, tr("NE"));
+    mapResult.insert((quint64)XBinary::FT_LE, tr("LE"));
+    mapResult.insert((quint64)XBinary::FT_LX, tr("LX"));
+    mapResult.insert((quint64)XBinary::FT_PE, tr("PE"));
+    mapResult.insert((quint64)XBinary::FT_ELF, tr("ELF"));
+    mapResult.insert((quint64)XBinary::FT_MACHO, tr("Mach-O"));
+    mapResult.insert((quint64)XBinary::FT_MACHOFAT, tr("Mach-O FAT"));
+    mapResult.insert((quint64)XBinary::FT_DOS16M, tr("DOS16M"));
+    mapResult.insert((quint64)XBinary::FT_DOS4G, tr("DOS4G"));
+    mapResult.insert((quint64)XBinary::FT_AMIGAHUNK, tr("AmigaHunk"));
+    mapResult.insert((quint64)XBinary::FT_ATARIST, tr("AtariST"));
+    mapResult.insert((quint64)XBinary::FT_DEB, tr("DEB"));
+
+    // Bytecode and documents
+    mapResult.insert((quint64)XBinary::FT_DEX, tr("DEX"));
+    mapResult.insert((quint64)XBinary::FT_JAVACLASS, tr("Java class"));
+    mapResult.insert((quint64)XBinary::FT_PYC, tr("PYC"));
+    mapResult.insert((quint64)XBinary::FT_PDF, tr("PDF"));
+    mapResult.insert((quint64)XBinary::FT_CFBF, tr("CFBF"));
+
+    // Images
+    mapResult.insert((quint64)XBinary::FT_IMAGE, tr("Image"));
+    mapResult.insert((quint64)XBinary::FT_JPEG, tr("JPEG"));
+    mapResult.insert((quint64)XBinary::FT_PNG, tr("PNG"));
+
+    return mapResult;
+}
+
+
 void XScanEngine::process()
 {
     XBinary::PDSTRUCT *pPdStruct = m_pPdStruct;
@@ -2127,6 +2185,11 @@ void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessa
 QString XScanEngine::recordTypeIdToString(qint32 nId)
 {
     return XBinary::XCONVERT_idToTransString(nId, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
+}
+
+QString XScanEngine::scanEngineTypeIdToString(qint32 nId)
+{
+    return XBinary::XCONVERT_idToTransString(nId, _TABLE_XScanEngine_SCANENGINETYPE, sizeof(_TABLE_XScanEngine_SCANENGINETYPE) / sizeof(XBinary::XCONVERT));
 }
 
 QString XScanEngine::recordNameIdToString(qint32 nId)
