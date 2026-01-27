@@ -1146,7 +1146,11 @@ public:
     static quint64 getDatabasesFromGlobalOptions(XOptions *pGlobalOptions);
     static void setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases);
 
-    static QMap<quint64, QString> getFileTypes();
+    static QMap<quint64, QString> getFileTypes(const QSet<XBinary::FT> &stFileTypes);
+    virtual QSet<XBinary::FT> getFileTypesSupported();
+
+    static QMap<quint64, QString> getTypes(const QSet<RECORD_TYPE> &stTypes);
+    virtual QSet<RECORD_TYPE> getTypesSupported();
 
     static bool isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type = RECORD_TYPE_UNKNOWN,
                                     RECORD_NAME name = RECORD_NAME_UNKNOWN, const QString &sVersion = "", const QString &sInfo = "");

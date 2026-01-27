@@ -2038,54 +2038,126 @@ void XScanEngine::setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_DATABASE_CUSTOM_ENABLED, nDatabases & DATABASE_CUSTOM);
 }
 
-QMap<quint64, QString> XScanEngine::getFileTypes()
+QMap<quint64, QString> XScanEngine::getFileTypes(const QSet<XBinary::FT> &stFileTypes)
 {
     QMap<quint64, QString> mapResult;
 
-    // Generic
-    mapResult.insert((quint64)XBinary::FT_BINARY, tr("Binary"));
-    mapResult.insert((quint64)XBinary::FT_COM, tr("COM"));
-
-    // Archives (meta-type and specific)
-    mapResult.insert((quint64)XBinary::FT_ARCHIVE, tr("Archive"));
-    mapResult.insert((quint64)XBinary::FT_ZIP, tr("ZIP"));
-    mapResult.insert((quint64)XBinary::FT_JAR, tr("JAR"));
-    mapResult.insert((quint64)XBinary::FT_APK, tr("APK"));
-    mapResult.insert((quint64)XBinary::FT_IPA, tr("IPA"));
-    mapResult.insert((quint64)XBinary::FT_NPM, tr("NPM"));
-    mapResult.insert((quint64)XBinary::FT_RAR, tr("RAR"));
-    mapResult.insert((quint64)XBinary::FT_ISO9660, tr("ISO9660"));
-
-    // Executable formats
-    mapResult.insert((quint64)XBinary::FT_MSDOS, tr("MS-DOS"));
-    mapResult.insert((quint64)XBinary::FT_NE, tr("NE"));
-    mapResult.insert((quint64)XBinary::FT_LE, tr("LE"));
-    mapResult.insert((quint64)XBinary::FT_LX, tr("LX"));
-    mapResult.insert((quint64)XBinary::FT_PE, tr("PE"));
-    mapResult.insert((quint64)XBinary::FT_ELF, tr("ELF"));
-    mapResult.insert((quint64)XBinary::FT_MACHO, tr("Mach-O"));
-    mapResult.insert((quint64)XBinary::FT_MACHOFAT, tr("Mach-O FAT"));
-    mapResult.insert((quint64)XBinary::FT_DOS16M, tr("DOS16M"));
-    mapResult.insert((quint64)XBinary::FT_DOS4G, tr("DOS4G"));
-    mapResult.insert((quint64)XBinary::FT_AMIGAHUNK, tr("AmigaHunk"));
-    mapResult.insert((quint64)XBinary::FT_ATARIST, tr("AtariST"));
-    mapResult.insert((quint64)XBinary::FT_DEB, tr("DEB"));
-
-    // Bytecode and documents
-    mapResult.insert((quint64)XBinary::FT_DEX, tr("DEX"));
-    mapResult.insert((quint64)XBinary::FT_JAVACLASS, tr("Java class"));
-    mapResult.insert((quint64)XBinary::FT_PYC, tr("PYC"));
-    mapResult.insert((quint64)XBinary::FT_PDF, tr("PDF"));
-    mapResult.insert((quint64)XBinary::FT_CFBF, tr("CFBF"));
-
-    // Images
-    mapResult.insert((quint64)XBinary::FT_IMAGE, tr("Image"));
-    mapResult.insert((quint64)XBinary::FT_JPEG, tr("JPEG"));
-    mapResult.insert((quint64)XBinary::FT_PNG, tr("PNG"));
+    QSetIterator<XBinary::FT> i(stFileTypes);
+    while (i.hasNext()) {
+        XBinary::FT fileType = i.next();
+        mapResult.insert(static_cast<quint64>(fileType), XBinary::fileTypeIdToString(fileType));
+    }
 
     return mapResult;
 }
 
+QSet<XBinary::FT> XScanEngine::getFileTypesSupported()
+{
+    QSet<XBinary::FT> stResult;
+
+    stResult.insert(XBinary::FT_BINARY);
+    stResult.insert(XBinary::FT_COM);
+    stResult.insert(XBinary::FT_ARCHIVE);
+    stResult.insert(XBinary::FT_ZIP);
+    stResult.insert(XBinary::FT_JAR);
+    stResult.insert(XBinary::FT_APK);
+    stResult.insert(XBinary::FT_IPA);
+    stResult.insert(XBinary::FT_NPM);
+    stResult.insert(XBinary::FT_RAR);
+    stResult.insert(XBinary::FT_ISO9660);
+    stResult.insert(XBinary::FT_MSDOS);
+    stResult.insert(XBinary::FT_PE);
+    stResult.insert(XBinary::FT_ELF);
+    stResult.insert(XBinary::FT_MACHO);
+    stResult.insert(XBinary::FT_MACHOFAT);
+    stResult.insert(XBinary::FT_DOS16M);
+    stResult.insert(XBinary::FT_DEX);
+    stResult.insert(XBinary::FT_JAVACLASS);
+    stResult.insert(XBinary::FT_PYC);
+    stResult.insert(XBinary::FT_PDF);
+    stResult.insert(XBinary::FT_CFBF);
+    stResult.insert(XBinary::FT_IMAGE);
+    stResult.insert(XBinary::FT_JPEG);
+    stResult.insert(XBinary::FT_PNG);
+
+    return stResult;
+}
+
+QMap<quint64, QString> XScanEngine::getTypes(const QSet<RECORD_TYPE> &stTypes)
+{
+    QMap<quint64, QString> mapResult;
+
+    QSetIterator<RECORD_TYPE> i(stTypes);
+    while (i.hasNext()) {
+        RECORD_TYPE recordType = i.next();
+        mapResult.insert(static_cast<quint64>(recordType), recordTypeIdToString(recordType));
+    }
+
+    return mapResult;
+}
+
+QSet<XScanEngine::RECORD_TYPE> XScanEngine::getTypesSupported()
+{
+    QSet<RECORD_TYPE> stResult;
+
+    stResult.insert(RECORD_TYPE_APKOBFUSCATOR);
+    stResult.insert(RECORD_TYPE_APKTOOL);
+    stResult.insert(RECORD_TYPE_CERTIFICATE);
+    stResult.insert(RECORD_TYPE_COMPILER);
+    stResult.insert(RECORD_TYPE_COMPRESSOR);
+    stResult.insert(RECORD_TYPE_CONVERTER);
+    stResult.insert(RECORD_TYPE_CRYPTER);
+    stResult.insert(RECORD_TYPE_DATABASE);
+    stResult.insert(RECORD_TYPE_DEBUGDATA);
+    stResult.insert(RECORD_TYPE_DOCUMENT);
+    stResult.insert(RECORD_TYPE_DONGLEPROTECTION);
+    stResult.insert(RECORD_TYPE_DOSEXTENDER);
+    stResult.insert(RECORD_TYPE_FORMAT);
+    stResult.insert(RECORD_TYPE_GENERIC);
+    stResult.insert(RECORD_TYPE_IMAGE);
+    stResult.insert(RECORD_TYPE_INSTALLER);
+    stResult.insert(RECORD_TYPE_INSTALLERDATA);
+    stResult.insert(RECORD_TYPE_JAROBFUSCATOR);
+    stResult.insert(RECORD_TYPE_JOINER);
+    stResult.insert(RECORD_TYPE_LANGUAGE);
+    stResult.insert(RECORD_TYPE_LIBRARY);
+    stResult.insert(RECORD_TYPE_LINKER);
+    stResult.insert(RECORD_TYPE_LOADER);
+    stResult.insert(RECORD_TYPE_NETCOMPRESSOR);
+    stResult.insert(RECORD_TYPE_NETOBFUSCATOR);
+    stResult.insert(RECORD_TYPE_OBFUSCATOR);
+    stResult.insert(RECORD_TYPE_OPERATIONSYSTEM);
+    stResult.insert(RECORD_TYPE_PACKER);
+    stResult.insert(RECORD_TYPE_PETOOL);
+    stResult.insert(RECORD_TYPE_PROTECTION);
+    stResult.insert(RECORD_TYPE_PROTECTOR);
+    stResult.insert(RECORD_TYPE_PROTECTORDATA);
+    stResult.insert(RECORD_TYPE_SFX);
+    stResult.insert(RECORD_TYPE_SFXDATA);
+    stResult.insert(RECORD_TYPE_SIGNTOOL);
+    stResult.insert(RECORD_TYPE_SOURCECODE);
+    stResult.insert(RECORD_TYPE_STUB);
+    stResult.insert(RECORD_TYPE_TOOL);
+    stResult.insert(RECORD_TYPE_VIRTUALMACHINE);
+    stResult.insert(RECORD_TYPE_VIRUS);
+    stResult.insert(RECORD_TYPE_ARCHIVE);
+    stResult.insert(RECORD_TYPE_CRYPTOR);
+    stResult.insert(RECORD_TYPE_OVERLAY);
+    stResult.insert(RECORD_TYPE_PLATFORM);
+    stResult.insert(RECORD_TYPE_PLAYER);
+    stResult.insert(RECORD_TYPE_TROJAN);
+    stResult.insert(RECORD_TYPE_MALWARE);
+    stResult.insert(RECORD_TYPE_PACKAGE);
+    stResult.insert(RECORD_TYPE_LICENSING);
+    stResult.insert(RECORD_TYPE_ROM);
+    stResult.insert(RECORD_TYPE_CORRUPTEDDATA);
+    stResult.insert(RECORD_TYPE_PERSONALDATA);
+    stResult.insert(RECORD_TYPE_AUTHOR);
+    stResult.insert(RECORD_TYPE_CREATOR);
+    stResult.insert(RECORD_TYPE_PRODUCER);
+
+    return stResult;
+}
 
 void XScanEngine::process()
 {
