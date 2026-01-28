@@ -132,7 +132,7 @@ public:
         RECORD_TYPE_AUTHOR,
         RECORD_TYPE_CREATOR,
         RECORD_TYPE_PRODUCER,
-
+        RECORD_TYPE_DATA,
         // TODO more
     };
 
@@ -145,9 +145,10 @@ public:
         SCANENGINETYPE_PEID,
     };
 
-    static QString recordTypeIdToString(qint32 nId);
+    static QString recordTypeIdToString(RECORD_TYPE _type);
     static QString heurTypeIdToString(qint32 nId);
     static QString scanEngineTypeIdToString(qint32 nId);
+    static RECORD_TYPE recordTypeStringToId(const QString &sType);
 
     enum RECORD_NAME {
         RECORD_NAME_UNKNOWN = 0,
@@ -949,7 +950,8 @@ public:
         RECORD_NAME_UNKNOWN9
     };
 
-    static QString recordNameIdToString(qint32 nId);
+    static QString recordNameIdToString(RECORD_NAME name);
+    static RECORD_NAME recordNameStringToId(const QString &sName);
 
     struct SCANID {
         bool bVirtual;  // TODO remove
@@ -974,8 +976,8 @@ public:
         bool bIsUnknown;
         SCANID id;
         SCANID parentId;
-        quint32 nType;
-        quint32 nName;
+        RECORD_TYPE type;
+        RECORD_NAME name;
         QString sType;
         QString sName;
         QString sVersion;
@@ -1119,7 +1121,7 @@ public:
     static QString translateType(const QString &sType);
     static bool isHeurType(const QString &sType);
     static bool isAHeurType(const QString &sType);
-    static QString _translate(const QString &sString);
+    static QString _translateType(const QString &sString);
     static void sortRecords(QList<SCANSTRUCT> *pListRecords);
     static QString getProtection(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
     static bool isProtection(const QString &sType);
@@ -1130,7 +1132,7 @@ public:
     XScanEngine::SCAN_RESULT scanMemory(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
     XScanEngine::SCAN_RESULT scanSubdevice(QIODevice *pDevice, qint64 nOffset, qint64 nSize, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
 
-    void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, XScanEngine::SCANID parentId,
+    void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, XScanEngine::SCANID parentId,
                      XScanEngine::SCAN_OPTIONS *pScanOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct);
 
     static QMap<quint64, QString> getScanFlags();

@@ -91,12 +91,16 @@ XBinary::XCONVERT _TABLE_XScanEngine_RECORD_TYPE[] = {
     {XScanEngine::RECORD_TYPE_APKOBFUSCATOR, "APK obfuscator", QString("APK %1").arg(QObject::tr("Obfuscator"))},
     {XScanEngine::RECORD_TYPE_APKTOOL, "APK Tool", QString("APK %1").arg(QObject::tr("Tool"))},
     {XScanEngine::RECORD_TYPE_ARCHIVE, "Archive", QObject::tr("Archive")},
+    {XScanEngine::RECORD_TYPE_AUTHOR, "Author", QObject::tr("Author")},
     {XScanEngine::RECORD_TYPE_CERTIFICATE, "Certificate", QObject::tr("Certificate")},
     {XScanEngine::RECORD_TYPE_COMPILER, "Compiler", QObject::tr("Compiler")},
     {XScanEngine::RECORD_TYPE_COMPRESSOR, "Compressor", QObject::tr("Compressor")},
     {XScanEngine::RECORD_TYPE_CONVERTER, "Converter", QObject::tr("Converter")},
+    {XScanEngine::RECORD_TYPE_CORRUPTEDDATA, "Corrupted data", QObject::tr("Corrupted data")},
+    {XScanEngine::RECORD_TYPE_CREATOR, "Creator", QObject::tr("Creator")},
     {XScanEngine::RECORD_TYPE_CRYPTER, "Crypter", QObject::tr("Crypter")},
     {XScanEngine::RECORD_TYPE_CRYPTOR, "Cryptor", QObject::tr("Cryptor")},
+    {XScanEngine::RECORD_TYPE_DATA, "Data", QObject::tr("Data")},
     {XScanEngine::RECORD_TYPE_DATABASE, "Database", QObject::tr("Database")},
     {XScanEngine::RECORD_TYPE_DEBUGDATA, "Debug data", QObject::tr("Debug data")},
     {XScanEngine::RECORD_TYPE_DOCUMENT, "Document", QObject::tr("Document")},
@@ -111,38 +115,35 @@ XBinary::XCONVERT _TABLE_XScanEngine_RECORD_TYPE[] = {
     {XScanEngine::RECORD_TYPE_JOINER, "Joiner", QObject::tr("Joiner")},
     {XScanEngine::RECORD_TYPE_LANGUAGE, "Language", QObject::tr("Language")},
     {XScanEngine::RECORD_TYPE_LIBRARY, "Library", QObject::tr("Library")},
+    {XScanEngine::RECORD_TYPE_LICENSING, "Licensing", QObject::tr("Licensing")},
     {XScanEngine::RECORD_TYPE_LINKER, "Linker", QObject::tr("Linker")},
     {XScanEngine::RECORD_TYPE_LOADER, "Loader", QObject::tr("Loader")},
+    {XScanEngine::RECORD_TYPE_MALWARE, "Malware", QObject::tr("Malware")},
     {XScanEngine::RECORD_TYPE_NETCOMPRESSOR, ".NET compressor", QString(".NET %1").arg(QObject::tr("Compressor"))},
     {XScanEngine::RECORD_TYPE_NETOBFUSCATOR, ".NET obfuscator", QString(".NET %1").arg(QObject::tr("Obfuscator"))},
     {XScanEngine::RECORD_TYPE_OBFUSCATOR, "Obfuscator", QObject::tr("Obfuscator")},
     {XScanEngine::RECORD_TYPE_OPERATIONSYSTEM, "Operation system", QObject::tr("Operation system")},
     {XScanEngine::RECORD_TYPE_OVERLAY, "Overlay", QObject::tr("Overlay")},
+    {XScanEngine::RECORD_TYPE_PACKAGE, "Package", QObject::tr("Package")},
     {XScanEngine::RECORD_TYPE_PACKER, "Packer", QObject::tr("Packer")},
+    {XScanEngine::RECORD_TYPE_PERSONALDATA, "Personal data", QObject::tr("Personal data")},
     {XScanEngine::RECORD_TYPE_PETOOL, "PE Tool", QString("PE %1").arg(QObject::tr("Tool"))},
     {XScanEngine::RECORD_TYPE_PLATFORM, "Platform", QObject::tr("Platform")},
     {XScanEngine::RECORD_TYPE_PLAYER, "Player", QObject::tr("Player")},
+    {XScanEngine::RECORD_TYPE_PRODUCER, "Producer", QObject::tr("Producer")},
     {XScanEngine::RECORD_TYPE_PROTECTION, "Protection", QObject::tr("Protection")},
     {XScanEngine::RECORD_TYPE_PROTECTOR, "Protector", QObject::tr("Protector")},
     {XScanEngine::RECORD_TYPE_PROTECTORDATA, "Protector data", QObject::tr("Protector data")},
+    {XScanEngine::RECORD_TYPE_ROM, "ROM", QString("ROM")},
     {XScanEngine::RECORD_TYPE_SFX, "SFX", QString("SFX")},
     {XScanEngine::RECORD_TYPE_SFXDATA, "SFX data", QString("SFX %1").arg(QObject::tr("data"))},
     {XScanEngine::RECORD_TYPE_SIGNTOOL, "Sign tool", QObject::tr("Sign tool")},
     {XScanEngine::RECORD_TYPE_SOURCECODE, "Source code", QObject::tr("Source code")},
     {XScanEngine::RECORD_TYPE_STUB, "Stub", QObject::tr("Stub")},
     {XScanEngine::RECORD_TYPE_TOOL, "Tool", QObject::tr("Tool")},
+    {XScanEngine::RECORD_TYPE_TROJAN, "Trojan", QObject::tr("Trojan")},
     {XScanEngine::RECORD_TYPE_VIRTUALMACHINE, "Virtual machine", QObject::tr("Virtual machine")},
     {XScanEngine::RECORD_TYPE_VIRUS, "Virus", QObject::tr("Virus")},
-    {XScanEngine::RECORD_TYPE_TROJAN, "Trojan", QObject::tr("Trojan")},
-    {XScanEngine::RECORD_TYPE_MALWARE, "Malware", QObject::tr("Malware")},
-    {XScanEngine::RECORD_TYPE_PACKAGE, "Package", QObject::tr("Package")},
-    {XScanEngine::RECORD_TYPE_LICENSING, "Licensing", QObject::tr("Licensing")},
-    {XScanEngine::RECORD_TYPE_ROM, "ROM", QString("ROM")},
-    {XScanEngine::RECORD_TYPE_CORRUPTEDDATA, "Corrupted data", QObject::tr("Corrupted data")},
-    {XScanEngine::RECORD_TYPE_PERSONALDATA, "Personal data", QObject::tr("Personal data")},
-    {XScanEngine::RECORD_TYPE_AUTHOR, "Author", QObject::tr("Author")},
-    {XScanEngine::RECORD_TYPE_CREATOR, "Creator", QObject::tr("Creator")},
-    {XScanEngine::RECORD_TYPE_PRODUCER, "Producer", QObject::tr("Producer")},
 };
 
 XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
@@ -1243,7 +1244,7 @@ QString XScanEngine::translateType(const QString &sType)
         }
     }
 
-    sResult = _translate(_sType);
+    sResult = _translateType(_sType);
 
     if (sResult.size()) {
         sResult[0] = sResult.at(0).toUpper();
@@ -1278,7 +1279,7 @@ bool XScanEngine::isAHeurType(const QString &sType)
     return bResult;
 }
 
-QString XScanEngine::_translate(const QString &sString)
+QString XScanEngine::_translateType(const QString &sString)
 {
     return XBinary::XCONVERT_translate(sString, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
 }
@@ -1340,7 +1341,7 @@ XScanEngine::SCAN_RESULT XScanEngine::scanDevice(QIODevice *pDevice, XScanEngine
         parentId.filePart = pOptions->initFilePart;
     }
 
-    scanProcess(pDevice, &result, 0, pDevice->size(), parentId, pOptions, true, pPdStruct);
+    scanProcess(pDevice, &result, parentId, pOptions, true, pPdStruct);
 
     return result;
 }
@@ -1396,10 +1397,11 @@ XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 n
     return result;
 }
 
-void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint64 nOffset, qint64 nSize, SCANID parentId, SCAN_OPTIONS *pScanOptions, bool bInit,
+void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCANID parentId, SCAN_OPTIONS *pScanOptions, bool bInit,
                               XBinary::PDSTRUCT *pPdStruct)
 {
     QElapsedTimer *pScanTimer = nullptr;
+    qint64 nSize = pDevice->size();
 
     if (bInit) {
         pScanTimer = new QElapsedTimer;
@@ -1408,28 +1410,17 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
         pScanResult->nSize = nSize;
     }
 
-    QIODevice *_pDevice = nullptr;
-    SubDevice *pSd = nullptr;
+    QIODevice *_pDevice = pDevice;
     char *pBuffer = nullptr;
     QBuffer *bufDevice = nullptr;
 
-    if ((nOffset == 0) && (pDevice->size() == nSize)) {
-        _pDevice = pDevice;
-    } else {
-        pSd = new SubDevice(pDevice, nOffset, nSize);
-        pSd->open(QIODevice::ReadOnly);
-        _pDevice = pSd;
-    }
-
     bool bMemory = false;
 
-    if (pScanOptions->nBufferSize) {
-        if (nSize <= pScanOptions->nBufferSize) {
-            bool bIsBuffer = _pDevice->property("Memory").toBool();
+    if (nSize <= XBinary::getFileBufferSize(pPdStruct)) {
+        bool bIsBuffer = _pDevice->property("Memory").toBool();
 
-            if (!bIsBuffer) {
-                bMemory = true;
-            }
+        if (!bIsBuffer) {
+            bMemory = true;
         }
     }
 
@@ -1799,7 +1790,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
                                     _options.bIsRecursiveScan = false;
 
                                     compDevice.setProperty("FileName", filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString());
-                                    scanProcess(&compDevice, pScanResult, 0, compDevice.size(), scanIdSub, &_options, false, pPdStruct);
+                                    scanProcess(&compDevice, pScanResult, scanIdSub, &_options, false, pPdStruct);
                                     nCount++;
                                 }
 
@@ -1823,12 +1814,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, qint
 
     if (pBuffer) {
         delete[] pBuffer;
-    }
-
-    if (pSd) {
-        pSd->close();
-
-        delete pSd;
     }
 
     if (pScanTimer) {
@@ -1978,7 +1963,7 @@ XScanEngine::SCAN_OPTIONS XScanEngine::getDefaultOptions(quint64 nFlags)
     result.bShowType = true;
     result.bShowVersion = true;
     result.bShowInfo = true;
-    result.nBufferSize = 2 * 1024 * 1024;
+    // result.nBufferSize = 2 * 1024 * 1024;
 
     setScanFlags(&result, nFlags);
 
@@ -2254,9 +2239,9 @@ void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessa
     emit errorMessage(sInfoMessage);
 }
 
-QString XScanEngine::recordTypeIdToString(qint32 nId)
+QString XScanEngine::recordTypeIdToString(RECORD_TYPE _type)
 {
-    return XBinary::XCONVERT_idToTransString(nId, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
+    return XBinary::XCONVERT_idToTransString((quint32)_type, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
 }
 
 QString XScanEngine::scanEngineTypeIdToString(qint32 nId)
@@ -2264,9 +2249,35 @@ QString XScanEngine::scanEngineTypeIdToString(qint32 nId)
     return XBinary::XCONVERT_idToTransString(nId, _TABLE_XScanEngine_SCANENGINETYPE, sizeof(_TABLE_XScanEngine_SCANENGINETYPE) / sizeof(XBinary::XCONVERT));
 }
 
-QString XScanEngine::recordNameIdToString(qint32 nId)
+XScanEngine::RECORD_TYPE XScanEngine::recordTypeStringToId(const QString &sType)
 {
-    return XBinary::XIDSTRING_idToString(nId, _TABLE_XScanEngine_RECORD_NAME, sizeof(_TABLE_XScanEngine_RECORD_NAME) / sizeof(XBinary::XIDSTRING));
+    QString _sType = sType.toUpper().remove(" ").remove("-");
+
+    if (_sType.size() > 1) {
+        if (_sType[0] == QChar('~')) {
+            _sType.remove(0, 1);
+        }
+    }
+
+    if (_sType.size() > 1) {
+        if (_sType[0] == QChar('!')) {
+            _sType.remove(0, 1);
+        }
+    }
+
+    return (XScanEngine::RECORD_TYPE)XBinary::XCONVERT_ftStringToId(_sType, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
+}
+
+QString XScanEngine::recordNameIdToString(RECORD_NAME name)
+{
+    return XBinary::XIDSTRING_idToString((quint32)name, _TABLE_XScanEngine_RECORD_NAME, sizeof(_TABLE_XScanEngine_RECORD_NAME) / sizeof(XBinary::XIDSTRING));
+}
+
+XScanEngine::RECORD_NAME XScanEngine::recordNameStringToId(const QString &sName)
+{
+    QString _sName = sName.toUpper().remove(" ").remove("-");
+
+    return (XScanEngine::RECORD_NAME)XBinary::XIDSTRING_ftStringToId(_sName, _TABLE_XScanEngine_RECORD_NAME, sizeof(_TABLE_XScanEngine_RECORD_NAME) / sizeof(XBinary::XIDSTRING));
 }
 
 bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type, RECORD_NAME name, const QString &sVersion,
@@ -2277,7 +2288,7 @@ bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanS
     if (pListScanStructs) {
         for (int i = 0; i < pListScanStructs->count(); i++) {
             const XScanEngine::SCANSTRUCT &ss = pListScanStructs->at(i);
-            if ((ss.nType == (quint32)type) && (ss.nName == (quint32)name) && (ss.sVersion == sVersion) && (ss.sInfo == sInfo)) {
+            if ((ss.type == type) && (ss.name == name) && (ss.sVersion == sVersion) && (ss.sInfo == sInfo)) {
                 bResult = true;
                 break;
             }
