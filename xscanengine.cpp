@@ -1158,6 +1158,32 @@ QString XScanEngine::createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions
     return sResult;
 }
 
+QString XScanEngine::getErrorsString(XScanEngine::SCAN_RESULT *pScanResult)
+{
+    QString sResult;
+
+    qint32 nNumberOfErrors = pScanResult->listErrors.count();
+
+    for (qint32 i = 0; i < nNumberOfErrors; i++) {
+        sResult += QString("%1: %2\n").arg(pScanResult->listErrors.at(i).sScript, pScanResult->listErrors.at(i).sErrorString);
+    }
+
+    return sResult;
+}
+
+QList<QString> XScanEngine::getErrorsAndWarningsStringList(XScanEngine::SCAN_RESULT *pScanResult)
+{
+    QList<QString> listResult;
+
+    qint32 nNumberOfErrors = pScanResult->listErrors.count();
+
+    for (qint32 i = 0; i < nNumberOfErrors; i++) {
+        listResult.append(QString("%1: %2").arg(pScanResult->listErrors.at(i).sScript, pScanResult->listErrors.at(i).sErrorString));
+    }
+
+    return listResult;
+}
+
 XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString &sType)
 {
     XOptions::GLOBAL_COLOR_RECORD result = {};

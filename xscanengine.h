@@ -1076,6 +1076,18 @@ public:
         bool bUseCustomDatabase;
         SCAN_ENGINE_CALLBACK scanEngineCallback;
         void *pUserData;
+        // Filter
+        bool bFilter;
+        bool bFilterAllFileTypes;
+        QSet<XBinary::FT> stFilterFileTypes;
+        bool bFilterAllTypes;
+        QSet<RECORD_TYPE> stFilterTypes;
+        bool bFilterCopyFiles;
+        bool bFilterCreateCatalog;
+        bool bFilterLog;
+        QString sFilterResultDirectory;
+        QString sFilterCopyFormat;
+        QString sFilterCatalogFormat;
     };
 
     struct SCAN_DATA {
@@ -1116,6 +1128,8 @@ public:
     static SCANSTRUCT createHeaderScanStruct(const SCANSTRUCT *pScanStruct);
     static QString createResultStringEx(XScanEngine::SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct);
     static QString createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
+    static QString getErrorsString(XScanEngine::SCAN_RESULT *pScanResult);
+    static QList<QString> getErrorsAndWarningsStringList(XScanEngine::SCAN_RESULT *pScanResult);
     static XOptions::GLOBAL_COLOR_RECORD typeToGlobalColorRecord(const QString &sType);
     static qint32 typeToPrio(const QString &sType);
     static QString translateType(const QString &sType);
