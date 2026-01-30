@@ -34,6 +34,7 @@ public:
         bool bIsHeuristicScan;
         bool bIsAggressiveScan;
         bool bIsRecursiveScan;
+        bool bIsOverlayScan;
         bool bIsVerbose;
         bool bIsProfiling;
     };
@@ -104,6 +105,7 @@ public slots:
     bool isHeuristicScan();
     bool isAggressiveScan();
     bool isRecursiveScan();
+    bool isOverlayScan();
     bool isVerbose();
     bool isProfiling();
 

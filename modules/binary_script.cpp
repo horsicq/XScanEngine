@@ -529,6 +529,11 @@ bool Binary_Script::isRecursiveScan()
     return m_pOptions->bIsRecursiveScan;
 }
 
+bool Binary_Script::isOverlayScan()
+{
+    return m_pOptions->bIsOverlayScan;
+}
+
 bool Binary_Script::isVerbose()
 {
     return m_pOptions->bIsVerbose;

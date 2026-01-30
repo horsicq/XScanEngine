@@ -1470,7 +1470,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     }
 
     QSet<XBinary::FT> stFT = XFormats::getFileTypes(_pDevice, true, pPdStruct);
-    QSet<XBinary::FT> stFTOriginal = stFT;
 
     if (bInit || (pScanOptions->fileType == XBinary::FT_BINARY)) {
         if (pScanOptions->fileType != XBinary::FT_UNKNOWN) {
@@ -1772,61 +1771,93 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         //     }
         // }
 
-        {
-            QList<XBinary::FPART> listFileParts = XFormats::getFileParts(
-                pScanResult->ftInit, _pDevice, XBinary::FILEPART_RESOURCE | XBinary::FILEPART_OVERLAY | XBinary::FILEPART_STREAM | XBinary::FILEPART_DEBUGDATA, 20000,
-                false, -1, pPdStruct);
+        // {
+        //     QList<XBinary::FPART> listFileParts = XFormats::getFileParts(
+        //         pScanResult->ftInit, _pDevice, XBinary::FILEPART_RESOURCE | XBinary::FILEPART_OVERLAY | XBinary::FILEPART_STREAM | XBinary::FILEPART_DEBUGDATA, 20000,
+        //         false, -1, pPdStruct);
 
-            qint32 nMaxCount = 20;
-            qint32 nCount = 0;
+        //     qint32 nMaxCount = 20;
+        //     qint32 nCount = 0;
 
-            qint32 nNumberOfFileParts = listFileParts.count();
+        //     qint32 nNumberOfFileParts = listFileParts.count();
 
-            if (nNumberOfFileParts > 0) {
-                for (qint32 i = 0; i < nNumberOfFileParts; i++) {
-                    XBinary::FPART filePart = listFileParts.at(i);
+        //     if (nNumberOfFileParts > 0) {
+        //         for (qint32 i = 0; i < nNumberOfFileParts; i++) {
+        //             XBinary::FPART filePart = listFileParts.at(i);
 
+        //             if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
+        //                 XCompressedDevice compDevice;
+
+        //                 if (compDevice.setData(_pDevice, filePart, pPdStruct)) {
+        //                     if (compDevice.open(QIODevice::ReadOnly)) {
+        //                         bool bProcess = false;
+
+        //                         if (filePart.filePart == XBinary::FILEPART_OVERLAY) {
+        //                             bProcess = true;  // always scan overlay
+        //                         } else if (filePart.filePart == XBinary::FILEPART_DEBUGDATA) {
+        //                             bProcess = true;  // always scan debug data
+        //                         } else if ((filePart.filePart == XBinary::FILEPART_RESOURCE) || (filePart.filePart == XBinary::FILEPART_STREAM)) {
+        //                             QSet<XBinary::FT> _stFT = XFormats::getFileTypes(&compDevice, 0, -1, true, pPdStruct);
+        //                             bProcess = isScanable(_stFT);
+        //                         }
+
+        //                         if (bProcess) {
+        //                             XScanEngine::SCANID scanIdSub = scanIdMain;
+        //                             scanIdSub.filePart = filePart.filePart;
+        //                             scanIdSub.nOffset = filePart.nFileOffset;
+        //                             scanIdSub.nSize = filePart.nFileSize;
+        //                             scanIdSub.sOriginalName = filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
+        //                             scanIdSub.compressMethod =
+        //                                 (XBinary::HANDLE_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_HANDLEMETHOD1, XBinary::HANDLE_METHOD_STORE).toUInt();
+
+        //                             XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+        //                             _options.fileType = XBinary::FT_UNKNOWN;
+        //                             _options.bIsRecursiveScan = false;
+
+        //                             compDevice.setProperty("FileName", filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString());
+        //                             scanProcess(&compDevice, pScanResult, scanIdSub, &_options, false, pPdStruct);
+        //                             nCount++;
+        //                         }
+
+        //                         compDevice.close();
+        //                     }
+        //                 }
+        //             }
+
+        //             if (nCount >= nMaxCount) {
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
+    }
+
+    if (pScanOptions->bIsOverlayScan) {
+        QList<XBinary::FPART> listFileParts = XFormats::getFileParts(
+            pScanResult->ftInit, _pDevice, XBinary::FILEPART_OVERLAY, 20000,
+            false, -1, pPdStruct);
+
+        qint32 nNumberOfFileParts = listFileParts.count();
+
+        if (nNumberOfFileParts > 0) {
+            for (qint32 i = 0; i < nNumberOfFileParts; i++) {
+                XBinary::FPART filePart = listFileParts.at(i);
+
+                if (filePart.filePart == XBinary::FILEPART_OVERLAY) {
                     if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
-                        XCompressedDevice compDevice;
+                        SubDevice subDevice(_pDevice, filePart.nFileOffset, filePart.nFileSize);
+                        if (subDevice.open(QIODevice::ReadOnly)) {
+                            XScanEngine::SCANID scanIdSub = scanIdMain;
+                            scanIdSub.filePart = filePart.filePart;
+                            scanIdSub.nOffset = filePart.nFileOffset;
+                            scanIdSub.nSize = filePart.nFileSize;
 
-                        if (compDevice.setData(_pDevice, filePart, pPdStruct)) {
-                            if (compDevice.open(QIODevice::ReadOnly)) {
-                                bool bProcess = false;
+                            XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+                            _options.fileType = XBinary::FT_UNKNOWN;
 
-                                if (filePart.filePart == XBinary::FILEPART_OVERLAY) {
-                                    bProcess = true;  // always scan overlay
-                                } else if (filePart.filePart == XBinary::FILEPART_DEBUGDATA) {
-                                    bProcess = true;  // always scan debug data
-                                } else if ((filePart.filePart == XBinary::FILEPART_RESOURCE) || (filePart.filePart == XBinary::FILEPART_STREAM)) {
-                                    QSet<XBinary::FT> _stFT = XFormats::getFileTypes(&compDevice, 0, -1, true, pPdStruct);
-                                    bProcess = isScanable(_stFT);
-                                }
-
-                                if (bProcess) {
-                                    XScanEngine::SCANID scanIdSub = scanIdMain;
-                                    scanIdSub.filePart = filePart.filePart;
-                                    scanIdSub.nOffset = filePart.nFileOffset;
-                                    scanIdSub.nSize = filePart.nFileSize;
-                                    scanIdSub.sOriginalName = filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
-                                    scanIdSub.compressMethod =
-                                        (XBinary::HANDLE_METHOD)filePart.mapProperties.value(XBinary::FPART_PROP_HANDLEMETHOD1, XBinary::HANDLE_METHOD_STORE).toUInt();
-
-                                    XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                                    _options.fileType = XBinary::FT_UNKNOWN;
-                                    _options.bIsRecursiveScan = false;
-
-                                    compDevice.setProperty("FileName", filePart.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString());
-                                    scanProcess(&compDevice, pScanResult, scanIdSub, &_options, false, pPdStruct);
-                                    nCount++;
-                                }
-
-                                compDevice.close();
-                            }
+                            scanProcess(&subDevice, pScanResult, scanIdSub, &_options, false, pPdStruct);
+                            subDevice.close();
                         }
-                    }
-
-                    if (nCount >= nMaxCount) {
-                        break;
                     }
                 }
             }
@@ -1854,6 +1885,7 @@ QMap<quint64, QString> XScanEngine::getScanFlags()
     QMap<quint64, QString> mapResult;
 
     mapResult.insert(SF_RECURSIVESCAN, tr("Recursive scan"));
+    mapResult.insert(SF_OVERLAYSCAN, tr("Overlay scan"));
     mapResult.insert(SF_DEEPSCAN, tr("Deep scan"));
     mapResult.insert(SF_HEURISTICSCAN, tr("Heuristic scan"));
 #ifdef QT_DEBUG
@@ -1871,6 +1903,10 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
 
     if (pScanOptions->bIsRecursiveScan) {
         nResult |= SF_RECURSIVESCAN;
+    }
+
+    if (pScanOptions->bIsOverlayScan) {
+        nResult |= SF_OVERLAYSCAN;
     }
 
     if (pScanOptions->bIsDeepScan) {
@@ -1919,6 +1955,7 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
 void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
 {
     pScanOptions->bIsRecursiveScan = nFlags & SF_RECURSIVESCAN;
+    pScanOptions->bIsOverlayScan = nFlags & SF_OVERLAYSCAN;
     pScanOptions->bIsDeepScan = nFlags & SF_DEEPSCAN;
     pScanOptions->bIsHeuristicScan = nFlags & SF_HEURISTICSCAN;
     pScanOptions->bIsAggressiveScan = nFlags & SF_AGGRESSIVESCAN;
@@ -1937,6 +1974,10 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_RECURSIVE).toBool()) {
         nResult |= SF_RECURSIVESCAN;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_OVERLAY).toBool()) {
+        nResult |= SF_OVERLAYSCAN;
     }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_DEEP).toBool()) {
@@ -1973,6 +2014,7 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
 void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags)
 {
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, nFlags & SF_RECURSIVESCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_OVERLAY, nFlags & SF_OVERLAYSCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_DEEP, nFlags & SF_DEEPSCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_HEURISTIC, nFlags & SF_HEURISTICSCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SF_AGGRESSIVESCAN);
@@ -2369,6 +2411,7 @@ XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
     if (jsonObject.contains("defaultScanFlags")) {
         QJsonObject defaultScanFlagsObj = jsonObject.value("defaultScanFlags").toObject();
         if (defaultScanFlagsObj.value("recursiveScan").toBool()) nScanFlags |= SF_RECURSIVESCAN;
+        if (defaultScanFlagsObj.value("overlayScan").toBool()) nScanFlags |= SF_OVERLAYSCAN;
         if (defaultScanFlagsObj.value("deepScan").toBool()) nScanFlags |= SF_DEEPSCAN;
         if (defaultScanFlagsObj.value("heuristicScan").toBool()) nScanFlags |= SF_HEURISTICSCAN;
         if (defaultScanFlagsObj.value("aggressiveScan").toBool()) nScanFlags |= SF_AGGRESSIVESCAN;
@@ -2440,6 +2483,7 @@ XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
             QJsonObject testScanFlagsObj = testCase.value("scanFlags").toObject();
             nTestScanFlags = 0;
             if (testScanFlagsObj.value("recursiveScan").toBool()) nTestScanFlags |= SF_RECURSIVESCAN;
+            if (testScanFlagsObj.value("overlayScan").toBool()) nTestScanFlags |= SF_OVERLAYSCAN;
             if (testScanFlagsObj.value("deepScan").toBool()) nTestScanFlags |= SF_DEEPSCAN;
             if (testScanFlagsObj.value("heuristicScan").toBool()) nTestScanFlags |= SF_HEURISTICSCAN;
             if (testScanFlagsObj.value("aggressiveScan").toBool()) nTestScanFlags |= SF_AGGRESSIVESCAN;
