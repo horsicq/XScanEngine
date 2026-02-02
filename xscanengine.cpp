@@ -1158,6 +1158,25 @@ QString XScanEngine::createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions
     return sResult;
 }
 
+QString XScanEngine::createResultString(SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult)
+{
+    QString sResult;
+
+    qint64 nNumberOfRecords = scanResult.listRecords.count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        SCANSTRUCT scanStruct = scanResult.listRecords.at(i);
+
+        if (scanStruct.id.fileType != XBinary::FT_BINARY) {
+            sResult += QString("%1: %2").arg(XBinary::fileTypeIdToString(scanStruct.id.fileType), createResultStringEx(pOptions, &scanStruct)) + "\r\n";
+        } else if (!scanStruct.bIsUnknown) {
+            sResult += createResultStringEx(pOptions, &scanStruct) + "\r\n";
+        }
+    }
+
+    return sResult;
+}
+
 QString XScanEngine::getErrorsString(XScanEngine::SCAN_RESULT *pScanResult)
 {
     QString sResult;
@@ -1450,7 +1469,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         }
     }
 
-    // TODO Check if not in memory already
     if (bMemory) {
         bufDevice = new QBuffer;
 
@@ -1847,6 +1865,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                     if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
                         SubDevice subDevice(_pDevice, filePart.nFileOffset, filePart.nFileSize);
                         if (subDevice.open(QIODevice::ReadOnly)) {
+                            subDevice.setProperty("FileName", XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileName(_pDevice) + ".OVERLAY");
+
                             XScanEngine::SCANID scanIdSub = scanIdMain;
                             scanIdSub.filePart = filePart.filePart;
                             scanIdSub.nOffset = filePart.nFileOffset;
@@ -1855,12 +1875,47 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                             XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
                             _options.fileType = XBinary::FT_UNKNOWN;
 
-                            scanProcess(&subDevice, pScanResult, scanIdSub, &_options, false, pPdStruct);
+                            SCAN_RESULT scanResultOverlay = {};
+
+                            scanProcess(&subDevice, &scanResultOverlay, scanIdSub, &_options, false, pPdStruct);
+
+                            pScanResult->listRecords.append(scanResultOverlay.listRecords);
+                            pScanResult->listErrors.append(scanResultOverlay.listErrors);
+                            pScanResult->listDebugRecords.append(scanResultOverlay.listDebugRecords);
+
                             subDevice.close();
                         }
                     }
                 }
             }
+        }
+    }
+
+    if (pScanTimer) {
+        pScanResult->nScanTime = pScanTimer->elapsed();
+
+        delete pScanTimer;
+    }
+
+    if (pScanOptions->bFilter) {
+        if (pScanOptions->sFilterResultDirectory !="") {
+            if (!XBinary::isDirectoryExists(pScanOptions->sFilterResultDirectory)) {
+                XBinary::createDirectory(pScanOptions->sFilterResultDirectory);
+            }
+        }
+
+        if (pScanOptions->bFilterLog) {
+            QString sLogFile = pScanOptions->sFilterResultDirectory + QDir::separator() + "info.log";
+            QString sInfo = createResultString(pScanOptions, *pScanResult);
+            XBinary::appendToFile(sLogFile, XBinary::getDeviceFileName(_pDevice).toUtf8());
+            XBinary::appendToFile(sLogFile, sInfo.toUtf8());
+        }
+
+        if (pScanResult->listErrors.count()) {
+            QString sLogFile = pScanOptions->sFilterResultDirectory + QDir::separator() + "error.log";
+            QString sErrors = getErrorsString(pScanResult);
+            XBinary::appendToFile(sLogFile, XBinary::getDeviceFileName(_pDevice).toUtf8());
+            XBinary::appendToFile(sLogFile, sErrors.toUtf8());
         }
     }
 
@@ -1871,12 +1926,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
     if (pBuffer) {
         delete[] pBuffer;
-    }
-
-    if (pScanTimer) {
-        pScanResult->nScanTime = pScanTimer->elapsed();
-
-        delete pScanTimer;
     }
 }
 
