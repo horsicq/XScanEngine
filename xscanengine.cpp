@@ -1917,6 +1917,23 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             XBinary::appendToFile(sLogFile, XBinary::getDeviceFileName(_pDevice).toUtf8());
             XBinary::appendToFile(sLogFile, sErrors.toUtf8());
         }
+
+        if (pScanOptions->bFilterCopyFiles) {
+            // QString sPath = convertPath(_pDevice, pScanResult, pScanOptions->sFilterCopyFormat);
+            // QString sDirPath = QFileInfo(sPath).absolutePath();
+
+            // if (sDirPath !="") {
+            //     if (!XBinary::isDirectoryExists(sDirPath)) {
+            //         XBinary::createDirectory(sDirPath);
+            //     }
+            // }
+
+            // bool bCopy = true;
+
+            // if (bCopy) {
+            //     XBinary::dumpToFile()
+            // }
+        }
     }
 
     if (bufDevice) {
