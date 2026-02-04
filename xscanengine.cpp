@@ -1898,6 +1898,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     }
 
     if (pScanOptions->bFilter) {
+        QString sFileName = XBinary::getDeviceFileName(_pDevice);
+
         if (pScanOptions->sFilterResultDirectory !="") {
             if (!XBinary::isDirectoryExists(pScanOptions->sFilterResultDirectory)) {
                 XBinary::createDirectory(pScanOptions->sFilterResultDirectory);
@@ -1907,32 +1909,53 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         if (pScanOptions->bFilterLog) {
             QString sLogFile = pScanOptions->sFilterResultDirectory + QDir::separator() + "info.log";
             QString sInfo = createResultString(pScanOptions, *pScanResult);
-            XBinary::appendToFile(sLogFile, XBinary::getDeviceFileName(_pDevice).toUtf8());
+            XBinary::appendToFile(sLogFile, sFileName.toUtf8());
             XBinary::appendToFile(sLogFile, sInfo.toUtf8());
         }
 
         if (pScanResult->listErrors.count()) {
             QString sLogFile = pScanOptions->sFilterResultDirectory + QDir::separator() + "error.log";
             QString sErrors = getErrorsString(pScanResult);
-            XBinary::appendToFile(sLogFile, XBinary::getDeviceFileName(_pDevice).toUtf8());
+            XBinary::appendToFile(sLogFile, sFileName.toUtf8());
             XBinary::appendToFile(sLogFile, sErrors.toUtf8());
         }
 
-        if (pScanOptions->bFilterCopyFiles) {
-            // QString sPath = convertPath(_pDevice, pScanResult, pScanOptions->sFilterCopyFormat);
-            // QString sDirPath = QFileInfo(sPath).absolutePath();
+        qint32 nNumberOfDetects = pScanResult->listRecords.count();
 
-            // if (sDirPath !="") {
-            //     if (!XBinary::isDirectoryExists(sDirPath)) {
-            //         XBinary::createDirectory(sDirPath);
-            //     }
-            // }
+        for (int i = 0; i < nNumberOfDetects; i++) {
+            if (pScanOptions->bFilterCopyFiles) {
+                QString sPath = convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCopyFormat);
+                QString sDirPath = QFileInfo(sPath).absolutePath();
 
-            // bool bCopy = true;
+                if (sDirPath !="") {
+                    if (!XBinary::isDirectoryExists(sDirPath)) {
+                        XBinary::createDirectory(sDirPath);
+                    }
+                }
 
-            // if (bCopy) {
-            //     XBinary::dumpToFile()
-            // }
+                bool bCopy = true;
+
+                if (bCopy) {
+                    bCopy = !(XBinary::isFileExists(sPath));
+                }
+
+                if (bCopy) {
+                    XBinary::dumpToFile(sPath, _pDevice, pPdStruct);
+                }
+            }
+
+            if (pScanOptions->bFilterCreateCatalog) {
+                QString sPath = convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCatalogFormat);
+                QString sDirPath = QFileInfo(sPath).absolutePath();
+
+                if (sDirPath !="") {
+                    if (!XBinary::isDirectoryExists(sDirPath)) {
+                        XBinary::createDirectory(sDirPath);
+                    }
+                }
+
+                XBinary::appendToFile(sPath, sFileName.toUtf8());
+            }
         }
     }
 
@@ -1944,6 +1967,15 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     if (pBuffer) {
         delete[] pBuffer;
     }
+}
+
+QString XScanEngine::convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruct, const QString &sString)
+{
+    QString sResult = sString;
+
+    // TODO
+
+    return sString;
 }
 
 QMap<quint64, QString> XScanEngine::getScanFlags()

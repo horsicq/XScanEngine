@@ -1152,6 +1152,8 @@ public:
     void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, XScanEngine::SCANID parentId,
                      XScanEngine::SCAN_OPTIONS *pScanOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct);
 
+    QString convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruct, const QString &sString);
+
     static QMap<quint64, QString> getScanFlags();
     static quint64 getScanFlags(SCAN_OPTIONS *pScanOptions);
     static void setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags);
