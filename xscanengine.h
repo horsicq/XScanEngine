@@ -958,12 +958,8 @@ public:
         QString sUuid;
         XBinary::FT fileType;
         XBinary::FILEPART filePart;
-        QString sArch;  // TODO remove
         QString sVersion;
         QString sInfo;
-        XBinary::MODE mode;
-        XBinary::ENDIAN endian;
-        QString sType;
         qint64 nSize;
         qint64 nOffset;
         XBinary::HANDLE_METHOD compressMethod;

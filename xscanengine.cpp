@@ -1924,7 +1924,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
         for (int i = 0; i < nNumberOfDetects; i++) {
             if (pScanOptions->bFilterCopyFiles) {
-                QString sPath = convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCopyFormat);
+                QString sPath = pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCopyFormat);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
                 if (sDirPath !="") {
@@ -1945,7 +1945,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             }
 
             if (pScanOptions->bFilterCreateCatalog) {
-                QString sPath = convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCatalogFormat);
+                QString sPath = pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCatalogFormat);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
                 if (sDirPath !="") {
@@ -1973,9 +1973,47 @@ QString XScanEngine::convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruc
 {
     QString sResult = sString;
 
-    // TODO
+    sResult = sResult.replace("/", QDir::separator());
+    sResult = sResult.replace("\\", QDir::separator());
 
-    return sString;
+    if (sResult.contains("{ft}")) {
+        sResult = sResult.replace("{ft}", XBinary::convertFileNameSymbols(XBinary::fileTypeIdToString(scanStruct.id.fileType)));
+    }
+
+    if (sResult.contains("{type}")) {
+        sResult = sResult.replace("{type}", XBinary::convertFileNameSymbols(scanStruct.sType));
+    }
+
+    if (sResult.contains("{name}")) {
+        sResult = sResult.replace("{name}", XBinary::convertFileNameSymbols(scanStruct.sName));
+    }
+
+    if (sResult.contains("{version}")) {
+        sResult = sResult.replace("{version}", XBinary::convertFileNameSymbols(scanStruct.sVersion));
+    }
+
+    if (sResult.contains("{info}")) {
+        sResult = sResult.replace("{info}", XBinary::convertFileNameSymbols(scanStruct.sInfo));
+    }
+
+    bool bOriginalBasename = sResult.contains("{original_basename}");
+    bool bOriginalExtension = sResult.contains("{original_extension}");
+
+    if (bOriginalBasename || bOriginalExtension) {
+        QString sOriginalFileName = XBinary::getDeviceFileName(pDevice);
+
+        if (bOriginalBasename) {
+            QString sBaseName = QFileInfo(sOriginalFileName).completeBaseName();
+            sResult = sResult.replace("{original_basename}", XBinary::convertFileNameSymbols(sBaseName));
+        }
+
+        if (bOriginalExtension) {
+            QString sExtension = QFileInfo(sOriginalFileName).completeSuffix();
+            sResult = sResult.replace("{original_extension}", XBinary::convertFileNameSymbols(sExtension));
+        }
+    }
+
+    return sResult;
 }
 
 QMap<quint64, QString> XScanEngine::getScanFlags()
