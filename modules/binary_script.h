@@ -35,6 +35,8 @@ public:
         bool bIsAggressiveScan;
         bool bIsRecursiveScan;
         bool bIsOverlayScan;
+        bool bIsResourcesScan;
+        bool bIsArchivesScan;
         bool bIsVerbose;
         bool bIsProfiling;
     };

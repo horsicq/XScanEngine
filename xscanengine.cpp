@@ -1850,7 +1850,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         // }
     }
 
-    if (pScanOptions->bIsOverlayScan) {
+    if (pScanOptions->bIsOverlayScan || pScanOptions->bIsRecursiveScan) {
         QList<XBinary::FPART> listFileParts = XFormats::getFileParts(
             pScanResult->ftInit, _pDevice, XBinary::FILEPART_OVERLAY, 20000,
             false, -1, pPdStruct);
@@ -2045,6 +2045,14 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
         nResult |= SF_OVERLAYSCAN;
     }
 
+    if (pScanOptions->bIsResourcesScan) {
+        nResult |= SF_RESOURCESSCAN;
+    }
+
+    if (pScanOptions->bIsArchivesScan) {
+        nResult |= SF_ARCHIVESSCAN;
+    }
+
     if (pScanOptions->bIsDeepScan) {
         nResult |= SF_DEEPSCAN;
     }
@@ -2092,6 +2100,8 @@ void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
 {
     pScanOptions->bIsRecursiveScan = nFlags & SF_RECURSIVESCAN;
     pScanOptions->bIsOverlayScan = nFlags & SF_OVERLAYSCAN;
+    pScanOptions->bIsResourcesScan = nFlags & SF_RESOURCESSCAN;
+    pScanOptions->bIsArchivesScan = nFlags & SF_ARCHIVESSCAN;
     pScanOptions->bIsDeepScan = nFlags & SF_DEEPSCAN;
     pScanOptions->bIsHeuristicScan = nFlags & SF_HEURISTICSCAN;
     pScanOptions->bIsAggressiveScan = nFlags & SF_AGGRESSIVESCAN;
@@ -2114,6 +2124,14 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_OVERLAY).toBool()) {
         nResult |= SF_OVERLAYSCAN;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_RESOURCES).toBool()) {
+        nResult |= SF_RESOURCESSCAN;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_ARCHIVES).toBool()) {
+        nResult |= SF_ARCHIVESSCAN;
     }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_DEEP).toBool()) {

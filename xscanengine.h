@@ -1015,6 +1015,8 @@ public:
         SF_ALLTYPESSCAN = 0x00000004,
         SF_RECURSIVESCAN = 0x00000008,
         SF_OVERLAYSCAN = 0x00000040,
+        SF_RESOURCESSCAN = 0x00000080,
+        SF_ARCHIVESSCAN = 0x00000100,
         SF_VERBOSE = 0x00000010,
         SF_AGGRESSIVESCAN = 0x00000020,
         SF_RESULTASXML = 0x00010000,
@@ -1037,6 +1039,8 @@ public:
         bool bIsHeuristicScan;
         bool bIsVerbose;
         bool bIsRecursiveScan;
+        bool bIsResourcesScan;
+        bool bIsArchivesScan;
         bool bIsOverlayScan;
         bool bIsAggressiveScan;
         bool bIsAllTypesScan;
