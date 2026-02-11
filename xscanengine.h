@@ -59,6 +59,7 @@
 #include <QLoggingCategory>
 #include "xthreadobject.h"
 #include "xcompresseddevice.h"
+#include <QCommandLineOption>
 
 typedef bool (*SCAN_ENGINE_CALLBACK)(const QString &sCurrentSignature, qint32 nNumberOfSignatures, qint32 nCurrentIndex, void *pUserData);
 
@@ -75,6 +76,43 @@ class XScanEngine : public XThreadObject {
     };
 
 public:
+    enum CONSOLE_OPTION_ID {
+        CONSOLE_OPTION_ID_UNKNOWN = 0,
+        CONSOLE_OPTION_ID_RECURSIVESCAN,
+        CONSOLE_OPTION_ID_DEEPSCAN,
+        CONSOLE_OPTION_ID_HEURISTICSCAN,
+        CONSOLE_OPTION_ID_VERBOSE,
+        CONSOLE_OPTION_ID_AGGRESSIVESCAN,
+        CONSOLE_OPTION_ID_ALLTYPES,
+        CONSOLE_OPTION_ID_FORMAT,
+        CONSOLE_OPTION_ID_PROFILING,
+        CONSOLE_OPTION_ID_MESSAGES,
+        CONSOLE_OPTION_ID_HIDEUNKNOWN,
+        CONSOLE_OPTION_ID_ENTROPY,
+        CONSOLE_OPTION_ID_INFO,
+        CONSOLE_OPTION_ID_XML,
+        CONSOLE_OPTION_ID_JSON,
+        CONSOLE_OPTION_ID_CSV,
+        CONSOLE_OPTION_ID_TSV,
+        CONSOLE_OPTION_ID_PLAINTEXT,
+        CONSOLE_OPTION_ID_DATABASE,
+        CONSOLE_OPTION_ID_EXTRADATABASE,
+        CONSOLE_OPTION_ID_CUSTOMDATABASE,
+        CONSOLE_OPTION_ID_SHOWDATABASE,
+        CONSOLE_OPTION_ID_SPECIAL,
+        CONSOLE_OPTION_ID_SHOWMETHODS,
+        CONSOLE_OPTION_ID_TEST,
+        CONSOLE_OPTION_ID_ADDTEST
+    };
+
+    struct CONSOLE_OPTION {
+        CONSOLE_OPTION_ID nId;
+        const char *pszShort;
+        const char *pszLong;
+        const char *pszDescription;
+    };
+
+
     enum RECORD_TYPE {
         RECORD_TYPE_UNKNOWN = 0,
         RECORD_TYPE_APKOBFUSCATOR,
@@ -1131,6 +1169,7 @@ public:
     static QString createResultStringEx(XScanEngine::SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct);
     static QString createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
     static QString createResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
+    static QString scanResultToJson(const SCAN_RESULT &scanResult);
     static QString getErrorsString(XScanEngine::SCAN_RESULT *pScanResult);
     static QList<QString> getErrorsAndWarningsStringList(XScanEngine::SCAN_RESULT *pScanResult);
     static XOptions::GLOBAL_COLOR_RECORD typeToGlobalColorRecord(const QString &sType);
@@ -1159,6 +1198,8 @@ public:
     static void setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags);
     static quint64 getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions);
     static void setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags);
+    static QString getJsonFromFlags(quint64 nFlags);
+    static quint64 getFlagsFromJson(const QString &sJson);
     static SCAN_OPTIONS getDefaultOptions(quint64 nFlags);
 
     static QMap<quint64, QString> getDatabases();
@@ -1177,9 +1218,16 @@ public:
                                     RECORD_NAME name = RECORD_NAME_UNKNOWN, const QString &sVersion = "", const QString &sInfo = "");
 
     TEST_RESULT test(const QString &sDirectoryName);
+    bool compareJson(const QString &sJson1, const QString &sJson2);
     static bool addTestCase(const QString &sJsonPath, const QString &sFilePath, const QString &sExpectedDetect);
+    bool createTest(const QString &sFilePath, const QString sResultName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
+
+    // Console command line options
+    static QCommandLineOption getCommandLineOption(CONSOLE_OPTION_ID nId);
+
 
     virtual void process();
+    virtual QString getEngineName();
 
 protected:
     virtual void _processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions,

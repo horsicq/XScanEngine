@@ -2154,10 +2154,6 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
         nResult |= SF_ALLTYPESSCAN;
     }
 
-    if (pGlobalOptions->getValue(XOptions::ID_SCAN_USECACHE).toBool()) {
-        nResult |= SF_USECACHE;
-    }
-
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FORMATRESULT).toBool()) {
         nResult |= SF_FORMATRESULT;
     }
@@ -2174,8 +2170,126 @@ void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SF_AGGRESSIVESCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SF_VERBOSE);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SF_ALLTYPESSCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_USECACHE, nFlags & SF_USECACHE);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FORMATRESULT, nFlags & SF_FORMATRESULT);
+}
+
+QString XScanEngine::getJsonFromFlags(quint64 nFlags)
+{
+    QJsonObject jsonObject;
+
+    jsonObject["recursiveScan"] = (bool)(nFlags & SF_RECURSIVESCAN);
+    jsonObject["overlayScan"] = (bool)(nFlags & SF_OVERLAYSCAN);
+    jsonObject["resourcesScan"] = (bool)(nFlags & SF_RESOURCESSCAN);
+    jsonObject["archivesScan"] = (bool)(nFlags & SF_ARCHIVESSCAN);
+    jsonObject["deepScan"] = (bool)(nFlags & SF_DEEPSCAN);
+    jsonObject["heuristicScan"] = (bool)(nFlags & SF_HEURISTICSCAN);
+    jsonObject["aggressiveScan"] = (bool)(nFlags & SF_AGGRESSIVESCAN);
+    jsonObject["verbose"] = (bool)(nFlags & SF_VERBOSE);
+    jsonObject["allTypesScan"] = (bool)(nFlags & SF_ALLTYPESSCAN);
+    jsonObject["formatResult"] = (bool)(nFlags & SF_FORMATRESULT);
+
+    QJsonDocument jsonDocument(jsonObject);
+    QString sResult = QString(jsonDocument.toJson(QJsonDocument::Compact));
+
+    return sResult;
+}
+
+quint64 XScanEngine::getFlagsFromJson(const QString &sJson)
+{
+    quint64 nResult = 0;
+
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(sJson.toUtf8());
+
+    if (!jsonDocument.isNull() && jsonDocument.isObject()) {
+        QJsonObject jsonObject = jsonDocument.object();
+
+        if (jsonObject.value("recursiveScan").toBool()) {
+            nResult |= SF_RECURSIVESCAN;
+        }
+
+        if (jsonObject.value("overlayScan").toBool()) {
+            nResult |= SF_OVERLAYSCAN;
+        }
+
+        if (jsonObject.value("resourcesScan").toBool()) {
+            nResult |= SF_RESOURCESSCAN;
+        }
+
+        if (jsonObject.value("archivesScan").toBool()) {
+            nResult |= SF_ARCHIVESSCAN;
+        }
+
+        if (jsonObject.value("deepScan").toBool()) {
+            nResult |= SF_DEEPSCAN;
+        }
+
+        if (jsonObject.value("heuristicScan").toBool()) {
+            nResult |= SF_HEURISTICSCAN;
+        }
+
+        if (jsonObject.value("aggressiveScan").toBool()) {
+            nResult |= SF_AGGRESSIVESCAN;
+        }
+
+        if (jsonObject.value("verbose").toBool()) {
+            nResult |= SF_VERBOSE;
+        }
+
+        if (jsonObject.value("allTypesScan").toBool()) {
+            nResult |= SF_ALLTYPESSCAN;
+        }
+
+        if (jsonObject.value("formatResult").toBool()) {
+            nResult |= SF_FORMATRESULT;
+        }
+    }
+
+    return nResult;
+}
+
+QString XScanEngine::scanResultToJson(const SCAN_RESULT &scanResult)
+{
+    QJsonObject jsonObject;
+
+    QJsonArray recordsArray;
+    qint32 nNumberOfRecords = scanResult.listRecords.count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const SCANSTRUCT &record = scanResult.listRecords.at(i);
+        QJsonObject recordObject;
+
+        recordObject["fileType"] = XBinary::fileTypeIdToString(record.id.fileType);
+        recordObject["filePart"] = XBinary::recordFilePartIdToString(record.id.filePart);
+        recordObject["type"] = recordTypeIdToString(record.type);
+        recordObject["name"] = recordNameIdToString(record.name);
+        recordObject["type"] = record.sType;
+        recordObject["name"] = record.sName;
+        recordObject["version"] = record.sVersion;
+        recordObject["info"] = record.sInfo;
+
+        recordsArray.append(recordObject);
+    }
+
+    jsonObject["records"] = recordsArray;
+
+    QJsonArray errorsArray;
+    qint32 nNumberOfErrors = scanResult.listErrors.count();
+
+    if (nNumberOfErrors) {
+        for (qint32 i = 0; i < nNumberOfErrors; i++) {
+            const ERROR_RECORD &error = scanResult.listErrors.at(i);
+            QJsonObject errorObject;
+            errorObject["script"] = error.sScript;
+            errorObject["errorString"] = error.sErrorString;
+            errorsArray.append(errorObject);
+        }
+        jsonObject["errors"] = errorsArray;
+    }    
+
+    QJsonDocument jsonDocument(jsonObject);
+    QString sResult = QString(jsonDocument.toJson(QJsonDocument::Compact));
+
+    return sResult;
 }
 
 XScanEngine::SCAN_OPTIONS XScanEngine::getDefaultOptions(quint64 nFlags)
@@ -2428,6 +2542,11 @@ void XScanEngine::process()
     XBinary::setPdStructFinished(pPdStruct, _nFreeIndex);
 }
 
+QString XScanEngine::getEngineName()
+{
+    return QString("XScanEngine");
+}
+
 void XScanEngine::_errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMessage)
 {
     Q_UNUSED(pOptions)
@@ -2520,6 +2639,127 @@ bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanS
     return bResult;
 }
 
+bool XScanEngine::compareJson(const QString &sJson1, const QString &sJson2)
+{
+    bool bResult = true;
+
+    QJsonDocument jsonDoc1 = QJsonDocument::fromJson(sJson1.toUtf8());
+    QJsonDocument jsonDoc2 = QJsonDocument::fromJson(sJson2.toUtf8());
+
+    if (jsonDoc1.isNull() || !jsonDoc1.isObject()) {
+        emit errorMessage("First JSON is invalid or not an object");
+        return false;
+    }
+
+    if (jsonDoc2.isNull() || !jsonDoc2.isObject()) {
+        emit errorMessage("Second JSON is invalid or not an object");
+        return false;
+    }
+
+    QJsonObject jsonObject1 = jsonDoc1.object();
+    QJsonObject jsonObject2 = jsonDoc2.object();
+
+    // Check for errors in JSON1
+    if (jsonObject1.contains("errors") && jsonObject1.value("errors").isArray()) {
+        QJsonArray errorsArray1 = jsonObject1.value("errors").toArray();
+        if (errorsArray1.count() > 0) {
+            for (qint32 i = 0; i < errorsArray1.count(); i++) {
+                QJsonObject errorObj = errorsArray1.at(i).toObject();
+                QString sScript = errorObj.value("script").toString();
+                QString sErrorString = errorObj.value("errorString").toString();
+                emit errorMessage(QString("JSON1 Error in %1: %2").arg(sScript, sErrorString));
+            }
+            bResult = false;
+        }
+    }
+
+    // Check for errors in JSON2
+    if (jsonObject2.contains("errors") && jsonObject2.value("errors").isArray()) {
+        QJsonArray errorsArray2 = jsonObject2.value("errors").toArray();
+        if (errorsArray2.count() > 0) {
+            for (qint32 i = 0; i < errorsArray2.count(); i++) {
+                QJsonObject errorObj = errorsArray2.at(i).toObject();
+                QString sScript = errorObj.value("script").toString();
+                QString sErrorString = errorObj.value("errorString").toString();
+                emit errorMessage(QString("JSON2 Error in %1: %2").arg(sScript, sErrorString));
+            }
+            bResult = false;
+        }
+    }
+
+    // Compare records arrays
+    QJsonArray recordsArray1;
+    QJsonArray recordsArray2;
+
+    if (jsonObject1.contains("records") && jsonObject1.value("records").isArray()) {
+        recordsArray1 = jsonObject1.value("records").toArray();
+    }
+
+    if (jsonObject2.contains("records") && jsonObject2.value("records").isArray()) {
+        recordsArray2 = jsonObject2.value("records").toArray();
+    }
+
+    qint32 nRecordsCount1 = recordsArray1.count();
+    qint32 nRecordsCount2 = recordsArray2.count();
+
+    if (nRecordsCount1 != nRecordsCount2) {
+        emit errorMessage(QString("Records count mismatch: JSON1 has %1 records, JSON2 has %2 records").arg(nRecordsCount1).arg(nRecordsCount2));
+        bResult = false;
+    }
+
+    // Compare each record
+    qint32 nMinRecords = (nRecordsCount1 < nRecordsCount2) ? nRecordsCount1 : nRecordsCount2;
+
+    for (qint32 i = 0; i < nMinRecords; i++) {
+        QJsonObject record1 = recordsArray1.at(i).toObject();
+        QJsonObject record2 = recordsArray2.at(i).toObject();
+
+        QString sFileType1 = record1.value("fileType").toString();
+        QString sFileType2 = record2.value("fileType").toString();
+        if (sFileType1 != sFileType2) {
+            emit errorMessage(QString("Record %1 fileType mismatch: '%2' vs '%3'").arg(i).arg(sFileType1, sFileType2));
+            bResult = false;
+        }
+
+        QString sFilePart1 = record1.value("filePart").toString();
+        QString sFilePart2 = record2.value("filePart").toString();
+        if (sFilePart1 != sFilePart2) {
+            emit errorMessage(QString("Record %1 filePart mismatch: '%2' vs '%3'").arg(i).arg(sFilePart1, sFilePart2));
+            bResult = false;
+        }
+
+        QString sType1 = record1.value("type").toString();
+        QString sType2 = record2.value("type").toString();
+        if (sType1 != sType2) {
+            emit errorMessage(QString("Record %1 type mismatch: '%2' vs '%3'").arg(i).arg(sType1, sType2));
+            bResult = false;
+        }
+
+        QString sName1 = record1.value("name").toString();
+        QString sName2 = record2.value("name").toString();
+        if (sName1 != sName2) {
+            emit errorMessage(QString("Record %1 name mismatch: '%2' vs '%3'").arg(i).arg(sName1, sName2));
+            bResult = false;
+        }
+
+        QString sVersion1 = record1.value("version").toString();
+        QString sVersion2 = record2.value("version").toString();
+        if (sVersion1 != sVersion2) {
+            emit errorMessage(QString("Record %1 version mismatch: '%2' vs '%3'").arg(i).arg(sVersion1, sVersion2));
+            bResult = false;
+        }
+
+        QString sInfo1 = record1.value("info").toString();
+        QString sInfo2 = record2.value("info").toString();
+        if (sInfo1 != sInfo2) {
+            emit errorMessage(QString("Record %1 info mismatch: '%2' vs '%3'").arg(i).arg(sInfo1, sInfo2));
+            bResult = false;
+        }
+    }
+
+    return bResult;
+}
+
 XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
 {
     TEST_RESULT result = {};
@@ -2530,14 +2770,10 @@ XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
     QFile jsonFile(sJsonFileName);
 
     if (!jsonFile.exists()) {
-        _errorMessage(nullptr, QString("JSON file not found: %1").arg(sJsonFileName));
-        result.nErrors++;
         return result;
     }
 
     if (!jsonFile.open(QIODevice::ReadOnly)) {
-        _errorMessage(nullptr, QString("Cannot open JSON file: %1").arg(sJsonFileName));
-        result.nErrors++;
         return result;
     }
 
@@ -2545,147 +2781,128 @@ XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
     jsonFile.close();
 
     QJsonDocument jsonDoc = QJsonDocument::fromJson(baJsonData);
-
     if (jsonDoc.isNull() || !jsonDoc.isObject()) {
-        _errorMessage(nullptr, QString("Invalid JSON format in: %1").arg(sJsonFileName));
-        result.nErrors++;
         return result;
     }
 
     QJsonObject jsonObject = jsonDoc.object();
-    QJsonArray testCases = jsonObject.value("testCases").toArray();
 
-    if (testCases.isEmpty()) {
-        _errorMessage(nullptr, QString("No test cases found in: %1").arg(sJsonFileName));
-        result.nErrors++;
+    if (!jsonObject.contains("testCases") || !jsonObject.value("testCases").isArray()) {
         return result;
     }
 
-    quint64 nScanFlags = 0;
-    if (jsonObject.contains("defaultScanFlags")) {
-        QJsonObject defaultScanFlagsObj = jsonObject.value("defaultScanFlags").toObject();
-        if (defaultScanFlagsObj.value("recursiveScan").toBool()) nScanFlags |= SF_RECURSIVESCAN;
-        if (defaultScanFlagsObj.value("overlayScan").toBool()) nScanFlags |= SF_OVERLAYSCAN;
-        if (defaultScanFlagsObj.value("deepScan").toBool()) nScanFlags |= SF_DEEPSCAN;
-        if (defaultScanFlagsObj.value("heuristicScan").toBool()) nScanFlags |= SF_HEURISTICSCAN;
-        if (defaultScanFlagsObj.value("aggressiveScan").toBool()) nScanFlags |= SF_AGGRESSIVESCAN;
-        if (defaultScanFlagsObj.value("verbose").toBool()) nScanFlags |= SF_VERBOSE;
-        if (defaultScanFlagsObj.value("allTypes").toBool()) nScanFlags |= SF_ALLTYPESSCAN;
-    }
+    QJsonArray testCases = jsonObject.value("testCases").toArray();
+    result.nTotal = testCases.count();
 
-    for (qint32 i = 0; i < testCases.size(); i++) {
+    XBinary::PDSTRUCT pdStruct = {};
+    pdStruct.bIsStop = false;
+
+    SCAN_OPTIONS scanOptions = getDefaultOptions(0);
+
+    for (qint32 i = 0; i < testCases.count(); i++) {
         QJsonObject testCase = testCases.at(i).toObject();
         QString sZipPath = testCase.value("zipPath").toString();
         QString sExpectedDetect = testCase.value("expectedDetect").toString();
 
-        if (sZipPath.isEmpty()) {
-            TEST_FAILED_RECORD failedRecord = {};
-            failedRecord.sZipPath = QString("<empty>");
-            failedRecord.sExpectedDetect = sExpectedDetect;
-            failedRecord.sErrorMessage = QString("Missing zipPath in test case");
-            result.listFailed.append(failedRecord);
-
-            _warningMessage(nullptr, QString("Test case %1: Missing zipPath").arg(i + 1));
-            result.nErrors++;
-            continue;
-        }
-
         QString sFullZipPath = sDirectoryName + QDir::separator() + sZipPath;
-        QFile zipFile(sFullZipPath);
 
+        QFile zipFile(sFullZipPath);
         if (!zipFile.exists()) {
             TEST_FAILED_RECORD failedRecord = {};
             failedRecord.sZipPath = sZipPath;
             failedRecord.sExpectedDetect = sExpectedDetect;
-            failedRecord.sErrorMessage = QString("ZIP file not found: %1").arg(sFullZipPath);
+            failedRecord.sErrorMessage = "ZIP file not found";
             result.listFailed.append(failedRecord);
-
-            _errorMessage(nullptr, QString("Test case %1: ZIP file not found: %2").arg(i + 1).arg(sFullZipPath));
             result.nErrors++;
-            result.nTotal++;
             continue;
         }
 
-        // zipRecord.compressInfo.compressMethod = XArchive::HANDLE_METHOD_DEFLATE;
-        // zipRecord.sPassword = "DetectItEasy";
-
-        // XBinary::createFileBuffer();
-
-        // XZip xzip(&zipFile);
-
-        // if (!xzip.isValid()) {
-        //     _errorMessage(nullptr, QString("Test case %1: Cannot open ZIP file: %2").arg(i + 1).arg(sFullZipPath));
-        //     result.nErrors++;
-        //     result.nTotal++;
-        //     continue;
-        // }
-
-        QByteArray baDecompressed;
-        // QByteArray baDecompressed = xzip.decompress(&listArchiveRecords.first(), nullptr);
-        // xzip.close();
-
-        // if (baDecompressed.isEmpty()) {
-        //     _errorMessage(nullptr, QString("Test case %1: Failed to decompress file from ZIP: %2").arg(i + 1).arg(sFullZipPath));
-        //     result.nErrors++;
-        //     result.nTotal++;
-        //     continue;
-        // }
-
-        // Use per-test-case scan flags if available, otherwise use default
-        quint64 nTestScanFlags = nScanFlags;
-        if (testCase.contains("scanFlags")) {
-            QJsonObject testScanFlagsObj = testCase.value("scanFlags").toObject();
-            nTestScanFlags = 0;
-            if (testScanFlagsObj.value("recursiveScan").toBool()) nTestScanFlags |= SF_RECURSIVESCAN;
-            if (testScanFlagsObj.value("overlayScan").toBool()) nTestScanFlags |= SF_OVERLAYSCAN;
-            if (testScanFlagsObj.value("deepScan").toBool()) nTestScanFlags |= SF_DEEPSCAN;
-            if (testScanFlagsObj.value("heuristicScan").toBool()) nTestScanFlags |= SF_HEURISTICSCAN;
-            if (testScanFlagsObj.value("aggressiveScan").toBool()) nTestScanFlags |= SF_AGGRESSIVESCAN;
-            if (testScanFlagsObj.value("verbose").toBool()) nTestScanFlags |= SF_VERBOSE;
-            if (testScanFlagsObj.value("allTypes").toBool()) nTestScanFlags |= SF_ALLTYPESSCAN;
-        }
-
-        SCAN_OPTIONS scanOptions = getDefaultOptions(nTestScanFlags);
-        QBuffer buffer(&baDecompressed);
-
-        if (!buffer.open(QIODevice::ReadOnly)) {
+        if (!zipFile.open(QIODevice::ReadOnly)) {
             TEST_FAILED_RECORD failedRecord = {};
             failedRecord.sZipPath = sZipPath;
             failedRecord.sExpectedDetect = sExpectedDetect;
-            failedRecord.sErrorMessage = QString("Cannot open decompressed buffer");
+            failedRecord.sErrorMessage = "Failed to open ZIP file";
             result.listFailed.append(failedRecord);
-
-            _errorMessage(nullptr, QString("Test case %1: Cannot open decompressed buffer").arg(i + 1));
             result.nErrors++;
-            result.nTotal++;
             continue;
         }
 
-        SCAN_RESULT scanResult = scanDevice(&buffer, &scanOptions, nullptr);
+        XZip xzip(&zipFile);
+        QList<XArchive::RECORD> listRecords = xzip.getRecords(-1, &pdStruct);
+
+        if (listRecords.isEmpty()) {
+            zipFile.close();
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = sZipPath;
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = "No files in ZIP archive";
+            result.listFailed.append(failedRecord);
+            result.nErrors++;
+            continue;
+        }
+
+        XArchive::RECORD record = listRecords.at(0);
+
+        QByteArray baFileData;
+        QBuffer buffer(&baFileData);
+        buffer.open(QIODevice::WriteOnly);
+
+        XBinary::UNPACK_STATE state = {};
+        QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;
+        mapProperties[XBinary::UNPACK_PROP_PASSWORD] = "DetectItEasy";
+
+        bool bExtracted = false;
+
+        if (xzip.initUnpack(&state, mapProperties, &pdStruct)) {
+            if (xzip.unpackCurrent(&state, &buffer, &pdStruct)) {
+                bExtracted = true;
+            }
+            xzip.finishUnpack(&state, &pdStruct);
+        }
+
         buffer.close();
+        zipFile.close();
 
-        QString sActualDetect = createShortResultString(&scanOptions, scanResult);
+        if (!bExtracted || baFileData.isEmpty()) {
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = sZipPath;
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = "Failed to extract file from ZIP";
+            result.listFailed.append(failedRecord);
+            result.nErrors++;
+            continue;
+        }
 
-        if (sExpectedDetect.isEmpty() || sActualDetect.contains(sExpectedDetect, Qt::CaseInsensitive)) {
+        QBuffer scanBuffer(&baFileData);
+        if (!scanBuffer.open(QIODevice::ReadOnly)) {
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = sZipPath;
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = "Failed to open buffer for scanning";
+            result.listFailed.append(failedRecord);
+            result.nErrors++;
+            continue;
+        }
+
+        SCAN_RESULT scanResult = scanDevice(&scanBuffer, &scanOptions, &pdStruct);
+        scanBuffer.close();
+
+        QString sDetectResult = createShortResultString(&scanOptions, scanResult);
+
+        if (sDetectResult == sExpectedDetect) {
             TEST_SUCCESS_RECORD successRecord = {};
             successRecord.sZipPath = sZipPath;
             successRecord.sExpectedDetect = sExpectedDetect;
             successRecord.nScanTime = scanResult.nScanTime;
             result.listSuccess.append(successRecord);
-
-            _infoMessage(nullptr, QString("Test case %1 PASSED: %2 -> %3 (Time: %4ms)").arg(i + 1).arg(sZipPath).arg(sActualDetect).arg(scanResult.nScanTime));
         } else {
             TEST_FAILED_RECORD failedRecord = {};
             failedRecord.sZipPath = sZipPath;
             failedRecord.sExpectedDetect = sExpectedDetect;
-            failedRecord.sErrorMessage = QString("Detection mismatch: Expected '%1', Got '%2'").arg(sExpectedDetect).arg(sActualDetect);
+            failedRecord.sErrorMessage = QString("Expected: '%1', Got: '%2'").arg(sExpectedDetect, sDetectResult);
             result.listFailed.append(failedRecord);
-
-            _errorMessage(nullptr, QString("Test case %1 FAILED: %2\n  Expected: %3\n  Got: %4").arg(i + 1).arg(sZipPath).arg(sExpectedDetect).arg(sActualDetect));
             result.nErrors++;
         }
-
-        result.nTotal++;
     }
 
     return result;
@@ -2845,4 +3062,118 @@ bool XScanEngine::addTestCase(const QString &sJsonPath, const QString &sFilePath
     jsonFile.close();
 
     return true;
+}
+
+bool XScanEngine::createTest(const QString &sFilePath, const QString sResultName, SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    bool bResult = false;
+
+    if (!QFile::exists(sFilePath)) {
+        return false;
+    }
+
+    QDir resultDir;
+    if (!resultDir.mkpath(sResultName)) {
+        return false;
+    }
+
+    QFile sourceFile(sFilePath);
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    QByteArray baFileData = sourceFile.readAll();
+    sourceFile.close();
+
+    QString sMD5 = QString(QCryptographicHash::hash(baFileData, QCryptographicHash::Md5).toHex());
+
+    QString sDestFilePath = sResultName + QDir::separator() + sMD5;
+    QFile destFile(sDestFilePath);
+    if (!destFile.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+
+    destFile.write(baFileData);
+    destFile.close();
+
+    SCAN_RESULT scanResult = scanFile(sDestFilePath, pOptions, pPdStruct);
+
+    QString sEngineName = getEngineName();
+    QString sResultJsonPath = sResultName + QDir::separator() + "result_" + sEngineName + ".json";
+    QString sFlagsJsonPath = sResultName + QDir::separator() + "flags_" + sEngineName + ".json";
+
+    QString sResultJson = scanResultToJson(scanResult);
+    QFile resultJsonFile(sResultJsonPath);
+    if (resultJsonFile.open(QIODevice::WriteOnly)) {
+        resultJsonFile.write(sResultJson.toUtf8());
+        resultJsonFile.close();
+        bResult = true;
+    }
+
+    quint64 nFlags = getScanFlags(pOptions);
+    QString sFlagsJson = getJsonFromFlags(nFlags);
+    QFile flagsJsonFile(sFlagsJsonPath);
+    if (flagsJsonFile.open(QIODevice::WriteOnly)) {
+        flagsJsonFile.write(sFlagsJson.toUtf8());
+        flagsJsonFile.close();
+    }
+
+    return bResult;
+}
+
+static const XScanEngine::CONSOLE_OPTION g_consoleOptions[] = {
+    {XScanEngine::CONSOLE_OPTION_ID_RECURSIVESCAN, "r", "recursivescan", "Scan directories recursively"},
+    {XScanEngine::CONSOLE_OPTION_ID_DEEPSCAN, "d", "deepscan", "Enable deep scanning for thorough analysis"},
+    {XScanEngine::CONSOLE_OPTION_ID_HEURISTICSCAN, "u", "heuristicscan", "Enable heuristic scanning methods"},
+    {XScanEngine::CONSOLE_OPTION_ID_VERBOSE, "b", "verbose", "Show verbose output with detailed information"},
+    {XScanEngine::CONSOLE_OPTION_ID_AGGRESSIVESCAN, "g", "aggressivecscan", "Enable aggressive scanning mode"},
+    {XScanEngine::CONSOLE_OPTION_ID_ALLTYPES, "a", "alltypes", "Scan all file types"},
+    {XScanEngine::CONSOLE_OPTION_ID_FORMAT, "f", "format", "Format the output result"},
+    {XScanEngine::CONSOLE_OPTION_ID_PROFILING, "l", "profiling", "Profile signatures during scan"},
+    {XScanEngine::CONSOLE_OPTION_ID_MESSAGES, "M", "messages", "Display scan messages and warnings"},
+    {XScanEngine::CONSOLE_OPTION_ID_HIDEUNKNOWN, "U", "hideunknown", "Hide unknown file types from results"},
+    {XScanEngine::CONSOLE_OPTION_ID_ENTROPY, "e", "entropy", "Display file entropy information"},
+    {XScanEngine::CONSOLE_OPTION_ID_INFO, "i", "info", "Display file information"},
+    {XScanEngine::CONSOLE_OPTION_ID_XML, "x", "xml", "Output results in XML format"},
+    {XScanEngine::CONSOLE_OPTION_ID_JSON, "j", "json", "Output results in JSON format"},
+    {XScanEngine::CONSOLE_OPTION_ID_CSV, "c", "csv", "Output results in CSV format"},
+    {XScanEngine::CONSOLE_OPTION_ID_TSV, "t", "tsv", "Output results in TSV format"},
+    {XScanEngine::CONSOLE_OPTION_ID_PLAINTEXT, "p", "plaintext", "Output results as plain text"},
+    {XScanEngine::CONSOLE_OPTION_ID_DATABASE, "D", "database", "Set database path"},
+    {XScanEngine::CONSOLE_OPTION_ID_EXTRADATABASE, "E", "extradatabase", "Set extra database path"},
+    {XScanEngine::CONSOLE_OPTION_ID_CUSTOMDATABASE, "C", "customdatabase", "Set custom database path"},
+    {XScanEngine::CONSOLE_OPTION_ID_SHOWDATABASE, "s", "showdatabase", "Show database information"},
+    {XScanEngine::CONSOLE_OPTION_ID_SPECIAL, "S", "special", "Show special file information using specified method (e.g., 'Hash' or 'Hash#MD5')"},
+    {XScanEngine::CONSOLE_OPTION_ID_SHOWMETHODS, "m", "showmethods", "Display all available special methods for the file"},
+    {XScanEngine::CONSOLE_OPTION_ID_TEST, "", "test", "Test signatures in specified directory"},
+    {XScanEngine::CONSOLE_OPTION_ID_ADDTEST, "", "addtest", "Add test case with filename, detect string, and directory"}
+};
+
+QCommandLineOption XScanEngine::getCommandLineOption(CONSOLE_OPTION_ID nId)
+{
+    if ((nId > CONSOLE_OPTION_ID_UNKNOWN) && (nId <= CONSOLE_OPTION_ID_ADDTEST)) {
+        const CONSOLE_OPTION *pOption = &g_consoleOptions[nId - 1];
+
+        QStringList listOptions;
+
+        if (pOption->pszShort[0] != '\0') {
+            listOptions << pOption->pszShort;
+        }
+
+        listOptions << pOption->pszLong;
+
+        if ((nId == CONSOLE_OPTION_ID_DATABASE) || (nId == CONSOLE_OPTION_ID_EXTRADATABASE) || (nId == CONSOLE_OPTION_ID_CUSTOMDATABASE)) {
+            return QCommandLineOption(listOptions, pOption->pszDescription, "path");
+        } else if (nId == CONSOLE_OPTION_ID_SPECIAL) {
+            return QCommandLineOption(listOptions, pOption->pszDescription, "method");
+        } else if (nId == CONSOLE_OPTION_ID_TEST) {
+            return QCommandLineOption(listOptions, pOption->pszDescription, "directory");
+        } else if (nId == CONSOLE_OPTION_ID_ADDTEST) {
+            return QCommandLineOption(listOptions, pOption->pszDescription, "filename", "");
+        } else {
+            return QCommandLineOption(listOptions, pOption->pszDescription);
+        }
+    }
+
+    return QCommandLineOption(QStringList() << "error", "Invalid option ID");
 }
