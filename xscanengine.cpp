@@ -1891,6 +1891,24 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         }
     }
 
+    QString sLastError = XBinary::getPdStructErrorString(pPdStruct);
+
+    if (sLastError!= "") {
+        ERROR_RECORD errorRecord = {};
+        errorRecord.sScript = tr("Last error");
+        errorRecord.sErrorString = sLastError;
+
+        pScanResult->listErrors.append(errorRecord);
+
+        XBinary::clearPdStructErrorString(pPdStruct);
+    }
+
+    QString sLastInfo = XBinary::getPdStructInfoString(pPdStruct);
+
+    if (sLastInfo!= "") {
+        XBinary::clearPdStructInfoString(pPdStruct);
+    }
+
     if (pScanTimer) {
         pScanResult->nScanTime = pScanTimer->elapsed();
 

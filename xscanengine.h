@@ -1225,7 +1225,6 @@ public:
     // Console command line options
     static QCommandLineOption getCommandLineOption(CONSOLE_OPTION_ID nId);
 
-
     virtual void process();
     virtual QString getEngineName();
 
