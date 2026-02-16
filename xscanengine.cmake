@@ -38,7 +38,6 @@ set(XSCANENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/scanitem.h
     ${CMAKE_CURRENT_LIST_DIR}/scanitemmodel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/scanitemmodel.h
-
     ${CMAKE_CURRENT_LIST_DIR}/modules/amiga_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/amiga_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/atarist_script.cpp
