@@ -182,7 +182,15 @@ qint64 Binary_Script::findSignature(qint64 nOffset, qint64 nSize, const QString 
 
     _fixOffsetAndSize(&nOffset, &nSize);
 
+    // qDebug() << "findSignature START - Signature:" << sSignature << "Offset:" << XBinary::valueToHexEx(nOffset) << "Size:" << XBinary::valueToHexEx(nSize);
+    
+    // QElapsedTimer timer;
+    // timer.start();
+    
     nResult = m_pBinary->find_signature(&m_memoryMap, nOffset, nSize, sSignature, &nResultSize, m_pPdStruct);
+    
+    // qint64 nElapsed = timer.elapsed();
+    // qDebug() << "findSignature END - Signature:" << sSignature << "Result:" << XBinary::valueToHexEx(nResult) << "Time:" << nElapsed << "ms";
 
     if (pTimer) {
         _finishProfiling(pTimer, QString("find_signature[%1]: %2 %3").arg(sSignature, XBinary::valueToHexEx(nOffset), XBinary::valueToHexEx(nSize)));
