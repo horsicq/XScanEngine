@@ -1000,7 +1000,6 @@ public:
         QString sInfo;
         qint64 nSize;
         qint64 nOffset;
-        XBinary::HANDLE_METHOD compressMethod;
         QString sOriginalName;
     };
 

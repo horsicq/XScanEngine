@@ -1052,10 +1052,6 @@ QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *
     if (pScanStruct->parentId.filePart != XBinary::FILEPART_HEADER) {
         QString sVersion;
 
-        if (pScanStruct->parentId.compressMethod != XBinary::HANDLE_METHOD_UNKNOWN) {
-            sVersion = XBinary::appendText(sVersion, XBinary::handleMethodToString(pScanStruct->parentId.compressMethod), ", ");
-        }
-
         if (pScanStruct->parentId.sOriginalName != "") {
             sVersion = XBinary::appendText(sVersion, QString("\"%1\"").arg(pScanStruct->parentId.sOriginalName), ", ");
         }
@@ -1462,7 +1458,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     bool bMemory = false;
 
     if (nSize <= XBinary::getFileBufferSize(pPdStruct)) {
-        bool bIsBuffer = _pDevice->property("Memory").toBool();
+        bool bIsBuffer = (_pDevice->property("Memory").toULongLong() != 0);
 
         if (!bIsBuffer) {
             bMemory = true;
@@ -1481,7 +1477,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         bufDevice->setData(pBuffer, nSize);
         bufDevice->open(QIODevice::ReadOnly);
 
-        bufDevice->setProperty("Memory", true);
+        bufDevice->setProperty("Memory", (quint64)pBuffer);
         bufDevice->setProperty("FileName", XBinary::getDeviceFileName(_pDevice));
 
         _pDevice = bufDevice;
@@ -1669,7 +1665,62 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         pScanResult->ftInit = XBinary::FT_BINARY;
     }
 
-    if (pScanOptions->bIsRecursiveScan) {
+    if (pScanOptions->bIsArchivesScan || pScanOptions->bIsRecursiveScan) {
+        if (stFT.contains(XBinary::FT_ZIP)) {
+            XBinary::FT _fileType = XBinary::_getPrefFileType(&stFT);
+
+            XBinary *pArchive = XFormats::getClass(_fileType, _pDevice, false, -1);
+
+            XBinary::UNPACK_STATE state = {};
+            QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;
+
+            if (pArchive->initUnpack(&state, mapProperties, pPdStruct)) {
+                for (qint32 i = 0; i < 10; i++) {
+                    XBinary::ARCHIVERECORD archiveRecord = pArchive->infoCurrent(&state, pPdStruct);
+
+                    QIODevice *pArchiveRecord = XBinary::createFileBuffer(archiveRecord.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong(), pPdStruct);
+
+                    if (pArchiveRecord) {
+                        if (pArchive->unpackCurrent(&state, pArchiveRecord, pPdStruct)) {
+                            QString sOriginalName = archiveRecord.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
+
+                            pArchiveRecord->setProperty("FileName", XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileBaseName(_pDevice) + "_ARCHIVE_RECORD_" + sOriginalName);
+
+                            XScanEngine::SCANID scanIdSub = scanIdMain;
+                            scanIdSub.filePart = XBinary::FILEPART_STREAM;
+                            scanIdSub.nOffset = archiveRecord.nStreamOffset;
+                            scanIdSub.nSize = archiveRecord.nStreamSize;
+                            scanIdSub.sOriginalName = sOriginalName;
+                            scanIdSub.sInfo = XBinary::getHandleMethods(archiveRecord.mapProperties);
+
+                            XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
+                            _options.fileType = XBinary::FT_UNKNOWN;
+
+                            SCAN_RESULT scanResultArchiveRecord = {};
+
+                            scanProcess(pArchiveRecord, &scanResultArchiveRecord, scanIdSub, &_options, false, pPdStruct);
+
+                            pScanResult->listRecords.append(scanResultArchiveRecord.listRecords);
+                            pScanResult->listErrors.append(scanResultArchiveRecord.listErrors);
+                            pScanResult->listDebugRecords.append(scanResultArchiveRecord.listDebugRecords);
+                        }
+                    }
+
+                    XBinary::freeFileBuffer(&pArchiveRecord);
+
+                    if (!pArchive->moveToNext(&state, pPdStruct)) {
+                        break;
+                    }
+                }
+
+                pArchive->finishUnpack(&state, pPdStruct);
+            }
+
+            if (pArchive) {
+                delete pArchive;
+            }
+
+        }
         // {
         //     QList<XArchive::RECORD> listRecords;
         //     XBinary::FT _fileType = XBinary::FT_UNKNOWN;
@@ -1865,7 +1916,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                     if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
                         SubDevice subDevice(_pDevice, filePart.nFileOffset, filePart.nFileSize);
                         if (subDevice.open(QIODevice::ReadOnly)) {
-                            subDevice.setProperty("FileName", XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileName(_pDevice) + ".OVERLAY");
+                            subDevice.setProperty("FileName", XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileBaseName(_pDevice) + "_OVERLAY");
 
                             XScanEngine::SCANID scanIdSub = scanIdMain;
                             scanIdSub.filePart = filePart.filePart;
