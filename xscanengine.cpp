@@ -1438,8 +1438,7 @@ XScanEngine::SCAN_RESULT XScanEngine::scanSubdevice(QIODevice *pDevice, qint64 n
     return result;
 }
 
-void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCANID parentId, SCAN_OPTIONS *pScanOptions, bool bInit,
-                              XBinary::PDSTRUCT *pPdStruct)
+void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCANID parentId, SCAN_OPTIONS *pScanOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct)
 {
     QElapsedTimer *pScanTimer = nullptr;
     qint64 nSize = pDevice->size();
@@ -1678,13 +1677,15 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                 for (qint32 i = 0; i < 10; i++) {
                     XBinary::ARCHIVERECORD archiveRecord = pArchive->infoCurrent(&state, pPdStruct);
 
-                    QIODevice *pArchiveRecord = XBinary::createFileBuffer(archiveRecord.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong(), pPdStruct);
+                    QIODevice *pArchiveRecord =
+                        XBinary::createFileBuffer(archiveRecord.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong(), pPdStruct);
 
                     if (pArchiveRecord) {
                         if (pArchive->unpackCurrent(&state, pArchiveRecord, pPdStruct)) {
                             QString sOriginalName = archiveRecord.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
 
-                            pArchiveRecord->setProperty("FileName", XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileBaseName(_pDevice) + "_ARCHIVE_RECORD_" + sOriginalName);
+                            pArchiveRecord->setProperty("FileName", XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileBaseName(_pDevice) +
+                                                                        "_ARCHIVE_RECORD_" + sOriginalName);
 
                             XScanEngine::SCANID scanIdSub = scanIdMain;
                             scanIdSub.filePart = XBinary::FILEPART_STREAM;
@@ -1719,7 +1720,6 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             if (pArchive) {
                 delete pArchive;
             }
-
         }
         // {
         //     QList<XArchive::RECORD> listRecords;
@@ -1902,9 +1902,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     }
 
     if (pScanOptions->bIsOverlayScan || pScanOptions->bIsRecursiveScan) {
-        QList<XBinary::FPART> listFileParts = XFormats::getFileParts(
-            pScanResult->ftInit, _pDevice, XBinary::FILEPART_OVERLAY, 20000,
-            false, -1, pPdStruct);
+        QList<XBinary::FPART> listFileParts = XFormats::getFileParts(pScanResult->ftInit, _pDevice, XBinary::FILEPART_OVERLAY, 20000, false, -1, pPdStruct);
 
         qint32 nNumberOfFileParts = listFileParts.count();
 
@@ -1916,7 +1914,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                     if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
                         SubDevice subDevice(_pDevice, filePart.nFileOffset, filePart.nFileSize);
                         if (subDevice.open(QIODevice::ReadOnly)) {
-                            subDevice.setProperty("FileName", XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileBaseName(_pDevice) + "_OVERLAY");
+                            subDevice.setProperty("FileName",
+                                                  XBinary::getDeviceDirectory(_pDevice) + QDir::separator() + XBinary::getDeviceFileBaseName(_pDevice) + "_OVERLAY");
 
                             XScanEngine::SCANID scanIdSub = scanIdMain;
                             scanIdSub.filePart = filePart.filePart;
@@ -1944,7 +1943,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
     QString sLastError = XBinary::getPdStructErrorString(pPdStruct);
 
-    if (sLastError!= "") {
+    if (sLastError != "") {
         ERROR_RECORD errorRecord = {};
         errorRecord.sScript = tr("Last error");
         errorRecord.sErrorString = sLastError;
@@ -1956,7 +1955,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
     QString sLastInfo = XBinary::getPdStructInfoString(pPdStruct);
 
-    if (sLastInfo!= "") {
+    if (sLastInfo != "") {
         XBinary::clearPdStructInfoString(pPdStruct);
     }
 
@@ -1969,7 +1968,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     if (pScanOptions->bFilter) {
         QString sFileName = XBinary::getDeviceFileName(_pDevice);
 
-        if (pScanOptions->sFilterResultDirectory !="") {
+        if (pScanOptions->sFilterResultDirectory != "") {
             if (!XBinary::isDirectoryExists(pScanOptions->sFilterResultDirectory)) {
                 XBinary::createDirectory(pScanOptions->sFilterResultDirectory);
             }
@@ -1993,10 +1992,11 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
         for (int i = 0; i < nNumberOfDetects; i++) {
             if (pScanOptions->bFilterCopyFiles) {
-                QString sPath = pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCopyFormat);
+                QString sPath =
+                    pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCopyFormat);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
-                if (sDirPath !="") {
+                if (sDirPath != "") {
                     if (!XBinary::isDirectoryExists(sDirPath)) {
                         XBinary::createDirectory(sDirPath);
                     }
@@ -2014,10 +2014,11 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             }
 
             if (pScanOptions->bFilterCreateCatalog) {
-                QString sPath = pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCatalogFormat);
+                QString sPath =
+                    pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCatalogFormat);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
-                if (sDirPath !="") {
+                if (sDirPath != "") {
                     if (!XBinary::isDirectoryExists(sDirPath)) {
                         XBinary::createDirectory(sDirPath);
                     }
@@ -2353,7 +2354,7 @@ QString XScanEngine::scanResultToJson(const SCAN_RESULT &scanResult)
             errorsArray.append(errorObject);
         }
         jsonObject["errors"] = errorsArray;
-    }    
+    }
 
     QJsonDocument jsonDocument(jsonObject);
     QString sResult = QString(jsonDocument.toJson(QJsonDocument::Compact));
@@ -2675,7 +2676,8 @@ XScanEngine::RECORD_TYPE XScanEngine::recordTypeStringToId(const QString &sType)
         }
     }
 
-    return (XScanEngine::RECORD_TYPE)XBinary::XCONVERT_ftStringToId(_sType, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
+    return (XScanEngine::RECORD_TYPE)XBinary::XCONVERT_ftStringToId(_sType, _TABLE_XScanEngine_RECORD_TYPE,
+                                                                    sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
 }
 
 QString XScanEngine::recordNameIdToString(RECORD_NAME name)
@@ -2687,7 +2689,8 @@ XScanEngine::RECORD_NAME XScanEngine::recordNameStringToId(const QString &sName)
 {
     QString _sName = sName.toUpper().remove(" ").remove("-");
 
-    return (XScanEngine::RECORD_NAME)XBinary::XIDSTRING_ftStringToId(_sName, _TABLE_XScanEngine_RECORD_NAME, sizeof(_TABLE_XScanEngine_RECORD_NAME) / sizeof(XBinary::XIDSTRING));
+    return (XScanEngine::RECORD_NAME)XBinary::XIDSTRING_ftStringToId(_sName, _TABLE_XScanEngine_RECORD_NAME,
+                                                                     sizeof(_TABLE_XScanEngine_RECORD_NAME) / sizeof(XBinary::XIDSTRING));
 }
 
 bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type, RECORD_NAME name, const QString &sVersion,
@@ -3215,8 +3218,7 @@ static const XScanEngine::CONSOLE_OPTION g_consoleOptions[] = {
     {XScanEngine::CONSOLE_OPTION_ID_SPECIAL, "S", "special", "Show special file information using specified method (e.g., 'Hash' or 'Hash#MD5')"},
     {XScanEngine::CONSOLE_OPTION_ID_SHOWMETHODS, "m", "showmethods", "Display all available special methods for the file"},
     {XScanEngine::CONSOLE_OPTION_ID_TEST, "", "test", "Test signatures in specified directory"},
-    {XScanEngine::CONSOLE_OPTION_ID_ADDTEST, "", "addtest", "Add test case with filename, detect string, and directory"}
-};
+    {XScanEngine::CONSOLE_OPTION_ID_ADDTEST, "", "addtest", "Add test case with filename, detect string, and directory"}};
 
 QCommandLineOption XScanEngine::getCommandLineOption(CONSOLE_OPTION_ID nId)
 {

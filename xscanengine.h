@@ -112,7 +112,6 @@ public:
         const char *pszDescription;
     };
 
-
     enum RECORD_TYPE {
         RECORD_TYPE_UNKNOWN = 0,
         RECORD_TYPE_APKOBFUSCATOR,
@@ -1187,8 +1186,8 @@ public:
     XScanEngine::SCAN_RESULT scanMemory(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
     XScanEngine::SCAN_RESULT scanSubdevice(QIODevice *pDevice, qint64 nOffset, qint64 nSize, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
 
-    void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, XScanEngine::SCANID parentId,
-                     XScanEngine::SCAN_OPTIONS *pScanOptions, bool bInit, XBinary::PDSTRUCT *pPdStruct);
+    void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, XScanEngine::SCANID parentId, XScanEngine::SCAN_OPTIONS *pScanOptions, bool bInit,
+                     XBinary::PDSTRUCT *pPdStruct);
 
     QString convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruct, const QString &sString);
 

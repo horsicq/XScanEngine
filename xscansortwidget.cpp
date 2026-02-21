@@ -25,12 +25,9 @@
 XScanSortWidget::XScanSortWidget(QWidget *pParent) : QWidget(pParent), ui(new Ui::XScanSortWidget)
 {
     ui->setupUi(this);
-
 }
 
 XScanSortWidget::~XScanSortWidget()
 {
     delete ui;
 }
-
-
