@@ -552,6 +552,11 @@ bool Binary_Script::isProfiling()
     return m_pOptions->bIsProfiling;
 }
 
+QString Binary_Script::getScanID()
+{
+    return m_pOptions->sScanID;
+}
+
 qint64 Binary_Script::getStartOffset()
 {
     return XIODevice::getInitLocation(m_pBinary->getDevice());

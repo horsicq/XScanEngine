@@ -39,6 +39,7 @@ public:
         bool bIsArchivesScan;
         bool bIsVerbose;
         bool bIsProfiling;
+        QString sScanID;
     };
 
     explicit Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
@@ -110,6 +111,8 @@ public slots:
     bool isOverlayScan();
     bool isVerbose();
     bool isProfiling();
+
+    QString getScanID();
 
     qint64 getStartOffset();
 

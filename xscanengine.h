@@ -1126,6 +1126,7 @@ public:
         bool bFilterLog;
         QString sFilterCopyFormat;
         QString sFilterCatalogFormat;
+        QString sScanID; // Optional
     };
 
     struct SCAN_DATA {
