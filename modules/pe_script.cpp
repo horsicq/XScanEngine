@@ -86,6 +86,8 @@ PE_Script::PE_Script(XPE *pPE, XBinary::FILEPART filePart, OPTIONS *pOptions, XB
     m_nImportHash32 = m_pPE->getImportHash32(&m_listImportRecords, getPdStruct());
     m_listImportPositionHashes = m_pPE->getImportPositionHashes(&m_listImportHeaders);
 
+    m_listDebugRecords = m_pPE->getDebugList(getPdStruct());
+
     m_imageFileHeader = m_pPE->getFileHeader();
     m_imageOptionalHeader32 = {};
     m_imageOptionalHeader64 = {};
@@ -537,4 +539,44 @@ quint64 PE_Script::getImageOptionalHeader(const QString &sString)
     } else {
         return m_pPE->getImageOptionalHeader64(&m_imageOptionalHeader64, sString);
     }
+}
+
+qint32 PE_Script::getNumberOfDebugDataRecords()
+{
+    return m_listDebugRecords.count();
+}
+
+QString PE_Script::getDebugDataType(quint32 nNumber)
+{
+    QString sResult;
+
+    if (nNumber < (quint32)m_listDebugRecords.count()) {
+        QMap<quint64, QString> mapDebugTypes = XPE::getDebugTypesS();
+        quint32 nType = m_listDebugRecords.at(nNumber).Type;
+        sResult = mapDebugTypes.value(nType);
+    }
+
+    return sResult;
+}
+
+qint64 PE_Script::getDebugDataOffset(quint32 nNumber)
+{
+    qint64 nResult = -1;
+
+    if (nNumber < (quint32)m_listDebugRecords.count()) {
+        nResult = m_listDebugRecords.at(nNumber).PointerToRawData;
+    }
+
+    return nResult;
+}
+
+qint64 PE_Script::getDebugDataSize(quint32 nNumber)
+{
+    qint64 nResult = -1;
+
+    if (nNumber < (quint32)m_listDebugRecords.count()) {
+        nResult = m_listDebugRecords.at(nNumber).SizeOfData;
+    }
+
+    return nResult;
 }

@@ -117,6 +117,11 @@ public slots:
     quint64 getImageFileHeader(const QString &sString);
     quint64 getImageOptionalHeader(const QString &sString);
 
+    qint32 getNumberOfDebugDataRecords();
+    QString getDebugDataType(quint32 nNumber);
+    qint64 getDebugDataOffset(quint32 nNumber);
+    qint64 getDebugDataSize(quint32 nNumber);
+
 private:
     XPE *m_pPE;
     qint32 m_nNumberOfSections;
@@ -169,6 +174,7 @@ private:
     XPE_DEF::IMAGE_OPTIONAL_HEADER64 m_imageOptionalHeader64;
     QString m_sNetModuleName;
     QString m_sNetAssemblyName;
+    QList<XPE_DEF::S_IMAGE_DEBUG_DIRECTORY> m_listDebugRecords;
 };
 
 #endif  // PE_SCRIPT_H

@@ -391,6 +391,15 @@ double Binary_Script::calculateEntropy(qint64 nOffset, qint64 nSize)
     return m_pBinary->getBinaryStatus(XBinary::BSTATUS_ENTROPY, nOffset, nSize, m_pPdStruct);
 }
 
+bool Binary_Script::isZeroFilled(qint64 nOffset, qint64 nSize)
+{
+    if (nSize <= 0) {
+        return false;
+    }
+
+    return m_pBinary->isZeroFilled(nOffset, nSize, m_pPdStruct);
+}
+
 QString Binary_Script::calculateMD5(qint64 nOffset, qint64 nSize)
 {
     return m_pBinary->getHash(XBinary::HASH_MD5, nOffset, nSize, m_pPdStruct);
