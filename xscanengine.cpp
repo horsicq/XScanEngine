@@ -1671,7 +1671,17 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             nLimit = 100000;
         }
 
-        if (stFT.contains(XBinary::FT_ZIP)) {
+        bool bScanableArchive = false;
+
+        if (stFT.contains(XBinary::FT_ZIP) ||
+            stFT.contains(XBinary::FT_7Z) ||
+            stFT.contains(XBinary::FT_RAR) ||
+            stFT.contains(XBinary::FT_CAB) ||
+            stFT.contains(XBinary::FT_ISO9660)) {
+            bScanableArchive = true;
+        }
+
+        if (bScanableArchive) {
             XBinary::FT _fileType = XBinary::_getPrefFileType(&stFT);
 
             XBinary *pArchive = XFormats::getClass(_fileType, _pDevice, false, -1);
