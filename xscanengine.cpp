@@ -1681,7 +1681,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             stFT.contains(XBinary::FT_7Z) ||
             stFT.contains(XBinary::FT_RAR) ||
             stFT.contains(XBinary::FT_CAB) ||
-            stFT.contains(XBinary::FT_ISO9660)) {
+            stFT.contains(XBinary::FT_ISO9660) ||
+            stFT.contains(XBinary::FT_STK)) {
             bScanableArchive = true;
         }
 
