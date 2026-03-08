@@ -1211,7 +1211,7 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
 
     // TODO more
     if ((_sType == "installer") || (_sType == "sfx") || (_sType == "archive")) {
-        result.colorMain = Qt::blue;
+        result.colorMain = Qt::cyan;
     } else if (isProtection(_sType)) {
         result.colorMain = Qt::red;
     } else if ((_sType == "pe tool") || (_sType == "apk tool")) {
@@ -1219,9 +1219,9 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
     } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
         result.colorMain = Qt::darkYellow;
     } else if (_sType == "format") {
-        result.colorMain = Qt::darkGreen;
+        result.colorMain = Qt::green;
     } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
-        result.colorMain = Qt::darkMagenta;
+        result.colorMain = Qt::gray;
     } else if (_sType == "language") {
         result.colorMain = Qt::darkCyan;
     } else if ((_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author")) {
@@ -1230,7 +1230,9 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
         result.colorMain = Qt::white;
         result.colorBackground = Qt::darkRed;
     } else if ((_sType == "debug") || (_sType == "debug data")) {
-        result.colorMain = Qt::darkBlue;
+        result.colorMain = Qt::yellow;
+    } else if ((_sType == "game engine")) {
+        result.colorMain = Qt::green;
     } else {
         result.colorMain = Qt::transparent;
     }
