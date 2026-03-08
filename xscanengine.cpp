@@ -1219,9 +1219,9 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
     } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
         result.colorMain = Qt::darkYellow;
     } else if (_sType == "format") {
-        result.colorMain = Qt::green;
+        result.colorMain = Qt::darkGreen;
     } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
-        result.colorMain = Qt::gray;
+        result.colorMain = Qt::darkGray;
     } else if (_sType == "language") {
         result.colorMain = Qt::darkCyan;
     } else if ((_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author")) {
@@ -1230,9 +1230,9 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
         result.colorMain = Qt::white;
         result.colorBackground = Qt::darkRed;
     } else if ((_sType == "debug") || (_sType == "debug data")) {
-        result.colorMain = Qt::yellow;
+        result.colorMain = Qt::darkYellow;
     } else if ((_sType == "game engine")) {
-        result.colorMain = Qt::green;
+        result.colorMain = Qt::darkGreen;
     } else {
         result.colorMain = Qt::transparent;
     }
