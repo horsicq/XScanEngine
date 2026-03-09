@@ -1219,9 +1219,9 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
     } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
         result.colorMain = Qt::darkYellow;
     } else if (_sType == "format") {
-        result.colorMain = Qt::darkGreen;
+        result.colorMain = Qt::green;
     } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
-        result.colorMain = Qt::darkGray;
+        result.colorMain = Qt::gray;
     } else if (_sType == "language") {
         result.colorMain = Qt::darkCyan;
     } else if ((_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author")) {
@@ -1230,11 +1230,9 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
         result.colorMain = Qt::white;
         result.colorBackground = Qt::darkRed;
     } else if ((_sType == "debug") || (_sType == "debug data")) {
-        result.colorMain = Qt::darkYellow;
+        result.colorMain = Qt::yellow;
     } else if ((_sType == "game engine")) {
-        result.colorMain = Qt::darkGreen;
-    } else if ((_sType == "unknown")) {
-        result.colorMain = Qt::red;
+        result.colorMain = Qt::green;
     } else {
         result.colorMain = Qt::transparent;
     }
@@ -1681,8 +1679,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             stFT.contains(XBinary::FT_7Z) ||
             stFT.contains(XBinary::FT_RAR) ||
             stFT.contains(XBinary::FT_CAB) ||
-            stFT.contains(XBinary::FT_ISO9660) ||
-            stFT.contains(XBinary::FT_STK)) {
+            stFT.contains(XBinary::FT_ISO9660)) {
             bScanableArchive = true;
         }
 
