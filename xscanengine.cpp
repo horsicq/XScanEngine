@@ -1230,7 +1230,11 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
         result.colorMain = Qt::white;
         result.colorBackground = Qt::darkRed;
     } else if ((_sType == "debug") || (_sType == "debug data")) {
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+        result.colorMain = Qt::darkBlue;
+#else
         result.colorMain = Qt::yellow;
+#endif
     } else if ((_sType == "game engine")) {
         result.colorMain = Qt::green;
     } else {
