@@ -1219,7 +1219,11 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
     } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
         result.colorMain = Qt::darkYellow;
     } else if (_sType == "format") {
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+        result.colorMain = Qt::darkGreen;
+#else
         result.colorMain = Qt::green;
+#endif
     } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
         result.colorMain = Qt::gray;
     } else if (_sType == "language") {
