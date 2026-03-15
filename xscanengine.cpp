@@ -1211,7 +1211,11 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
 
     // TODO more
     if ((_sType == "installer") || (_sType == "sfx") || (_sType == "archive")) {
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+        result.colorMain = Qt::darkGreen;
+#else
         result.colorMain = Qt::cyan;
+#endif
     } else if (isProtection(_sType)) {
         result.colorMain = Qt::red;
     } else if ((_sType == "pe tool") || (_sType == "apk tool")) {
