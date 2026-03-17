@@ -112,6 +112,21 @@ public:
         const char *pszDescription;
     };
 
+    enum DT {
+        DT_MAIN = 0,
+        DT_EXTRA,
+        DT_CUSTOM
+    };
+
+    struct SIGNATURE_RECORD {
+        XBinary::FT fileType;
+        QString sName;
+        QString sFilePath;
+        DT databaseType;
+        QString sText;
+        bool bReadOnly;
+    };
+
     enum RECORD_TYPE {
         RECORD_TYPE_UNKNOWN = 0,
         RECORD_TYPE_APKOBFUSCATOR,
@@ -1126,7 +1141,7 @@ public:
         bool bFilterLog;
         QString sFilterCopyFormat;
         QString sFilterCatalogFormat;
-        QString sScanID; // Optional
+        QString sScanID;  // Optional
     };
 
     struct SCAN_DATA {
@@ -1159,6 +1174,27 @@ public:
     void setData(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(const QString &sDirectoryName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+
+    struct STATS {
+        QMap<QString, qint32> mapTypes;
+    };
+
+    struct SIGNATURE_STATE {
+        XBinary::FT fileType;
+        qint32 nNumberOfSignatures;
+    };
+
+    void initDatabase();
+    bool loadDatabase(const QString &sDatabasePath, DT databaseType, bool bUseCache = true, XBinary::PDSTRUCT *pPdStruct = nullptr);
+
+    QList<SIGNATURE_STATE> getSignatureStates();
+    qint32 getNumberOfSignatures(XBinary::FT fileType);
+    QList<SIGNATURE_RECORD> *getSignatures();
+
+    SIGNATURE_RECORD getSignatureByFilePath(const QString &sSignatureFilePath);
+    bool updateSignature(const QString &sSignatureFilePath, const QString &sText);
+    STATS getStats();
+    bool isSignaturesPresent(XBinary::FT fileType);
 
     // void enableDebugLog(bool bState);
     // static void debugLogFilter(QLoggingCategory *category);
@@ -1226,6 +1262,16 @@ public:
 
     virtual void process();
     virtual QString getEngineName();
+    virtual bool isSignatureValid(const QString &sSignatureFilePath);
+
+private:
+    QList<SIGNATURE_RECORD> _loadDatabaseFromPath(const QString &sDatabasePath, DT databaseType, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
+    QList<SIGNATURE_RECORD> _loadDatabaseFromArchive(XArchive *pArchive, QList<XArchive::RECORD> *pListRecords, DT databaseType, const QString &sPrefix,
+                                                     XBinary::FT fileType);  // TODO pdStruct
+    static QString _getDatabaseCachePath(const QString &sDatabasePath);
+    static void _getDatabaseStats(const QString &sDatabasePath, quint32 *pnFileCount, quint64 *pnTotalSize, qint64 *pnNewestMtime);
+    bool _loadDatabaseCache(const QString &sCachePath, quint32 nFileCount, quint64 nTotalSize, qint64 nNewestMtime, XBinary::PDSTRUCT *pPdStruct);
+    void _saveDatabaseCache(const QString &sCachePath, const QList<SIGNATURE_RECORD> &listRecords, quint32 nFileCount, quint64 nTotalSize, qint64 nNewestMtime);
 
 protected:
     virtual void _processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions,
@@ -1238,6 +1284,9 @@ signals:
     void scanFileStarted(const QString &sFileName);
     void scanResult(const XScanEngine::SCAN_RESULT &scanResult);
 
+protected:
+    QList<SIGNATURE_RECORD> m_listSignatures;
+
 private:
     QString m_sFileName;
     QString m_sDirectoryName;
@@ -1249,5 +1298,8 @@ private:
     SCAN_TYPE m_scanType;
     XBinary::PDSTRUCT *m_pPdStruct;
 };
+
+bool sort_signature_prio(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEngine::SIGNATURE_RECORD &sr2);
+bool sort_signature_name(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEngine::SIGNATURE_RECORD &sr2);
 
 #endif  // XSCANENGINE_H
