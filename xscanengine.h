@@ -120,10 +120,14 @@ public:
 
     struct SIGNATURE_RECORD {
         XBinary::FT fileType;
-        QString sName;
         QString sFilePath;
+        qint64 nPosition; // Position in file
         DT databaseType;
+        QString sType;
+        QString sName;
         QString sText;
+        QString sInfo;
+        QString sVersion;
         bool bReadOnly;
     };
 
@@ -1125,6 +1129,9 @@ public:
         QString sDetectFunction;
         bool bIsHighlight;
         bool bIsSort;
+        QString sMainDatabasePath;
+        QString sExtraDatabasePath;
+        QString sCustomDatabasePath;
         bool bUseExtraDatabase;
         bool bUseCustomDatabase;
         SCAN_ENGINE_CALLBACK scanEngineCallback;
@@ -1184,9 +1191,6 @@ public:
         qint32 nNumberOfSignatures;
     };
 
-    void initDatabase();
-    bool loadDatabase(const QString &sDatabasePath, DT databaseType, bool bUseCache = true, XBinary::PDSTRUCT *pPdStruct = nullptr);
-
     QList<SIGNATURE_STATE> getSignatureStates();
     qint32 getNumberOfSignatures(XBinary::FT fileType);
     QList<SIGNATURE_RECORD> *getSignatures();
@@ -1195,9 +1199,6 @@ public:
     bool updateSignature(const QString &sSignatureFilePath, const QString &sText);
     STATS getStats();
     bool isSignaturesPresent(XBinary::FT fileType);
-
-    // void enableDebugLog(bool bState);
-    // static void debugLogFilter(QLoggingCategory *category);
 
     static QString createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct);
     static SCANSTRUCT createHeaderScanStruct(const SCANSTRUCT *pScanStruct);
@@ -1262,9 +1263,13 @@ public:
 
     virtual void process();
     virtual QString getEngineName();
-    virtual bool isSignatureValid(const QString &sSignatureFilePath);
+    virtual bool isSignatureFileValid(const QString &sSignatureFilePath);
+
+    bool loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
 
 private:
+    void initDatabase();
+    bool loadDatabase(const QString &sDatabasePath, DT databaseType, bool bUseCache = true, XBinary::PDSTRUCT *pPdStruct = nullptr);
     QList<SIGNATURE_RECORD> _loadDatabaseFromPath(const QString &sDatabasePath, DT databaseType, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
     QList<SIGNATURE_RECORD> _loadDatabaseFromArchive(XArchive *pArchive, QList<XArchive::RECORD> *pListRecords, DT databaseType, const QString &sPrefix,
                                                      XBinary::FT fileType);  // TODO pdStruct

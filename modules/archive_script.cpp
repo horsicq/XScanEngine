@@ -33,7 +33,7 @@ Archive_Script::Archive_Script(XArchive *pArchive, XBinary::FILEPART filePart, O
     }
 
     if (!bIsArchive) {
-        XTGZ *_pArchive = dynamic_cast<XTGZ *>(m_pArchive);
+        XTAR_GZ *_pArchive = dynamic_cast<XTAR_GZ *>(m_pArchive);
         if (_pArchive) m_listArchiveRecords = _pArchive->getRecords(20000, pPdStruct), bIsArchive = true;
     }
 

@@ -1068,6 +1068,25 @@ void XScanEngine::setData(const QString &sDirectoryName, XScanEngine::SCAN_OPTIO
     m_scanType = SCAN_TYPE_DIRECTORY;
 }
 
+bool XScanEngine::loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    bool bResult = false;
+
+    initDatabase();
+
+    bResult = loadDatabase(pScanOptions->sMainDatabasePath, DT_MAIN, pScanOptions->bUseCache, pPdStruct);
+
+    if (pScanOptions->bUseExtraDatabase) {
+        loadDatabase(pScanOptions->sExtraDatabasePath, DT_EXTRA, pScanOptions->bUseCache, pPdStruct);
+    }
+
+    if (pScanOptions->bUseCustomDatabase) {
+        loadDatabase(pScanOptions->sCustomDatabasePath, DT_CUSTOM, pScanOptions->bUseCache, pPdStruct);
+    }
+
+    return bResult;
+}
+
 void XScanEngine::initDatabase()
 {
     m_listSignatures.clear();
@@ -1392,7 +1411,7 @@ QList<XScanEngine::SIGNATURE_RECORD> XScanEngine::_loadDatabaseFromPath(const QS
     qint32 nNumberOfFiles = eil.count();
 
     for (qint32 i = 0; (i < nNumberOfFiles) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
-        if (isSignatureValid(eil.at(i).absoluteFilePath())) {
+        if (isSignatureFileValid(eil.at(i).absoluteFilePath())) {
             SIGNATURE_RECORD record = {};
 
             record.fileType = fileType;
@@ -1455,6 +1474,8 @@ QString XScanEngine::_getDatabaseCachePath(const QString &sDatabasePath)
 
 void XScanEngine::_getDatabaseStats(const QString &sDatabasePath, quint32 *pnFileCount, quint64 *pnTotalSize, qint64 *pnNewestMtime)
 {
+    // TODO rewrite
+    // Load from database then show
     *pnFileCount = 0;
     *pnTotalSize = 0;
     *pnNewestMtime = 0;
@@ -1519,6 +1540,7 @@ bool XScanEngine::_loadDatabaseCache(const QString &sCachePath, quint32 nFileCou
         stream >> record.sFilePath;
         stream >> nDatabaseType;
         stream >> record.sText;
+        // TODO more fields Check
 
         record.fileType = (XBinary::FT)nFileType;
         record.databaseType = (DT)nDatabaseType;
@@ -1565,6 +1587,7 @@ void XScanEngine::_saveDatabaseCache(const QString &sCachePath, const QList<SIGN
         stream << record.sFilePath;
         stream << (qint32)record.databaseType;
         stream << record.sText;
+        // TODO more fields Check
     }
 
     file.close();
@@ -1573,18 +1596,6 @@ void XScanEngine::_saveDatabaseCache(const QString &sCachePath, const QList<SIGN
     qDebug("XScanEngine: saved cache: %s (%u records, %lld bytes)", sCachePath.toUtf8().data(), nRecordCount, QFileInfo(sCachePath).size());
 #endif
 }
-
-// void XScanEngine::enableDebugLog(bool bState)
-// {
-//     if (bState) {
-//         QLoggingCategory::installFilter(debugLogFilter);
-//     }
-// }
-
-// void XScanEngine::debugLogFilter(QLoggingCategory *category)
-// {
-//     qDebug("%s", category->categoryName());
-// }
 
 QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct)
 {
@@ -3094,7 +3105,7 @@ QString XScanEngine::getEngineName()
     return QString("XScanEngine");
 }
 
-bool XScanEngine::isSignatureValid(const QString &sSignatureFilePath)
+bool XScanEngine::isSignatureFileValid(const QString &sSignatureFilePath)
 {
     Q_UNUSED(sSignatureFilePath)
 
