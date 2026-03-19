@@ -1264,6 +1264,7 @@ public:
     virtual void process();
     virtual QString getEngineName();
     virtual bool isSignatureFileValid(const QString &sSignatureFilePath);
+    virtual QList<SIGNATURE_RECORD> getSignaturesFromData(const QString &sData, const QString &sSignatureFilePath, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
 
     bool loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
 

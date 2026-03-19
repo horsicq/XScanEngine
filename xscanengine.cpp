@@ -1412,14 +1412,14 @@ QList<XScanEngine::SIGNATURE_RECORD> XScanEngine::_loadDatabaseFromPath(const QS
 
     for (qint32 i = 0; (i < nNumberOfFiles) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
         if (isSignatureFileValid(eil.at(i).absoluteFilePath())) {
-            SIGNATURE_RECORD record = {};
+            QString sData = XBinary::readFile(eil.at(i).absoluteFilePath(), pPdStruct);
+            QList<SIGNATURE_RECORD> listRecords = getSignaturesFromData(sData, eil.at(i).absoluteFilePath(), fileType, pPdStruct);
 
-            record.fileType = fileType;
-            record.sName = eil.at(i).fileName();
-            record.sText = XBinary::readFile(eil.at(i).absoluteFilePath(), pPdStruct);
-            record.sFilePath = eil.at(i).absoluteFilePath();
-            record.databaseType = databaseType;
-            listResult.append(record);
+            for (qint32 j = 0; j < listRecords.count(); j++) {
+                SIGNATURE_RECORD record = listRecords.at(j);
+                record.databaseType = databaseType;
+                listResult.append(record);
+            }
         }
     }
 
@@ -3110,6 +3110,24 @@ bool XScanEngine::isSignatureFileValid(const QString &sSignatureFilePath)
     Q_UNUSED(sSignatureFilePath)
 
     return true;
+}
+
+QList<XScanEngine::SIGNATURE_RECORD> XScanEngine::getSignaturesFromData(const QString &sData, const QString &sSignatureFilePath, XBinary::FT fileType,
+                                                                        XBinary::PDSTRUCT *pPdStruct)
+{
+    Q_UNUSED(pPdStruct)
+
+    QList<SIGNATURE_RECORD> listResult;
+
+    SIGNATURE_RECORD record = {};
+    record.fileType = fileType;
+    record.sName = QFileInfo(sSignatureFilePath).fileName();
+    record.sText = sData;
+    record.sFilePath = sSignatureFilePath;
+
+    listResult.append(record);
+
+    return listResult;
 }
 
 void XScanEngine::_errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMessage)
