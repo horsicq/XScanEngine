@@ -1515,9 +1515,16 @@ bool XScanEngine::_loadDatabaseCache(const QString &sCachePath, quint32 nFileCou
     quint64 nCachedTotalSize = 0;
     qint64 nCachedNewestMtime = 0;
 
-    stream >> nMagic >> nVersion >> nCachedFileCount >> nCachedTotalSize >> nCachedNewestMtime;
+    QString sCachedEngineName;
+    stream >> nMagic >> nVersion;
 
-    if (nMagic != 0x44494543 || nVersion != 2) {
+    if (nMagic != 0x44494543 || nVersion != 5) {
+        return false;
+    }
+
+    stream >> sCachedEngineName >> nCachedFileCount >> nCachedTotalSize >> nCachedNewestMtime;
+
+    if (sCachedEngineName != getEngineName()) {
         return false;
     }
 
@@ -1535,15 +1542,21 @@ bool XScanEngine::_loadDatabaseCache(const QString &sCachePath, quint32 nFileCou
         qint32 nFileType = 0;
         qint32 nDatabaseType = 0;
 
+        quint8 nIsEP = 0;
         stream >> nFileType;
         stream >> record.sName;
         stream >> record.sFilePath;
         stream >> nDatabaseType;
         stream >> record.sText;
-        // TODO more fields Check
+        stream >> record.sType;
+        stream >> record.sVersion;
+        stream >> record.sInfo;
+        stream >> nIsEP;
+        stream >> record.nLine;
 
         record.fileType = (XBinary::FT)nFileType;
         record.databaseType = (DT)nDatabaseType;
+        record.bIsEP = (nIsEP != 0);
         record.bReadOnly = false;
 
         m_listSignatures.append(record);
@@ -1572,7 +1585,8 @@ void XScanEngine::_saveDatabaseCache(const QString &sCachePath, const QList<SIGN
     stream.setVersion(QDataStream::Qt_5_0);
 
     stream << (quint32)0x44494543;  // Magic "DIEC"
-    stream << (quint32)2;           // Version
+    stream << (quint32)5;           // Version
+    stream << getEngineName();
     stream << nFileCount;
     stream << nTotalSize;
     stream << nNewestMtime;
@@ -1587,7 +1601,11 @@ void XScanEngine::_saveDatabaseCache(const QString &sCachePath, const QList<SIGN
         stream << record.sFilePath;
         stream << (qint32)record.databaseType;
         stream << record.sText;
-        // TODO more fields Check
+        stream << record.sType;
+        stream << record.sVersion;
+        stream << record.sInfo;
+        stream << (quint8)(record.bIsEP ? 1 : 0);
+        stream << record.nLine;
     }
 
     file.close();
@@ -1771,6 +1789,45 @@ QList<QString> XScanEngine::getErrorsAndWarningsStringList(XScanEngine::SCAN_RES
     }
 
     return listResult;
+}
+
+void XScanEngine::debugPrintSlowestSignatures(const SCAN_RESULT &scanResult)
+{
+    qint32 nNumberOfRecords = scanResult.listDebugRecords.count();
+
+    if (nNumberOfRecords == 0) {
+        qDebug("XScanEngine: no debug records available");
+        return;
+    }
+
+    QList<qint32> listIndices;
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        listIndices.append(i);
+    }
+
+    for (qint32 i = 0; i < nNumberOfRecords - 1; i++) {
+        for (qint32 j = 0; j < nNumberOfRecords - 1 - i; j++) {
+            if (scanResult.listDebugRecords.at(listIndices.at(j)).nElapsedTime < scanResult.listDebugRecords.at(listIndices.at(j + 1)).nElapsedTime) {
+                qint32 nTemp = listIndices.at(j);
+                listIndices[j] = listIndices.at(j + 1);
+                listIndices[j + 1] = nTemp;
+            }
+        }
+    }
+
+    qDebug("XScanEngine: signature statistics (slowest first), total: %d", nNumberOfRecords);
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const DEBUG_RECORD &record = scanResult.listDebugRecords.at(listIndices.at(i));
+
+        qDebug("  #%d [%s] %s (line %lld) (%lld ms)",
+               i + 1,
+               record.sType.toUtf8().data(),
+               record.sName.toUtf8().data(),
+               record.nLine,
+               record.nElapsedTime);
+    }
 }
 
 XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString &sType)

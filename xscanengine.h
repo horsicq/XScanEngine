@@ -121,13 +121,14 @@ public:
     struct SIGNATURE_RECORD {
         XBinary::FT fileType;
         QString sFilePath;
-        qint64 nPosition; // Position in file
+        qint64 nLine; // Line in text file
         DT databaseType;
         QString sType;
         QString sName;
         QString sText;
         QString sInfo;
         QString sVersion;
+        bool bIsEP;
         bool bReadOnly;
     };
 
@@ -1052,6 +1053,7 @@ public:
         QString sName;
         QString sValue;
         qint64 nElapsedTime;
+        qint64 nLine;
     };
 
     struct SCAN_RESULT {
@@ -1207,6 +1209,7 @@ public:
     static QString createResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
     static QString scanResultToJson(const SCAN_RESULT &scanResult);
     static QString getErrorsString(XScanEngine::SCAN_RESULT *pScanResult);
+    static void debugPrintSlowestSignatures(const SCAN_RESULT &scanResult);
     static QList<QString> getErrorsAndWarningsStringList(XScanEngine::SCAN_RESULT *pScanResult);
     static XOptions::GLOBAL_COLOR_RECORD typeToGlobalColorRecord(const QString &sType);
     static qint32 typeToPrio(const QString &sType);

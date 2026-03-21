@@ -24,6 +24,10 @@
 #include <QWidget>
 #include <QTableView>
 #include <QSortFilterProxyModel>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QStandardItemModel>
+#include "xscanengine.h"
 #include "scanitemmodel.h"
 
 namespace Ui {
@@ -37,8 +41,38 @@ public:
     explicit XScanSortWidget(QWidget *pParent = nullptr);
     ~XScanSortWidget();
 
+    void setOptions(XScanEngine::SCAN_OPTIONS *pOptions);
+    XScanEngine::SCAN_OPTIONS *getOptions();
+
+private slots:
+    void on_pushButtonOpenDirectory_clicked();
+    void on_pushButtonScan_clicked();
+    void on_pushButtonResult_clicked();
+    void on_checkBoxAllFileTypes_toggled(bool bChecked);
+    void on_checkBoxAllTypes_toggled(bool bChecked);
+    void on_comboBoxFileType_currentIndexChanged(int nIndex);
+    void on_comboBoxType_currentIndexChanged(int nIndex);
+    void on_comboBoxFlags_currentIndexChanged(int nIndex);
+    void on_lineEditDirectoryName_textChanged(const QString &sText);
+    void scanFinished();
+
+private:
+    void setupConnections();
+    void populateFileTypes();
+    void populateTypes();
+    void populateFlags();
+    void updateFilter();
+    void startScan();
+    QString _getCurrentFileType();
+    QString _getCurrentType();
+
 private:
     Ui::XScanSortWidget *ui;
+    XScanEngine::SCAN_OPTIONS *m_pScanOptions;
+    ScanItemModel *m_pModel;
+    QSortFilterProxyModel *m_pProxyModel;
+    QThread *m_pScanThread;
+    bool m_bIsScanning;
 };
 
 #endif  // XSCANSORTWIDGET_H
