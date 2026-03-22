@@ -1875,7 +1875,7 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
         result.colorMain = Qt::yellow;
 #endif
     } else if ((_sType == "game engine")) {
-        result.colorMain = Qt::green;
+        result.colorMain = Qt::darkGreen;
     } else {
         result.colorMain = Qt::transparent;
     }
