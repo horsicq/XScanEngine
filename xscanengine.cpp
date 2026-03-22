@@ -2309,7 +2309,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         pScanResult->ftInit = XBinary::FT_BINARY;
     }
 
-    if (pScanOptions->bIsArchivesScan || pScanOptions->bIsRecursiveScan) {
+    if (pScanOptions->bIsRecursiveScan) {
         qint32 nLimit = 20;
 
         if (pScanOptions->bIsAggressiveScan) {
@@ -2636,6 +2636,9 @@ QMap<quint64, QString> XScanEngine::getScanFlags()
     QMap<quint64, QString> mapResult;
 
     mapResult.insert(SF_RECURSIVESCAN, tr("Recursive scan"));
+    mapResult.insert(SF_OVERLAYSCAN, tr("Overlay scan"));
+    mapResult.insert(SF_RESOURCESSCAN, tr("Resource scan"));
+    mapResult.insert(SF_ARCHIVESSCAN, tr("Archive scan"));
     mapResult.insert(SF_OVERLAYSCAN, tr("Overlay scan"));
     mapResult.insert(SF_DEEPSCAN, tr("Deep scan"));
     mapResult.insert(SF_HEURISTICSCAN, tr("Heuristic scan"));

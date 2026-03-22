@@ -31,7 +31,11 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
 
     QMap<QString, ScanItem *> mapParents;
 
-    qint32 nNumberOfDetects = pListScanStructs->count();
+    qint32 nNumberOfDetects = 0;
+
+    if (pListScanStructs) {
+        nNumberOfDetects = pListScanStructs->count();
+    }
 
     for (qint32 i = 0; i < nNumberOfDetects; i++) {
         if (!mapParents.contains(pListScanStructs->at(i).id.sUuid)) {
