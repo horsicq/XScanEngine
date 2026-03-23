@@ -2,13 +2,16 @@ INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
 
 HEADERS += \
-    $$PWD/xscansortwidget.h
+    $$PWD/xscansortwidget.h \
+    $$PWD/xscanengineoptionswidget.h
 
 SOURCES += \
-    $$PWD/xscansortwidget.cpp
+    $$PWD/xscansortwidget.cpp \
+    $$PWD/xscanengineoptionswidget.cpp
 
 FORMS += \
-    $$PWD/xscansortwidget.ui
+    $$PWD/xscansortwidget.ui \
+    $$PWD/xscanengineoptionswidget.ui
 
 !contains(XCONFIG, xscanengine) {
     XCONFIG += xscanengine

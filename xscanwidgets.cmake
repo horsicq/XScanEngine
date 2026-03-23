@@ -15,4 +15,7 @@ set(XSCANWIDGETS_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/xscansortwidget.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xscansortwidget.h
     ${CMAKE_CURRENT_LIST_DIR}/xscansortwidget.ui
+    ${CMAKE_CURRENT_LIST_DIR}/xscanengineoptionswidget.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/xscanengineoptionswidget.h
+    ${CMAKE_CURRENT_LIST_DIR}/xscanengineoptionswidget.ui
 )

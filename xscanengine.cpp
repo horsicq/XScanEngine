@@ -2707,6 +2707,18 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
         nResult |= SF_USECACHE;
     }
 
+    if (pScanOptions->bIsSort) {
+        nResult |= SF_SORT;
+    }
+
+    if (pScanOptions->bHideUnknown) {
+        nResult |= SF_HIDEUNKNOWN;
+    }
+
+    if (pScanOptions->bIsHighlight) {
+        nResult |= SF_HIGHLIGHT;
+    }
+
     if (pScanOptions->bFormatResult) {
         nResult |= SF_FORMATRESULT;
     }
@@ -2729,6 +2741,9 @@ void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
     pScanOptions->bResultAsXML = nFlags & SF_RESULTASXML;
     pScanOptions->bResultAsCSV = nFlags & SF_RESULTASCSV;
     pScanOptions->bUseCache = nFlags & SF_USECACHE;
+    pScanOptions->bIsSort = nFlags & SF_SORT;
+    pScanOptions->bHideUnknown = nFlags & SF_HIDEUNKNOWN;
+    pScanOptions->bIsHighlight = nFlags & SF_HIGHLIGHT;
     pScanOptions->bFormatResult = nFlags & SF_FORMATRESULT;
 }
 
@@ -2772,6 +2787,22 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
         nResult |= SF_ALLTYPESSCAN;
     }
 
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_USECACHE).toBool()) {
+        nResult |= SF_USECACHE;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_SORT).toBool()) {
+        nResult |= SF_SORT;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_HIDEUNKNOWN).toBool()) {
+        nResult |= SF_HIDEUNKNOWN;
+    }
+
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_HIGHLIGHT).toBool()) {
+        nResult |= SF_HIGHLIGHT;
+    }
+
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_FORMATRESULT).toBool()) {
         nResult |= SF_FORMATRESULT;
     }
@@ -2788,6 +2819,10 @@ void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SF_AGGRESSIVESCAN);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SF_VERBOSE);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SF_ALLTYPESSCAN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_USECACHE, nFlags & SF_USECACHE);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_SORT, nFlags & SF_SORT);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_HIDEUNKNOWN, nFlags & SF_HIDEUNKNOWN);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_HIGHLIGHT, nFlags & SF_HIGHLIGHT);
     pGlobalOptions->setValue(XOptions::ID_SCAN_FORMATRESULT, nFlags & SF_FORMATRESULT);
 }
 
@@ -2804,6 +2839,10 @@ QString XScanEngine::getJsonFromFlags(quint64 nFlags)
     jsonObject["aggressiveScan"] = (bool)(nFlags & SF_AGGRESSIVESCAN);
     jsonObject["verbose"] = (bool)(nFlags & SF_VERBOSE);
     jsonObject["allTypesScan"] = (bool)(nFlags & SF_ALLTYPESSCAN);
+    jsonObject["useCache"] = (bool)(nFlags & SF_USECACHE);
+    jsonObject["sort"] = (bool)(nFlags & SF_SORT);
+    jsonObject["hideUnknown"] = (bool)(nFlags & SF_HIDEUNKNOWN);
+    jsonObject["highlight"] = (bool)(nFlags & SF_HIGHLIGHT);
     jsonObject["formatResult"] = (bool)(nFlags & SF_FORMATRESULT);
 
     QJsonDocument jsonDocument(jsonObject);
@@ -2855,6 +2894,22 @@ quint64 XScanEngine::getFlagsFromJson(const QString &sJson)
 
         if (jsonObject.value("allTypesScan").toBool()) {
             nResult |= SF_ALLTYPESSCAN;
+        }
+
+        if (jsonObject.value("useCache").toBool()) {
+            nResult |= SF_USECACHE;
+        }
+
+        if (jsonObject.value("sort").toBool()) {
+            nResult |= SF_SORT;
+        }
+
+        if (jsonObject.value("hideUnknown").toBool()) {
+            nResult |= SF_HIDEUNKNOWN;
+        }
+
+        if (jsonObject.value("highlight").toBool()) {
+            nResult |= SF_HIGHLIGHT;
         }
 
         if (jsonObject.value("formatResult").toBool()) {
@@ -3791,11 +3846,15 @@ static const XScanEngine::CONSOLE_OPTION g_consoleOptions[] = {
     {XScanEngine::CONSOLE_OPTION_ID_SPECIAL, "S", "special", "Show special file information using specified method (e.g., 'Hash' or 'Hash#MD5')"},
     {XScanEngine::CONSOLE_OPTION_ID_SHOWMETHODS, "m", "showmethods", "Display all available special methods for the file"},
     {XScanEngine::CONSOLE_OPTION_ID_TEST, "", "test", "Test signatures in specified directory"},
-    {XScanEngine::CONSOLE_OPTION_ID_ADDTEST, "", "addtest", "Add test case with filename, detect string, and directory"}};
+    {XScanEngine::CONSOLE_OPTION_ID_ADDTEST, "", "addtest", "Add test case with filename, detect string, and directory"},
+    {XScanEngine::CONSOLE_OPTION_ID_SORT, "", "sort", "Sort scan results"},
+    {XScanEngine::CONSOLE_OPTION_ID_NOHIGHLIGHT, "", "nohighlight", "Do not highlight scan results"},
+    {XScanEngine::CONSOLE_OPTION_ID_USECACHE, "", "usecache", "Use database cache for faster loading"},
+};
 
 QCommandLineOption XScanEngine::getCommandLineOption(CONSOLE_OPTION_ID nId)
 {
-    if ((nId > CONSOLE_OPTION_ID_UNKNOWN) && (nId <= CONSOLE_OPTION_ID_ADDTEST)) {
+    if ((nId > CONSOLE_OPTION_ID_UNKNOWN) && (nId <= CONSOLE_OPTION_ID_USECACHE)) {
         const CONSOLE_OPTION *pOption = &g_consoleOptions[nId - 1];
 
         QStringList listOptions;
