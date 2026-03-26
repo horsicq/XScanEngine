@@ -1679,8 +1679,8 @@ XScanEngine::SCANSTRUCT XScanEngine::createHeaderScanStruct(const SCANSTRUCT *pS
     result.sInfo = "";
     result.varInfo.clear();
     result.varInfo2.clear();
-    result.globalColorRecord.colorMain = Qt::transparent;
-    result.globalColorRecord.colorBackground = Qt::transparent;
+    result.globalColorRecord.sColorMain = "";
+    result.globalColorRecord.sColorBackground = "";
 
     return result;
 }
@@ -1830,11 +1830,11 @@ void XScanEngine::debugPrintSlowestSignatures(const SCAN_RESULT &scanResult)
     }
 }
 
-XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString &sType, XOptions *pOptions)
+XOptions::COLOR_RECORD XScanEngine::typeToColorRecord(const QString &sType, XOptions *pOptions)
 {
-    XOptions::GLOBAL_COLOR_RECORD result = {};
-    result.colorMain = Qt::transparent;
-    result.colorBackground = Qt::transparent;
+    XOptions::COLOR_RECORD result = {};
+    result.sColorMain = "";
+    result.sColorBackground = "";
 
     QString _sType = sType;
     _sType = _sType.toLower().remove("~");
@@ -1943,12 +1943,12 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
     if (pOptions && idMain != XOptions::ID_UNKNOWN && pOptions->isIDPresent(idMain)) {
         QString sValue = pOptions->getValue(idMain).toString();
         QString sColorMain = sValue.section('|', 0, 0);
-        QString sColorBg = sValue.section('|', 1, 1);
+        QString sColorBackground = sValue.section('|', 1, 1);
         if (!sColorMain.isEmpty()) {
-            result.colorMain = XOptions::stringToColor(sColorMain);
+            result.sColorMain = sColorMain;
         }
-        if (!sColorBg.isEmpty()) {
-            result.colorBackground = XOptions::stringToColor(sColorBg);
+        if (!sColorBackground.isEmpty()) {
+            result.sColorBackground = sColorBackground;
         }
     }
 
