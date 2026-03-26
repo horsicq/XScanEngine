@@ -1217,7 +1217,7 @@ public:
     static QString getErrorsString(XScanEngine::SCAN_RESULT *pScanResult);
     static void debugPrintSlowestSignatures(const SCAN_RESULT &scanResult);
     static QList<QString> getErrorsAndWarningsStringList(XScanEngine::SCAN_RESULT *pScanResult);
-    static XOptions::GLOBAL_COLOR_RECORD typeToGlobalColorRecord(const QString &sType);
+    static XOptions::GLOBAL_COLOR_RECORD typeToGlobalColorRecord(const QString &sType, XOptions *pOptions = nullptr);
     static qint32 typeToPrio(const QString &sType);
     static QString translateType(const QString &sType);
     static bool isHeurType(const QString &sType);

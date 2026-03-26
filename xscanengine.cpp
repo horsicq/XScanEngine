@@ -1830,7 +1830,7 @@ void XScanEngine::debugPrintSlowestSignatures(const SCAN_RESULT &scanResult)
     }
 }
 
-XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString &sType)
+XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString &sType, XOptions *pOptions)
 {
     XOptions::GLOBAL_COLOR_RECORD result = {};
     result.colorMain = Qt::transparent;
@@ -1840,44 +1840,116 @@ XOptions::GLOBAL_COLOR_RECORD XScanEngine::typeToGlobalColorRecord(const QString
     _sType = _sType.toLower().remove("~");
     _sType = _sType.toLower().remove("!");
 
-    // TODO more
-    if ((_sType == "installer") || (_sType == "sfx") || (_sType == "archive")) {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        result.colorMain = Qt::darkGreen;
-#else
-        result.colorMain = Qt::cyan;
-#endif
+    XOptions::ID idMain = XOptions::ID_UNKNOWN;
+
+    if (_sType == "installer") {
+        idMain = XOptions::ID_SCAN_COLOR_INSTALLER;
+    } else if (_sType == "sfx") {
+        idMain = XOptions::ID_SCAN_COLOR_SFX;
+    } else if (_sType == "archive") {
+        idMain = XOptions::ID_SCAN_COLOR_ARCHIVE;
     } else if (isProtection(_sType)) {
-        result.colorMain = Qt::red;
-    } else if ((_sType == "pe tool") || (_sType == "apk tool")) {
-        result.colorMain = Qt::green;
-    } else if ((_sType == "operation system") || (_sType == "virtual machine") || (_sType == "platform") || (_sType == "dos extender")) {
-        result.colorMain = Qt::darkYellow;
+        idMain = XOptions::ID_SCAN_COLOR_PROTECTION;
+    } else if (_sType == "pe tool") {
+        idMain = XOptions::ID_SCAN_COLOR_PETOOL;
+    } else if (_sType == "apk tool") {
+        idMain = XOptions::ID_SCAN_COLOR_APKTOOL;
+    } else if (_sType == "operation system") {
+        idMain = XOptions::ID_SCAN_COLOR_OS;
+    } else if (_sType == "virtual machine") {
+        idMain = XOptions::ID_SCAN_COLOR_VM;
+    } else if (_sType == "platform") {
+        idMain = XOptions::ID_SCAN_COLOR_PLATFORM;
+    } else if (_sType == "dos extender") {
+        idMain = XOptions::ID_SCAN_COLOR_DOSEXTENDER;
     } else if (_sType == "format") {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        result.colorMain = Qt::darkGreen;
-#else
-        result.colorMain = Qt::green;
-#endif
-    } else if ((_sType == "sign tool") || (_sType == "certificate") || (_sType == "licensing")) {
-        result.colorMain = Qt::gray;
+        idMain = XOptions::ID_SCAN_COLOR_FORMAT;
+    } else if (_sType == "sign tool") {
+        idMain = XOptions::ID_SCAN_COLOR_SIGNTOOL;
+    } else if (_sType == "certificate") {
+        idMain = XOptions::ID_SCAN_COLOR_CERTIFICATE;
+    } else if (_sType == "licensing") {
+        idMain = XOptions::ID_SCAN_COLOR_LICENSING;
     } else if (_sType == "language") {
-        result.colorMain = Qt::darkCyan;
-    } else if ((_sType == "corrupted data") || (_sType == "personal data") || (_sType == "author")) {
-        result.colorMain = Qt::darkRed;
-    } else if ((_sType == "virus") || (_sType == "trojan") || (_sType == "malware")) {
-        result.colorMain = Qt::white;
-        result.colorBackground = Qt::darkRed;
-    } else if ((_sType == "debug") || (_sType == "debug data")) {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        result.colorMain = Qt::darkBlue;
-#else
-        result.colorMain = Qt::yellow;
-#endif
-    } else if ((_sType == "game engine")) {
-        result.colorMain = Qt::darkGreen;
-    } else {
-        result.colorMain = Qt::transparent;
+        idMain = XOptions::ID_SCAN_COLOR_LANGUAGE;
+    } else if (_sType == "corrupted data") {
+        idMain = XOptions::ID_SCAN_COLOR_CORRUPTEDDATA;
+    } else if (_sType == "personal data") {
+        idMain = XOptions::ID_SCAN_COLOR_PERSONALDATA;
+    } else if (_sType == "author") {
+        idMain = XOptions::ID_SCAN_COLOR_AUTHOR;
+    } else if (_sType == "virus") {
+        idMain = XOptions::ID_SCAN_COLOR_VIRUS;
+    } else if (_sType == "trojan") {
+        idMain = XOptions::ID_SCAN_COLOR_TROJAN;
+    } else if (_sType == "malware") {
+        idMain = XOptions::ID_SCAN_COLOR_MALWARE;
+    } else if (_sType == "debug") {
+        idMain = XOptions::ID_SCAN_COLOR_DEBUG;
+    } else if (_sType == "debug data") {
+        idMain = XOptions::ID_SCAN_COLOR_DEBUGDATA;
+    } else if (_sType == "game engine") {
+        idMain = XOptions::ID_SCAN_COLOR_GAMEENGINE;
+    } else if (_sType == "compiler") {
+        idMain = XOptions::ID_SCAN_COLOR_COMPILER;
+    } else if (_sType == "compressor") {
+        idMain = XOptions::ID_SCAN_COLOR_COMPRESSOR;
+    } else if (_sType == "converter") {
+        idMain = XOptions::ID_SCAN_COLOR_CONVERTER;
+    } else if (_sType == "creator") {
+        idMain = XOptions::ID_SCAN_COLOR_CREATOR;
+    } else if (_sType == "data") {
+        idMain = XOptions::ID_SCAN_COLOR_DATA;
+    } else if (_sType == "database") {
+        idMain = XOptions::ID_SCAN_COLOR_DATABASE;
+    } else if (_sType == "document") {
+        idMain = XOptions::ID_SCAN_COLOR_DOCUMENT;
+    } else if (_sType == "generic") {
+        idMain = XOptions::ID_SCAN_COLOR_GENERIC;
+    } else if (_sType == "image") {
+        idMain = XOptions::ID_SCAN_COLOR_IMAGE;
+    } else if (_sType == "installer data") {
+        idMain = XOptions::ID_SCAN_COLOR_INSTALLERDATA;
+    } else if (_sType == "library") {
+        idMain = XOptions::ID_SCAN_COLOR_LIBRARY;
+    } else if (_sType == "linker") {
+        idMain = XOptions::ID_SCAN_COLOR_LINKER;
+    } else if (_sType == "loader") {
+        idMain = XOptions::ID_SCAN_COLOR_LOADER;
+    } else if (_sType == "obfuscator") {
+        idMain = XOptions::ID_SCAN_COLOR_OBFUSCATOR;
+    } else if (_sType == "overlay") {
+        idMain = XOptions::ID_SCAN_COLOR_OVERLAY;
+    } else if (_sType == "package") {
+        idMain = XOptions::ID_SCAN_COLOR_PACKAGE;
+    } else if (_sType == "player") {
+        idMain = XOptions::ID_SCAN_COLOR_PLAYER;
+    } else if (_sType == "producer") {
+        idMain = XOptions::ID_SCAN_COLOR_PRODUCER;
+    } else if (_sType == "protector data") {
+        idMain = XOptions::ID_SCAN_COLOR_PROTECTORDATA;
+    } else if (_sType == "rom") {
+        idMain = XOptions::ID_SCAN_COLOR_ROM;
+    } else if (_sType == "sfx data") {
+        idMain = XOptions::ID_SCAN_COLOR_SFXDATA;
+    } else if (_sType == "source code") {
+        idMain = XOptions::ID_SCAN_COLOR_SOURCECODE;
+    } else if (_sType == "stub") {
+        idMain = XOptions::ID_SCAN_COLOR_STUB;
+    } else if (_sType == "tool") {
+        idMain = XOptions::ID_SCAN_COLOR_TOOL;
+    }
+
+    if (pOptions && idMain != XOptions::ID_UNKNOWN && pOptions->isIDPresent(idMain)) {
+        QString sValue = pOptions->getValue(idMain).toString();
+        QString sColorMain = sValue.section('|', 0, 0);
+        QString sColorBg = sValue.section('|', 1, 1);
+        if (!sColorMain.isEmpty()) {
+            result.colorMain = XOptions::stringToColor(sColorMain);
+        }
+        if (!sColorBg.isEmpty()) {
+            result.colorBackground = XOptions::stringToColor(sColorBg);
+        }
     }
 
     return result;
