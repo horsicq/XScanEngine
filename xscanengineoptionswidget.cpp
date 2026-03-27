@@ -63,11 +63,11 @@ void XScanEngineOptionsWidget::save()
     m_pOptions->getCheckBox(ui->checkBoxHideUnknown, XOptions::ID_SCAN_HIDEUNKNOWN);
     m_pOptions->getCheckBox(ui->checkBoxUseCache, XOptions::ID_SCAN_USECACHE);
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
-        m_pOptions->getLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DATABASE_MAIN_PATH);
-        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DATABASE_EXTRA_PATH);
-        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DATABASE_CUSTOM_PATH);
-        m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DATABASE_EXTRA_ENABLED);
-        m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DATABASE_CUSTOM_ENABLED);
+        m_pOptions->getLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH);
+        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH);
+        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
+        m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED);
+        m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
     }
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         m_pOptions->getLineEdit(ui->lineEditPeidDatabase, XOptions::ID_SCAN_PEID_DATABASE_PATH);
@@ -104,11 +104,11 @@ void XScanEngineOptionsWidget::reload()
         ui->groupBoxDIEDatabase->show();
         ui->groupBoxDIEDatabaseExtra->show();
         ui->groupBoxDIEDatabaseCustom->show();
-        m_pOptions->setLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DATABASE_MAIN_PATH);
-        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DATABASE_EXTRA_PATH);
-        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DATABASE_CUSTOM_PATH);
-        m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DATABASE_EXTRA_ENABLED);
-        m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DATABASE_CUSTOM_ENABLED);
+        m_pOptions->setLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH);
+        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH);
+        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
+        m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED);
+        m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
     } else {
         ui->groupBoxDIEDatabase->hide();
         ui->groupBoxDIEDatabaseExtra->hide();
@@ -224,11 +224,11 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
     pOptions->addID(XOptions::ID_SCAN_COLOR_TOOL, QString("|"));
 
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
-        pOptions->addID(XOptions::ID_SCAN_DATABASE_MAIN_PATH, "$data/db");
-        pOptions->addID(XOptions::ID_SCAN_DATABASE_EXTRA_PATH, "$data/db_extra");
-        pOptions->addID(XOptions::ID_SCAN_DATABASE_CUSTOM_PATH, "$data/db_custom");
-        pOptions->addID(XOptions::ID_SCAN_DATABASE_EXTRA_ENABLED, true);
-        pOptions->addID(XOptions::ID_SCAN_DATABASE_CUSTOM_ENABLED, true);
+        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, "$data/db");
+        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, "$data/db_extra");
+        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, "$data/db_custom");
+        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, true);
+        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, true);
     }
 
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
@@ -250,7 +250,7 @@ void XScanEngineOptionsWidget::reloadData(bool bSaveSelection)
 void XScanEngineOptionsWidget::on_toolButtonDIEDatabase_clicked()
 {
     QString sText = ui->lineEditDIEDatabase->text();
-    QString sInitDirectory = XBinary::convertPathName(sText);
+    QString sInitDirectory = XOptions::convertPathName(sText);
 
     QString sDirectoryName = QFileDialog::getExistingDirectory(this, tr("Open directory") + QString("..."), sInitDirectory, QFileDialog::ShowDirsOnly);
 
@@ -262,7 +262,7 @@ void XScanEngineOptionsWidget::on_toolButtonDIEDatabase_clicked()
 void XScanEngineOptionsWidget::on_toolButtonDIEDatabaseExtra_clicked()
 {
     QString sText = ui->lineEditDIEDatabaseExtra->text();
-    QString sInitDirectory = XBinary::convertPathName(sText);
+    QString sInitDirectory = XOptions::convertPathName(sText);
 
     QString sDirectoryName = QFileDialog::getExistingDirectory(this, tr("Open directory") + QString("..."), sInitDirectory, QFileDialog::ShowDirsOnly);
 
@@ -274,7 +274,7 @@ void XScanEngineOptionsWidget::on_toolButtonDIEDatabaseExtra_clicked()
 void XScanEngineOptionsWidget::on_toolButtonDIEDatabaseCustom_clicked()
 {
     QString sText = ui->lineEditDIEDatabaseCustom->text();
-    QString sInitDirectory = XBinary::convertPathName(sText);
+    QString sInitDirectory = XOptions::convertPathName(sText);
 
     QString sDirectoryName = QFileDialog::getExistingDirectory(this, tr("Open directory") + QString("..."), sInitDirectory, QFileDialog::ShowDirsOnly);
 
@@ -286,7 +286,7 @@ void XScanEngineOptionsWidget::on_toolButtonDIEDatabaseCustom_clicked()
 void XScanEngineOptionsWidget::on_toolButtonYaraRules_clicked()
 {
     QString sText = ui->lineEditYaraRules->text();
-    QString sInitDirectory = XBinary::convertPathName(sText);
+    QString sInitDirectory = XOptions::convertPathName(sText);
 
     QString sDirectoryName = QFileDialog::getExistingDirectory(this, tr("Open directory") + QString("..."), sInitDirectory, QFileDialog::ShowDirsOnly);
 
@@ -298,7 +298,7 @@ void XScanEngineOptionsWidget::on_toolButtonYaraRules_clicked()
 void XScanEngineOptionsWidget::on_toolButtonPeidDatabase_clicked()
 {
     QString sText = ui->lineEditPeidDatabase->text();
-    QString sInitDirectory = XBinary::convertPathName(sText);
+    QString sInitDirectory = XOptions::convertPathName(sText);
 
     QString sDirectoryName = QFileDialog::getExistingDirectory(this, tr("Open directory") + QString("..."), sInitDirectory, QFileDialog::ShowDirsOnly);
 
@@ -311,6 +311,7 @@ QList<DialogViewColors::RECORD> XScanEngineOptionsWidget::getRecords()
 {
     QList<DialogViewColors::RECORD> listResult;
 
+    // TODO Create a table with color IDs and names
     {
         DialogViewColors::RECORD record = {"", tr("APK tool"), XOptions::ID_SCAN_COLOR_APKTOOL};
         listResult.append(record);

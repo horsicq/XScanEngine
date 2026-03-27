@@ -1040,7 +1040,6 @@ public:
         QString varInfo;   // Signature in die scripts
         QString varInfo2;  // Signature File in die scripts
         // QString sResult;   // TODO Check
-        XOptions::COLOR_RECORD globalColorRecord;
         qint32 nPrio;
         bool bIsProtection;
     };
@@ -1086,7 +1085,6 @@ public:
         SF_USECACHE = 0x01000000,
         SF_SORT = 0x02000000,
         SF_HIDEUNKNOWN = 0x04000000,
-        SF_HIGHLIGHT = 0x08000000,
         SF_FORMATRESULT = 0x10000000,
     };
 
@@ -1107,7 +1105,6 @@ public:
         bool bIsOverlayScan;
         bool bIsAggressiveScan;
         bool bIsAllTypesScan;
-        qint64 nBufferSize;  // TODO use global in pdstruct
         bool bUseCache;
         bool bShowInternalDetects;
         bool bResultAsXML;
@@ -1135,7 +1132,6 @@ public:
         QString sSpecial;        // Special info
         QString sSignatureName;  // Optional
         QString sDetectFunction;
-        bool bIsHighlight;
         bool bIsSort;
         QString sMainDatabasePath;
         QString sExtraDatabasePath;
@@ -1217,7 +1213,7 @@ public:
     static QString getErrorsString(XScanEngine::SCAN_RESULT *pScanResult);
     static void debugPrintSlowestSignatures(const SCAN_RESULT &scanResult);
     static QList<QString> getErrorsAndWarningsStringList(XScanEngine::SCAN_RESULT *pScanResult);
-    static XOptions::COLOR_RECORD typeToColorRecord(const QString &sType, XOptions *pOptions = nullptr);
+    static XOptions::COLOR_RECORD typeToColorRecord(const QString &sType, XOptions *pOptions);
     static qint32 typeToPrio(const QString &sType);
     static QString translateType(const QString &sType);
     static bool isHeurType(const QString &sType);

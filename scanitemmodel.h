@@ -48,7 +48,7 @@ public:
     };
 
     // TODO nNumberOfColumns remove, use scanOptions
-    explicit ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, qint32 nNumberOfColumns);
+    explicit ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, qint32 nNumberOfColumns, XOptions *pOptions);
     ~ScanItemModel();
 
     QVariant headerData(int nSection, Qt::Orientation orientation, int nRole = Qt::DisplayRole) const override;
@@ -77,10 +77,12 @@ private:
     void _toFormattedString(QString *pString, ScanItem *pItem, qint32 nLevel);
     void _coloredOutput(ScanItem *pItem, qint32 nLevel);
     void _coloredItem(ScanItem *pItem);
+    bool isHighlight() const;
 
 private:
     ScanItem *m_pRootItem;
     XScanEngine::SCAN_OPTIONS m_scanOptions;
+    XOptions *m_pOptions;
 };
 
 #endif  // SCANITEMMODEL_H

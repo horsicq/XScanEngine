@@ -20,10 +20,11 @@
  */
 #include "scanitemmodel.h"
 
-ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, qint32 nNumberOfColumns)
+ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QList<XScanEngine::SCANSTRUCT> *pListScanStructs, qint32 nNumberOfColumns, XOptions *pOptions)
     : QAbstractItemModel(0)
 {
     m_scanOptions = *pScanOptions;
+    m_pOptions = pOptions;
 
     m_pRootItem = new ScanItem(tr("Result"), nullptr, nNumberOfColumns, true);
     XScanEngine::SCANSTRUCT emptySS = {};
@@ -193,21 +194,23 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
         }
 #ifdef QT_GUI_LIB
         else if (nRole == Qt::ForegroundRole) {
-            if (m_scanOptions.bIsHighlight) {
-                if (pItem->scanStruct().globalColorRecord.sColorMain == "") {
+            if (isHighlight()) {
+                QString sColor = XScanEngine::typeToColorRecord(pItem->scanStruct().sType, m_pOptions).sColorMain;
+                if (sColor == "") {
                     result = QVariant();
                 } else {
-                    result = QVariant(QColor(pItem->scanStruct().globalColorRecord.sColorMain));
+                    result = QVariant(QColor(sColor));
                 }
             } else {
                 result = QVariant();
             }
         } else if (nRole == Qt::BackgroundRole) {
-            if (m_scanOptions.bIsHighlight) {
-                if (pItem->scanStruct().globalColorRecord.sColorBackground == "") {
+            if (isHighlight()) {
+                QString sColor = XScanEngine::typeToColorRecord(pItem->scanStruct().sType, m_pOptions).sColorBackground;
+                if (sColor == "") {
                     result = QVariant();
                 } else {
-                    result = QVariant(QColor(pItem->scanStruct().globalColorRecord.sColorBackground));
+                    result = QVariant(QColor(sColor));
                 }
             } else {
                 result = QVariant();
@@ -473,10 +476,22 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
 #ifdef QT_GUI_LIB
     Q_UNUSED(pItem)
 #else
-    if (m_scanOptions.bIsHighlight) {
-        XOptions::printConsole(pItem->data(0).toString(), pItem->scanStruct().globalColorRecord.sColorMain, pItem->scanStruct().globalColorRecord.sColorBackground);
+    if (isHighlight()) {
+        XOptions::COLOR_RECORD colorRecord = XScanEngine::typeToColorRecord(pItem->scanStruct().sType, m_pOptions);
+        XOptions::printConsole(pItem->data(0).toString(), colorRecord.sColorMain, colorRecord.sColorBackground);
     } else {
         XOptions::printConsole(pItem->data(0).toString(), "", "");
     }
 #endif
+}
+
+bool ScanItemModel::isHighlight() const
+{
+    bool bResult = false;
+
+    if (m_pOptions) {
+        bResult = m_pOptions->getValue(XOptions::ID_SCAN_HIGHLIGHT).toBool();
+    }
+
+    return bResult;
 }

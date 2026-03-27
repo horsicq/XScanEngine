@@ -33,7 +33,7 @@ XScanSortWidget::XScanSortWidget(QWidget *pParent)
     *m_pScanOptions = XScanEngine::getDefaultOptions(0);
 
     // Setup model and proxy
-    m_pModel = new ScanItemModel(m_pScanOptions, nullptr, 1);
+    m_pModel = new ScanItemModel(m_pScanOptions, nullptr, 1, nullptr);
     m_pProxyModel = new QSortFilterProxyModel(this);
     m_pProxyModel->setSourceModel(m_pModel);
     m_pProxyModel->setFilterKeyColumn(0);
