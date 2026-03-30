@@ -23,4 +23,13 @@ set(XSCANWIDGETS_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/xscanengineoptionswidget.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xscanengineoptionswidget.h
     ${CMAKE_CURRENT_LIST_DIR}/xscanengineoptionswidget.ui
+    # ${CMAKE_CURRENT_LIST_DIR}/xscanenginewidget.cpp
+    # ${CMAKE_CURRENT_LIST_DIR}/xscanenginewidget.h
+    # ${CMAKE_CURRENT_LIST_DIR}/xscanenginewidget.ui
+    # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanenginedirectory.cpp
+    # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanenginedirectory.h
+    # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanenginedirectory.ui
+    # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanengineelapsed.cpp
+    # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanengineelapsed.h
+    # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanengineelapsed.ui
 )

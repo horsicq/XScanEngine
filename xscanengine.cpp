@@ -1087,6 +1087,11 @@ bool XScanEngine::loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pP
     return bResult;
 }
 
+bool XScanEngine::_loadDatabase(const QString &sDatabasePath, DT databaseType)
+{
+    return loadDatabase(sDatabasePath, databaseType, false, nullptr);
+}
+
 void XScanEngine::initDatabase()
 {
     m_listSignatures.clear();
@@ -1819,12 +1824,7 @@ void XScanEngine::debugPrintSlowestSignatures(const SCAN_RESULT &scanResult)
     for (qint32 i = 0; i < nNumberOfRecords; i++) {
         const DEBUG_RECORD &record = scanResult.listDebugRecords.at(listIndices.at(i));
 
-        qDebug("  #%d [%s] %s (line %lld) (%lld ms)",
-               i + 1,
-               record.sType.toUtf8().data(),
-               record.sName.toUtf8().data(),
-               record.nLine,
-               record.nElapsedTime);
+        qDebug("  #%d [%s] %s (line %lld) (%lld ms)", i + 1, record.sType.toUtf8().data(), record.sName.toUtf8().data(), record.nLine, record.nElapsedTime);
     }
 }
 

@@ -124,7 +124,7 @@ public:
     struct SIGNATURE_RECORD {
         XBinary::FT fileType;
         QString sFilePath;
-        qint64 nLine; // Line in text file
+        qint64 nLine;  // Line in text file
         DT databaseType;
         QString sType;
         QString sName;
@@ -1284,6 +1284,7 @@ public:
     virtual QList<SIGNATURE_RECORD> getSignaturesFromData(const QString &sData, const QString &sSignatureFilePath, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
 
     bool loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
+    bool _loadDatabase(const QString &sDatabasePath, DT databaseType);
 
 private:
     void initDatabase();

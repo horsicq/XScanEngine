@@ -4,14 +4,23 @@ DEPENDPATH += $$PWD
 HEADERS += \
     $$PWD/xscansortwidget.h \
     $$PWD/xscanengineoptionswidget.h
+    # $$PWD/xscanenginewidget.h \
+    # $$PWD/dialogxscanenginedirectory.h \
+    # $$PWD/dialogxscanengineelapsed.h
 
 SOURCES += \
     $$PWD/xscansortwidget.cpp \
     $$PWD/xscanengineoptionswidget.cpp
+    # $$PWD/xscanenginewidget.cpp \
+    # $$PWD/dialogxscanenginedirectory.cpp \
+    # $$PWD/dialogxscanengineelapsed.cpp
 
 FORMS += \
     $$PWD/xscansortwidget.ui \
     $$PWD/xscanengineoptionswidget.ui
+    # $$PWD/xscanenginewidget.ui \
+    # $$PWD/dialogxscanenginedirectory.ui \
+    # $$PWD/dialogxscanengineelapsed.ui
 
 !contains(XCONFIG, xscanengine) {
     XCONFIG += xscanengine

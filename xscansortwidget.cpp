@@ -23,8 +23,7 @@
 #include "ui_xscansortwidget.h"
 
 XScanSortWidget::XScanSortWidget(QWidget *pParent)
-    : QWidget(pParent), ui(new Ui::XScanSortWidget), m_pScanOptions(nullptr), m_pModel(nullptr),
-      m_pProxyModel(nullptr), m_pScanThread(nullptr), m_bIsScanning(false)
+    : QWidget(pParent), ui(new Ui::XScanSortWidget), m_pScanOptions(nullptr), m_pModel(nullptr), m_pProxyModel(nullptr), m_pScanThread(nullptr), m_bIsScanning(false)
 {
     ui->setupUi(this);
 
@@ -134,8 +133,8 @@ void XScanSortWidget::on_pushButtonScan_clicked()
 
 void XScanSortWidget::on_pushButtonResult_clicked()
 {
-    QString sFileName = QFileDialog::getSaveFileName(this, tr("Save Result"), ui->lineEditResult->text(),
-                                                      tr("All Files (*.*);;JSON (*.json);;XML (*.xml);;CSV (*.csv);;TSV (*.tsv)"));
+    QString sFileName =
+        QFileDialog::getSaveFileName(this, tr("Save Result"), ui->lineEditResult->text(), tr("All Files (*.*);;JSON (*.json);;XML (*.xml);;CSV (*.csv);;TSV (*.tsv)"));
 
     if (!sFileName.isEmpty()) {
         ui->lineEditResult->setText(sFileName);
