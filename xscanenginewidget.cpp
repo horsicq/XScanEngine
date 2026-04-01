@@ -43,8 +43,8 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
 
     m_bInitDatabase = false;
 
-    // ui->comboBoxFlags->setData(XScanEngine::getScanFlags(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Flags"));
-    // ui->comboBoxDatabases->setData(XScanEngine::getDatabases(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Database"));
+    ui->comboBoxFlags->setData(XScanEngine::getScanFlags(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Flags"));
+    ui->comboBoxDatabases->setData(XScanEngine::getDatabases(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Database"));
 
     // ui->comboBoxDatabases->setItemEnabled(1, false);
 
@@ -112,7 +112,7 @@ void XScanEngineWidget::clear()
 void XScanEngineWidget::process()
 {
     if (!m_bProcess) {
-        enableControls(false);
+        // enableControls(false);
         m_bProcess = true;
 
         m_scanOptions.bUseCustomDatabase = true;
@@ -153,7 +153,7 @@ void XScanEngineWidget::process()
     } else {
         stop();
         m_watcher.waitForFinished();
-        enableControls(true);
+        // enableControls(true);
     }
 }
 

@@ -3277,6 +3277,11 @@ QString XScanEngine::getEngineName()
     return QString("XScanEngine");
 }
 
+XScanEngine::SCANENGINETYPE XScanEngine::getEngineType()
+{
+    return SCANENGINETYPE_UNKNOWN;
+}
+
 bool XScanEngine::isSignatureFileValid(const QString &sSignatureFilePath)
 {
     Q_UNUSED(sSignatureFilePath)
