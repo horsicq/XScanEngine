@@ -57,22 +57,14 @@
 #include "xzip.h"
 #include <QFutureWatcher>
 #include <QLoggingCategory>
-#include "xthreadobject.h"
+#include <QObject>
 #include "xcompresseddevice.h"
 
 typedef bool (*SCAN_ENGINE_CALLBACK)(const QString &sCurrentSignature, qint32 nNumberOfSignatures, qint32 nCurrentIndex, void *pUserData);
 
 // TODO pOptions -> pScanOptions
-class XScanEngine : public XThreadObject {
+class XScanEngine : public QObject {
     Q_OBJECT
-
-    enum SCAN_TYPE {
-        SCAN_TYPE_UNKNOWN = 0,
-        SCAN_TYPE_DEVICE,
-        SCAN_TYPE_DIRECTORY,
-        SCAN_TYPE_FILE,
-        SCAN_TYPE_MEMORY
-    };
 
 public:
     enum DT {
@@ -1153,11 +1145,6 @@ public:
     XScanEngine(QObject *pParent = nullptr);
     XScanEngine(const XScanEngine &other);  // Copy constructor declaration
 
-    void setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
-    void setData(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
-    void setData(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
-    void setData(const QString &sDirectoryName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
-
     struct STATS {
         QMap<QString, qint32> mapTypes;
     };
@@ -1235,7 +1222,6 @@ public:
     static bool addTestCase(const QString &sJsonPath, const QString &sFilePath, const QString &sExpectedDetect);
     bool createTest(const QString &sFilePath, const QString sResultName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
 
-    virtual void process();
     virtual QString getEngineName();
     virtual SCANENGINETYPE getEngineType();
     virtual bool isSignatureFileValid(const QString &sSignatureFilePath);
@@ -1263,6 +1249,9 @@ protected:
     void _infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessage);
 
 signals:
+    void errorMessage(const QString &sErrorMessage);
+    void warningMessage(const QString &sWarningMessage);
+    void infoMessage(const QString &sInfoMessage);
     void scanFileStarted(const QString &sFileName);
     void scanResult(const XScanEngine::SCAN_RESULT &scanResult);
 
@@ -1270,15 +1259,6 @@ protected:
     QList<SIGNATURE_RECORD> m_listSignatures;
 
 private:
-    QString m_sFileName;
-    QString m_sDirectoryName;
-    QIODevice *m_pDevice;
-    char *m_pData;
-    qint32 m_nDataSize;
-    XScanEngine::SCAN_OPTIONS *m_pScanOptions;
-    XScanEngine::SCAN_RESULT *m_pScanResult;
-    SCAN_TYPE m_scanType;
-    XBinary::PDSTRUCT *m_pPdStruct;
 };
 
 bool sort_signature_prio(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEngine::SIGNATURE_RECORD &sr2);
