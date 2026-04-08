@@ -53,6 +53,10 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     // ui->toolButtonElapsedTime->setText(QString("%1 %2").arg(0).arg(tr("msec")));  // TODO Function
 }
 
+void XScanEngineWidget::timerSlot()
+{
+}
+
 XScanEngineWidget::~XScanEngineWidget()
 {
     if (m_bProcess) {

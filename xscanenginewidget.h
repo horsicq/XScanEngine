@@ -77,6 +77,7 @@ private slots:
     // void on_treeViewResult_clicked(const QModelIndex &index);
     // void on_treeViewResult_customContextMenuRequested(const QPoint &pos);
     // void timerSlot();
+    void timerSlot();
     // void on_pushButtonDieScanStart_clicked();
     // void on_pushButtonDieScanStop_clicked();
     // void handleErrorString(const QString &sErrorString);
