@@ -2973,6 +2973,48 @@ QString XScanEngine::scanResultToJson(const SCAN_RESULT &scanResult)
     return sResult;
 }
 
+QString XScanEngine::scanResultToXml(const SCAN_RESULT &scanResult)
+{
+    QString sResult;
+    QXmlStreamWriter xml(&sResult);
+    xml.setAutoFormatting(true);
+    xml.writeStartDocument();
+    xml.writeStartElement("result");
+
+    xml.writeStartElement("records");
+    qint32 nNumberOfRecords = scanResult.listRecords.count();
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const SCANSTRUCT &record = scanResult.listRecords.at(i);
+        xml.writeStartElement("record");
+        xml.writeAttribute("filePart", XBinary::recordFilePartIdToString(record.id.filePart));
+        xml.writeAttribute("fileType", XBinary::fileTypeIdToString(record.id.fileType));
+        xml.writeAttribute("type", record.sType);
+        xml.writeAttribute("name", record.sName);
+        xml.writeAttribute("version", record.sVersion);
+        xml.writeAttribute("info", record.sInfo);
+        xml.writeEndElement();
+    }
+    xml.writeEndElement();  // records
+
+    qint32 nNumberOfErrors = scanResult.listErrors.count();
+    if (nNumberOfErrors) {
+        xml.writeStartElement("errors");
+        for (qint32 i = 0; i < nNumberOfErrors; i++) {
+            const ERROR_RECORD &error = scanResult.listErrors.at(i);
+            xml.writeStartElement("error");
+            xml.writeAttribute("script", error.sScript);
+            xml.writeAttribute("errorString", error.sErrorString);
+            xml.writeEndElement();
+        }
+        xml.writeEndElement();  // errors
+    }
+
+    xml.writeEndElement();  // result
+    xml.writeEndDocument();
+
+    return sResult;
+}
+
 XScanEngine::SCAN_OPTIONS XScanEngine::getDefaultOptions(quint64 nFlags)
 {
     XScanEngine::SCAN_OPTIONS result = {};

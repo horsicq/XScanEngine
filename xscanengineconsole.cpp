@@ -30,6 +30,8 @@ int XScanEngineConsole::process()
 {
     qint32 nResult = XOptions::CR_SUCCESS;
 
+    XBinary::PDSTRUCT pdStruct = XBinary::createPdStruct();
+
     QCommandLineParser parser;
     parser.setApplicationDescription(m_sDescription);
     parser.addHelpOption();
@@ -37,13 +39,16 @@ int XScanEngineConsole::process()
 
     parser.addPositionalArgument("target", "The file or directory to open.");
 
+    XScanEngine::SCANENGINETYPE engineType = m_pScanEngine->getEngineType();
+    bool bHasMainDb = (engineType != XScanEngine::SCANENGINETYPE_NFD);
+    bool bHasExtraCustomDb = (engineType == XScanEngine::SCANENGINETYPE_DIE);
+
     QCommandLineOption clRecursiveScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_RECURSIVESCAN);
     QCommandLineOption clDeepScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_DEEPSCAN);
     QCommandLineOption clHeuristicScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_HEURISTICSCAN);
     QCommandLineOption clVerbose = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_VERBOSE);
     QCommandLineOption clAggresiveScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_AGGRESSIVESCAN);
     QCommandLineOption clAllTypesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ALLTYPES);
-    QCommandLineOption clFormatResult = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FORMAT);
     QCommandLineOption clProfiling = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_PROFILING);
     QCommandLineOption clMessages = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_MESSAGES);
     QCommandLineOption clHideUnknown = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_HIDEUNKNOWN);
@@ -62,6 +67,9 @@ int XScanEngineConsole::process()
     QCommandLineOption clShowMethods = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWMETHODS);
     QCommandLineOption clTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_TEST);
     QCommandLineOption clAddTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ADDTEST);
+    QCommandLineOption clOverlayScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_OVERLAYSCAN);
+    QCommandLineOption clResourcesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_RESOURCESSCAN);
+    QCommandLineOption clArchivesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ARCHIVESSCAN);
 
     parser.addOption(clRecursiveScan);
     parser.addOption(clDeepScan);
@@ -69,7 +77,6 @@ int XScanEngineConsole::process()
     parser.addOption(clVerbose);
     parser.addOption(clAggresiveScan);
     parser.addOption(clAllTypesScan);
-    parser.addOption(clFormatResult);
     parser.addOption(clProfiling);
     parser.addOption(clMessages);
     parser.addOption(clHideUnknown);
@@ -81,10 +88,17 @@ int XScanEngineConsole::process()
     parser.addOption(clResultAsCSV);
     parser.addOption(clResultAsTSV);
     parser.addOption(clResultAsPlainText);
-    parser.addOption(clDatabaseMain);
-    parser.addOption(clDatabaseExtra);
-    parser.addOption(clDatabaseCustom);
-    parser.addOption(clShowDatabase);
+    if (bHasMainDb) {
+        parser.addOption(clDatabaseMain);
+        parser.addOption(clShowDatabase);
+    }
+    if (bHasExtraCustomDb) {
+        parser.addOption(clDatabaseExtra);
+        parser.addOption(clDatabaseCustom);
+    }
+    parser.addOption(clOverlayScan);
+    parser.addOption(clResourcesScan);
+    parser.addOption(clArchivesScan);
     parser.addOption(clShowMethods);
     parser.addOption(clTest);
     parser.addOption(clAddTest);
@@ -95,18 +109,18 @@ int XScanEngineConsole::process()
 
     XScanEngine::SCAN_OPTIONS scanOptions = {};
 
-    scanOptions.bUseCustomDatabase = true;
-    scanOptions.bUseExtraDatabase = true;
+    scanOptions.bUseExtraDatabase = (engineType == XScanEngine::SCANENGINETYPE_DIE);
+    scanOptions.bUseCustomDatabase = (engineType == XScanEngine::SCANENGINETYPE_DIE);
     scanOptions.bShowType = true;
     scanOptions.bShowInfo = true;
     scanOptions.bShowVersion = true;
+    scanOptions.bFormatResult = true;
     scanOptions.bIsRecursiveScan = parser.isSet(clRecursiveScan);
     scanOptions.bIsDeepScan = parser.isSet(clDeepScan);
     scanOptions.bIsHeuristicScan = parser.isSet(clHeuristicScan);
     scanOptions.bIsVerbose = parser.isSet(clVerbose);
     scanOptions.bIsAggressiveScan = parser.isSet(clAggresiveScan);
     scanOptions.bIsAllTypesScan = parser.isSet(clAllTypesScan);
-    scanOptions.bFormatResult = parser.isSet(clFormatResult);
     scanOptions.bHideUnknown = parser.isSet(clHideUnknown);
     scanOptions.bLogProfiling = parser.isSet(clProfiling);
     scanOptions.bShowEntropy = parser.isSet(clEntropy);
@@ -117,6 +131,9 @@ int XScanEngineConsole::process()
     scanOptions.bResultAsTSV = parser.isSet(clResultAsTSV);
     scanOptions.bResultAsPlainText = parser.isSet(clResultAsPlainText);
     scanOptions.bIsSort = true;
+    scanOptions.bIsOverlayScan = parser.isSet(clOverlayScan);
+    scanOptions.bIsResourcesScan = parser.isSet(clResourcesScan);
+    scanOptions.bIsArchivesScan = parser.isSet(clArchivesScan);
 
     scanOptions.sSpecial = parser.value(clSpecial);
 
@@ -127,7 +144,13 @@ int XScanEngineConsole::process()
     QString sAddTestFilename = parser.value(clAddTest);
 
     if (scanOptions.sMainDatabasePath == "") {
-        scanOptions.sMainDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db";
+        if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
+            scanOptions.sMainDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "peid";
+        } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
+            scanOptions.sMainDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "yara";
+        } else {
+            scanOptions.sMainDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db";
+        }
     }
 
     if (scanOptions.sExtraDatabasePath == "") {
@@ -151,13 +174,15 @@ int XScanEngineConsole::process()
 
     if (parser.isSet(clShowDatabase)) {
         if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(nullptr);
+            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
         }
 
         printf("Main database: %s\n", scanOptions.sMainDatabasePath.toUtf8().data());
-        printf("Extra database: %s\n", scanOptions.sExtraDatabasePath.toUtf8().data());
-        printf("Custom database: %s\n", scanOptions.sCustomDatabasePath.toUtf8().data());
+        if (bHasExtraCustomDb) {
+            printf("Extra database: %s\n", scanOptions.sExtraDatabasePath.toUtf8().data());
+            printf("Custom database: %s\n", scanOptions.sCustomDatabasePath.toUtf8().data());
+        }
 
         QList<XScanEngine::SIGNATURE_STATE> list = m_pScanEngine->getSignatureStates();
 
@@ -186,14 +211,14 @@ int XScanEngineConsole::process()
         // }
     } else if (parser.isSet(clTest)) {
         if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(nullptr);
+            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
         }
 
         // TODO
     } else if (parser.isSet(clAddTest)) {
         if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(nullptr);
+            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
         }
 
@@ -210,10 +235,35 @@ int XScanEngineConsole::process()
         }
     } else if (listArgs.count()) {
         if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(nullptr);
+            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
+            bIsDbUsed = true;
         }
 
-        // nResult = ScanFiles(&listArgs, &scanOptions, &die_script);
+        if (bDbLoaded) {
+            qint32 nFiles = listArgs.count();
+
+            for (qint32 i = 0; i < nFiles; i++) {
+                const QString &sFile = listArgs.at(i);
+
+                XScanEngine::SCAN_RESULT scanResult = m_pScanEngine->scanFile(sFile, &scanOptions, &pdStruct);
+
+                QString sResult;
+
+                if (scanOptions.bResultAsJSON) {
+                    sResult = XScanEngine::scanResultToJson(scanResult);
+                } else if (scanOptions.bResultAsXML) {
+                    sResult = XScanEngine::scanResultToXml(scanResult);
+                } else {
+                    sResult = XScanEngine::createResultString(&scanOptions, scanResult);
+                }
+
+                if (nFiles > 1) {
+                    printf("%s:\n", sFile.toUtf8().data());
+                }
+
+                printf("%s", sResult.toUtf8().data());
+            }
+        }
     } else if (!parser.isSet(clShowDatabase)) {
         parser.showHelp();
         Q_UNREACHABLE();

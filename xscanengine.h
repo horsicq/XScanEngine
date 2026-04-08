@@ -1169,6 +1169,7 @@ public:
     static QString createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
     static QString createResultString(XScanEngine::SCAN_OPTIONS *pOptions, const SCAN_RESULT &scanResult);
     static QString scanResultToJson(const SCAN_RESULT &scanResult);
+    static QString scanResultToXml(const SCAN_RESULT &scanResult);
     static QString getErrorsString(XScanEngine::SCAN_RESULT *pScanResult);
     static void debugPrintSlowestSignatures(const SCAN_RESULT &scanResult);
     static QList<QString> getErrorsAndWarningsStringList(XScanEngine::SCAN_RESULT *pScanResult);
