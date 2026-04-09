@@ -1257,7 +1257,9 @@ QList<XScanEngine::SIGNATURE_STATE> XScanEngine::getSignatureStates()
         state.fileType = listFT.at(i);
         state.nNumberOfSignatures = getNumberOfSignatures(state.fileType);
 
-        listResult.append(state);
+        if (state.nNumberOfSignatures > 0) {
+            listResult.append(state);
+        }
     }
 
     return listResult;
