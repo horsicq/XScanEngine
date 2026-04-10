@@ -165,12 +165,14 @@ int XScanEngineConsole::process()
         }
     }
 
-    if (scanOptions.sExtraDatabasePath == "") {
-        scanOptions.sExtraDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db_extra";
-    }
+    if (bHasExtraCustomDb) {
+        if (scanOptions.sExtraDatabasePath == "") {
+            scanOptions.sExtraDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db_extra";
+        }
 
-    if (scanOptions.sCustomDatabasePath == "") {
-        scanOptions.sCustomDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db_custom";
+        if (scanOptions.sCustomDatabasePath == "") {
+            scanOptions.sCustomDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db_custom";
+        }
     }
 
     XConsoleOutput consoleOutput;
@@ -190,62 +192,19 @@ int XScanEngineConsole::process()
             bIsDbUsed = true;
         }
 
-        QList<XScanEngine::SIGNATURE_STATE> list = m_pScanEngine->getSignatureStates();
-        qint32 nNumberOfRecords = list.count();
+        XScanEngine::DATABASE_STATE dataBaseState = m_pScanEngine->getDatabaseState(&scanOptions);
+
+        QString sResullt;
 
         if (scanOptions.bResultAsJSON) {
-            QJsonObject obj;
-            obj["mainDatabase"] = scanOptions.sMainDatabasePath;
-            if (bHasExtraCustomDb) {
-                obj["extraDatabase"] = scanOptions.sExtraDatabasePath;
-                obj["customDatabase"] = scanOptions.sCustomDatabasePath;
-            }
-            QJsonArray signaturesArray;
-            for (qint32 i = 0; i < nNumberOfRecords; i++) {
-                QJsonObject sigObj;
-                sigObj["fileType"] = XBinary::fileTypeIdToString(list.at(i).fileType);
-                sigObj["count"] = list.at(i).nNumberOfSignatures;
-                signaturesArray.append(sigObj);
-            }
-            obj["signatures"] = signaturesArray;
-            printf("%s\n", QJsonDocument(obj).toJson(QJsonDocument::Compact).data());
+            sResullt = XScanEngine::databaseStateToJson(dataBaseState);
         } else if (scanOptions.bResultAsXML) {
-            QString sResult;
-            QXmlStreamWriter xml(&sResult);
-            xml.setAutoFormatting(true);
-            xml.writeStartDocument();
-            xml.writeStartElement("database");
-            xml.writeTextElement("mainDatabase", scanOptions.sMainDatabasePath);
-            if (bHasExtraCustomDb) {
-                xml.writeTextElement("extraDatabase", scanOptions.sExtraDatabasePath);
-                xml.writeTextElement("customDatabase", scanOptions.sCustomDatabasePath);
-            }
-            xml.writeStartElement("signatures");
-            for (qint32 i = 0; i < nNumberOfRecords; i++) {
-                xml.writeStartElement("signature");
-                xml.writeAttribute("fileType", XBinary::fileTypeIdToString(list.at(i).fileType));
-                xml.writeAttribute("count", QString::number(list.at(i).nNumberOfSignatures));
-                xml.writeEndElement();
-            }
-            xml.writeEndElement();  // signatures
-            xml.writeEndElement();  // database
-            xml.writeEndDocument();
-            printf("%s", sResult.toUtf8().data());
-        } else if (scanOptions.bResultAsTSV) {
-            printf("fileType\tcount\n");
-            for (qint32 i = 0; i < nNumberOfRecords; i++) {
-                printf("%s\t%d\n", XBinary::fileTypeIdToString(list.at(i).fileType).toUtf8().data(), list.at(i).nNumberOfSignatures);
-            }
+            sResullt = XScanEngine::databaseStateToXml(dataBaseState);
         } else {
-            printf("Main database: %s\n", scanOptions.sMainDatabasePath.toUtf8().data());
-            if (bHasExtraCustomDb) {
-                printf("Extra database: %s\n", scanOptions.sExtraDatabasePath.toUtf8().data());
-                printf("Custom database: %s\n", scanOptions.sCustomDatabasePath.toUtf8().data());
-            }
-            for (qint32 i = 0; i < nNumberOfRecords; i++) {
-                printf("\t%s: %d\n", XBinary::fileTypeIdToString(list.at(i).fileType).toUtf8().data(), list.at(i).nNumberOfSignatures);
-            }
+            sResullt = XScanEngine::databaseStateToText(dataBaseState);
         }
+
+        printf("%s", sResullt.toUtf8().data());
     }
 
     if (parser.isSet(clShowMethods)) {
@@ -262,16 +221,30 @@ int XScanEngineConsole::process()
                     fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
                 }
 
+                XBinary *pBinary = XFormats::getClass(fileType, &file);
+
+                if (pBinary) {
+                    QList<XBinary::XFHEADER> listHeaders = pBinary->_getXFHeaders(&pdStruct);
+
+                    XFTreeModel treeModel(nullptr);
+                    treeModel.setData(pBinary, listHeaders);
+
+                    QString sMethods;
+
+                    if (scanOptions.bResultAsJSON) {
+                        sMethods = treeModel.toJSON();
+                    } else if (scanOptions.bResultAsXML) {
+                        sMethods = treeModel.toXML();
+                    } else {
+                        sMethods = treeModel.toFormattedString();
+                    }
+
+                    printf("%s", sMethods.toUtf8().data());
+                }
+
                 file.close();
             }
-
-
-
-            XBinary *pBinary = XFormats::getClass(fileType, nullptr);
         }
-
-
-        printf("Methods:\n");
 
         // QList<QString> listMethods = XFileInfo::getMethodNames(fileType);
 

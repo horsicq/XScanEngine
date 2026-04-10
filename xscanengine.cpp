@@ -1019,6 +1019,156 @@ XScanEngine::XScanEngine(const XScanEngine &other) : QObject(other.parent())
     m_listSignatures = other.m_listSignatures;
 }
 
+QString XScanEngine::databaseStateToJson(const DATABASE_STATE &databaseState)
+{
+    QJsonObject jsonObject;
+
+    jsonObject["mainDatabasePath"] = databaseState.sMainDatabasePath;
+
+    if (!databaseState.sExtraDatabasePath.isEmpty()) {
+        jsonObject["extraDatabasePath"] = databaseState.sExtraDatabasePath;
+    }
+
+    if (!databaseState.sCustomDatabasePath.isEmpty()) {
+        jsonObject["customDatabasePath"] = databaseState.sCustomDatabasePath;
+    }
+
+    QJsonArray recordsArray;
+    qint32 nNumberOfRecords = databaseState.listRecords.count();
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const DATABASE_STATE_RECORD &record = databaseState.listRecords.at(i);
+
+        QJsonObject recordObject;
+        recordObject["fileType"] = XBinary::fileTypeIdToString(record.fileType);
+        recordObject["numberOfSignatures"] = record.nNumberOfSignatures;
+
+        recordsArray.append(recordObject);
+    }
+
+    jsonObject["records"] = recordsArray;
+
+    QJsonDocument jsonDocument(jsonObject);
+    QString sResult = QString(jsonDocument.toJson(QJsonDocument::Compact));
+
+    return sResult;
+}
+
+QString XScanEngine::databaseStateToXml(const DATABASE_STATE &databaseState)
+{
+    QString sResult;
+    QXmlStreamWriter xml(&sResult);
+    xml.setAutoFormatting(true);
+    xml.writeStartDocument();
+    xml.writeStartElement("databaseState");
+
+    xml.writeTextElement("mainDatabasePath", databaseState.sMainDatabasePath);
+
+    if (!databaseState.sExtraDatabasePath.isEmpty()) {
+        xml.writeTextElement("extraDatabasePath", databaseState.sExtraDatabasePath);
+    }
+
+    if (!databaseState.sCustomDatabasePath.isEmpty()) {
+        xml.writeTextElement("customDatabasePath", databaseState.sCustomDatabasePath);
+    }
+
+    xml.writeStartElement("records");
+    qint32 nNumberOfRecords = databaseState.listRecords.count();
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const DATABASE_STATE_RECORD &record = databaseState.listRecords.at(i);
+
+        xml.writeStartElement("record");
+        xml.writeAttribute("fileType", XBinary::fileTypeIdToString(record.fileType));
+        xml.writeAttribute("numberOfSignatures", QString::number(record.nNumberOfSignatures));
+        xml.writeEndElement();
+    }
+    xml.writeEndElement();  // records
+
+    xml.writeEndElement();  // databaseState
+    xml.writeEndDocument();
+
+    return sResult;
+}
+
+QString XScanEngine::databaseStateToText(const DATABASE_STATE &databaseState)
+{
+    QString sResult;
+
+    sResult += QString("Main signature path: %1\n").arg(databaseState.sMainDatabasePath);
+
+    if (!databaseState.sExtraDatabasePath.isEmpty()) {
+        sResult += QString("Extra signature path: %1\n").arg(databaseState.sExtraDatabasePath);
+    }
+
+    if (!databaseState.sCustomDatabasePath.isEmpty()) {
+        sResult += QString("Custom signature path: %1\n").arg(databaseState.sCustomDatabasePath);
+    }
+
+    sResult += "Records:\n";
+
+    qint32 nNumberOfRecords = databaseState.listRecords.count();
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const DATABASE_STATE_RECORD &record = databaseState.listRecords.at(i);
+        sResult += QString("  - fileType: %1, numberOfSignatures: %2\n").arg(XBinary::fileTypeIdToString(record.fileType)).arg(record.nNumberOfSignatures);
+    }
+
+    return sResult;
+}
+
+XScanEngine::DATABASE_STATE XScanEngine::getDatabaseState(XScanEngine::SCAN_OPTIONS *pOptions)
+{
+    XScanEngine::DATABASE_STATE result = {};
+
+    result.sMainDatabasePath = pOptions->sMainDatabasePath;
+    result.sExtraDatabasePath = pOptions->sExtraDatabasePath;
+    result.sCustomDatabasePath = pOptions->sCustomDatabasePath;
+
+    QList<XBinary::FT> listFT;
+
+    listFT.append(XBinary::FT_BINARY);
+    listFT.append(XBinary::FT_COM);
+    listFT.append(XBinary::FT_MSDOS);
+    listFT.append(XBinary::FT_NE);
+    listFT.append(XBinary::FT_LE);
+    listFT.append(XBinary::FT_LX);
+    listFT.append(XBinary::FT_PE);
+    listFT.append(XBinary::FT_ELF);
+    listFT.append(XBinary::FT_MACHO);
+    listFT.append(XBinary::FT_PDF);
+    listFT.append(XBinary::FT_CFBF);
+    listFT.append(XBinary::FT_IMAGE);
+    listFT.append(XBinary::FT_JPEG);
+    listFT.append(XBinary::FT_PNG);
+    listFT.append(XBinary::FT_RAR);
+    listFT.append(XBinary::FT_ISO9660);
+    listFT.append(XBinary::FT_ARCHIVE);
+    listFT.append(XBinary::FT_ZIP);
+    listFT.append(XBinary::FT_JAR);
+    listFT.append(XBinary::FT_APK);
+    listFT.append(XBinary::FT_IPA);
+    listFT.append(XBinary::FT_DEB);
+    listFT.append(XBinary::FT_DEX);
+    listFT.append(XBinary::FT_NPM);
+    listFT.append(XBinary::FT_MACHOFAT);
+    listFT.append(XBinary::FT_AMIGAHUNK);
+    listFT.append(XBinary::FT_ATARIST);
+    listFT.append(XBinary::FT_DOS16M);
+    listFT.append(XBinary::FT_DOS4G);
+
+    qint32 nNumberOfFileTypes = listFT.count();
+
+    for (qint32 i = 0; i < nNumberOfFileTypes; i++) {
+        DATABASE_STATE_RECORD record = {};
+        record.fileType = listFT.at(i);
+        record.nNumberOfSignatures = getNumberOfSignatures(record.fileType);
+
+        if (record.nNumberOfSignatures > 0) {
+            result.listRecords.append(record);
+        }
+    }
+
+    return result;
+}
+
 bool XScanEngine::loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
 {
     bool bResult = false;

@@ -1164,6 +1164,24 @@ public:
         qint32 nNumberOfSignatures;
     };
 
+    struct DATABASE_STATE_RECORD {
+        XBinary::FT fileType;
+        qint32 nNumberOfSignatures;
+    };
+
+    struct DATABASE_STATE {
+        QString sMainDatabasePath;
+        QString sExtraDatabasePath;
+        QString sCustomDatabasePath;
+        QList<DATABASE_STATE_RECORD> listRecords;
+    };
+
+    DATABASE_STATE getDatabaseState(XScanEngine::SCAN_OPTIONS *pOptions);
+
+    static QString databaseStateToJson(const DATABASE_STATE &databaseState);
+    static QString databaseStateToXml(const DATABASE_STATE &databaseState);
+    static QString databaseStateToText(const DATABASE_STATE &databaseState);
+
     QList<SIGNATURE_STATE> getSignatureStates();
     qint32 getNumberOfSignatures(XBinary::FT fileType);
     QList<SIGNATURE_RECORD> *getSignatures();

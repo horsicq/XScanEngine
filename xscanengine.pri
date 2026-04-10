@@ -86,6 +86,11 @@ SOURCES += \
     include($$PWD/../Formats/xformats.pri)
 }
 
+!contains(XCONFIG, xfmodel) {
+    XCONFIG += xfmodel
+    include($$PWD/../Formats/xfmodel.pri)
+}
+
 !contains(XCONFIG, xarchives) {
     XCONFIG += xarchives
     include($$PWD/../XArchive/xarchives.pri)
@@ -99,6 +104,11 @@ SOURCES += \
 !contains(XCONFIG, xdex) {
     XCONFIG += xdex
     include($$PWD/../XDEX/xdex.pri)
+}
+
+!contains(XCONFIG, xpdf) {
+    XCONFIG += xpdf
+    include($$PWD/../XPDF/xpdf.pri)
 }
 
 !contains(XCONFIG, xoptions) {
