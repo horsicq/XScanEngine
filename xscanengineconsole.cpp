@@ -68,8 +68,8 @@ int XScanEngineConsole::process()
     QCommandLineOption clDatabaseExtra = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_EXTRADATABASE);
     QCommandLineOption clDatabaseCustom = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_CUSTOMDATABASE);
     QCommandLineOption clShowDatabase = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWDATABASE);
-    QCommandLineOption clSpecial = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SPECIAL);
-    QCommandLineOption clShowMethods = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWMETHODS);
+    QCommandLineOption clStruct = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_STRUCT);
+    QCommandLineOption clShowStructs = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWSTRUCTS);
     QCommandLineOption clTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_TEST);
     QCommandLineOption clAddTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ADDTEST);
     QCommandLineOption clOverlayScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_OVERLAYSCAN);
@@ -88,7 +88,7 @@ int XScanEngineConsole::process()
     parser.addOption(clHideUnknown);
     parser.addOption(clEntropy);
     parser.addOption(clInfo);
-    parser.addOption(clSpecial);
+    parser.addOption(clStruct);
     parser.addOption(clResultAsXml);
     parser.addOption(clResultAsJson);
     parser.addOption(clResultAsCSV);
@@ -106,7 +106,7 @@ int XScanEngineConsole::process()
     parser.addOption(clResourcesScan);
     parser.addOption(clArchivesScan);
     parser.addOption(clFileType);
-    parser.addOption(clShowMethods);
+    parser.addOption(clShowStructs);
     parser.addOption(clTest);
     parser.addOption(clAddTest);
 
@@ -143,7 +143,7 @@ int XScanEngineConsole::process()
     scanOptions.bIsArchivesScan = parser.isSet(clArchivesScan);
     scanOptions.fileType = parser.isSet(clFileType) ? XBinary::ftStringToFileTypeId(parser.value(clFileType)) : XBinary::FT_UNKNOWN;
 
-    scanOptions.sSpecial = parser.value(clSpecial);
+    //scanOptions.sSpecial = parser.value(clStruct);
 
     if (bHasMainDb) {
         scanOptions.sMainDatabasePath = parser.value(clDatabaseMain);
@@ -157,21 +157,21 @@ int XScanEngineConsole::process()
 
     if (scanOptions.sMainDatabasePath == "") {
         if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
-            scanOptions.sMainDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "peid";
+            scanOptions.sMainDatabasePath = "$data/peid";
         } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
-            scanOptions.sMainDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "yara";
+            scanOptions.sMainDatabasePath = "$data/yara";
         } else {
-            scanOptions.sMainDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db";
+            scanOptions.sMainDatabasePath = "$data/db";
         }
     }
 
     if (bHasExtraCustomDb) {
         if (scanOptions.sExtraDatabasePath == "") {
-            scanOptions.sExtraDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db_extra";
+            scanOptions.sExtraDatabasePath = "$data/db_extra";
         }
 
         if (scanOptions.sCustomDatabasePath == "") {
-            scanOptions.sCustomDatabasePath = XOptions().getApplicationDataPath() + QDir::separator() + "db_custom";
+            scanOptions.sCustomDatabasePath = "$data/db_custom";
         }
     }
 
@@ -207,7 +207,7 @@ int XScanEngineConsole::process()
         printf("%s", sResullt.toUtf8().data());
     }
 
-    if (parser.isSet(clShowMethods)) {
+    if (parser.isSet(clShowStructs)) {
         if (listArgs.count() > 0) {
             XBinary::FT fileType = scanOptions.fileType;
 
@@ -229,17 +229,19 @@ int XScanEngineConsole::process()
                     XFTreeModel treeModel(nullptr);
                     treeModel.setData(pBinary, listHeaders);
 
-                    QString sMethods;
+                    QString sStructs;
 
                     if (scanOptions.bResultAsJSON) {
-                        sMethods = treeModel.toJSON();
+                        sStructs = treeModel.toJSON();
                     } else if (scanOptions.bResultAsXML) {
-                        sMethods = treeModel.toXML();
+                        sStructs = treeModel.toXML();
                     } else {
-                        sMethods = treeModel.toFormattedString();
+                        sStructs = treeModel.toFormattedString();
                     }
 
-                    printf("%s", sMethods.toUtf8().data());
+                    printf("%s", sStructs.toUtf8().data());
+
+                    delete pBinary;
                 }
 
                 file.close();
@@ -253,7 +255,64 @@ int XScanEngineConsole::process()
         // for (qint32 i = 0; i < nNumberOfMethods; i++) {
         //     printf("\t%s\n", listMethods.at(i).toUtf8().data());
         // }
-    } else if (parser.isSet(clTest)) {
+    }
+
+    if (parser.isSet(clStruct)) {
+        if (listArgs.count() > 0) {
+            QString sStruct = parser.value(clStruct);
+
+            QFile file;
+
+            file.setFileName(listArgs.at(0));
+
+            if (file.open(QIODevice::ReadOnly)) {
+                XBinary::XFHEADER xFHeader = XFormats::getXFHeaderFromStructName(&file, sStruct, false, -1 , &pdStruct);
+
+                if (xFHeader.xfType != XBinary::XFTYPE_UNKNOWN) {
+
+                    XBinary *pBinary = XFormats::getClass(xFHeader.fileType, &file);
+
+                    if (pBinary) {
+                        QString sStructInfo;
+
+                        if (xFHeader.xfType == XBinary::XFTYPE_HEADER) {
+                            XFModel_header modelHeader(nullptr);
+                            modelHeader.setData(pBinary, xFHeader);
+
+                            if (scanOptions.bResultAsJSON) {
+                                sStructInfo = modelHeader.toJSON();
+                            } else if (scanOptions.bResultAsXML) {
+                                sStructInfo = modelHeader.toXML();
+                            } else {
+                                XOptions::printModel(&modelHeader);
+                            }
+                        } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
+                            XFModel_table modelTable;
+                            modelTable.setData(pBinary, xFHeader);
+
+                            if (scanOptions.bResultAsJSON) {
+                                sStructInfo = modelTable.toJSON();
+                            } else if (scanOptions.bResultAsXML) {
+                                sStructInfo = modelTable.toXML();
+                            } else {
+                                XOptions::printModel(&modelTable);
+                            }
+                        }
+
+                        if (sStructInfo != "") {
+                            printf("%s", sStructInfo.toUtf8().data());
+                        }
+
+                        delete pBinary;
+                    }
+                }
+
+                file.close();
+            }
+        }
+    }
+
+    if (parser.isSet(clTest)) {
         if (!bIsDbUsed) {
             bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;

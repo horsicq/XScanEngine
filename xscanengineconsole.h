@@ -23,6 +23,8 @@
 
 #include "xscanengine.h"
 #include "xftree_model.h"
+#include "xfmodel_header.h"
+#include "xfmodel_table.h"
 
 class XScanEngineConsole : public QObject {
     Q_OBJECT

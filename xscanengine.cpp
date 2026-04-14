@@ -1206,11 +1206,11 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
 
     if (_sDatabasePath == "") {
         if (databaseType == DT_MAIN) {
-            _sDatabasePath = "$app/db";
+            _sDatabasePath = "$data/db";
         } else if (databaseType == DT_EXTRA) {
-            _sDatabasePath = "$app/db_extra";
+            _sDatabasePath = "$data/db_extra";
         } else if (databaseType == DT_CUSTOM) {
-            _sDatabasePath = "$app/db_custom";
+            _sDatabasePath = "$data/db_custom";
         }
     }
 
