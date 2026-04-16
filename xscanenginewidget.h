@@ -28,8 +28,10 @@
 #include <QWidget>
 #include <QtConcurrent>
 #include "xscanengine.h"
-
+#include "xscanengineprocess.h"
 #include "xshortcutswidget.h"
+#include "xdialogprocess.h"
+#include "scanitemmodel.h"
 
 namespace Ui {
 class XScanEngineWidget;
@@ -53,6 +55,8 @@ public:
     explicit XScanEngineWidget(QWidget *pParent = nullptr);
     ~XScanEngineWidget();
 
+    void setEngine(XScanEngine *pScanEngine);
+
     void setData(const QString &sFileName, bool bScan = false, XBinary::FT fileType = XBinary::FT_UNKNOWN);
     virtual void adjustView();
     void setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions);
@@ -61,9 +65,7 @@ public:
 private slots:
     void clear();
     void process();
-    void scan();
-    void stop();
-    void onScanFinished();
+    void onScanFinished(qint64 nMsec);
     // void on_pushButtonDieSignatures_clicked();
     // void on_pushButtonDieExtraInformation_clicked();
     // void on_pushButtonDieLog_clicked();
@@ -76,12 +78,15 @@ private slots:
     // void on_toolButtonElapsedTime_clicked();
     // void on_treeViewResult_clicked(const QModelIndex &index);
     // void on_treeViewResult_customContextMenuRequested(const QPoint &pos);
-    // void timerSlot();
-    void timerSlot();
-    // void on_pushButtonDieScanStart_clicked();
-    // void on_pushButtonDieScanStop_clicked();
     // void handleErrorString(const QString &sErrorString);
     // void handleWarningString(const QString &sWarningString);
+
+    void on_pushButtonScanStart_clicked();
+    void on_pushButtonScanDirectory_clicked();
+    void on_pushButtonCollection_clicked();
+    void on_pushButtonLog_clicked();
+    void on_pushButtonExtraInformation_clicked();
+    void on_toolButtonElapsedTime_clicked();
 
 protected:
     virtual void registerShortcuts(bool bState);
@@ -95,18 +100,14 @@ signals:
 private:
     Ui::XScanEngineWidget *ui;
     ST m_scanType;
-    // DiE_Script m_dieScript;
+    XScanEngine *m_pScanEngine;
     XScanEngine::SCAN_OPTIONS m_scanOptions;
     XScanEngine::SCAN_RESULT m_scanResult;
-    QFutureWatcher<void> m_watcher;
+    ScanItemModel *m_pModel;
     QString m_sFileName;
     XBinary::FT m_fileType;
-    bool m_bProcess;
     QString m_sInfoPath;
-    XBinary::PDSTRUCT m_pdStruct;
-    QTimer *m_pTimer;
     bool m_bInitDatabase;
-    // ScanItemModel *m_pModel;
     QList<QString> m_listErrorsAndWarnings;
 };
 

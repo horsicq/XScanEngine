@@ -48,6 +48,8 @@ public:
 signals:
     void scanFileStarted(const QString &sFileName);
     void scanResult(const XScanEngine::SCAN_RESULT &scanResult);
+    void scanStarted();
+    void scanFinished(qint64 nMsec);
 
 private:
     XScanEngine *m_pScanEngine;

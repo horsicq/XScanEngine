@@ -3372,6 +3372,11 @@ bool XScanEngine::isSignatureFileValid(const QString &sSignatureFilePath)
     return true;
 }
 
+bool XScanEngine::isDatabaseUsing()
+{
+    return false;
+}
+
 QList<XScanEngine::SIGNATURE_RECORD> XScanEngine::getSignaturesFromData(const QString &sData, const QString &sSignatureFilePath, XBinary::FT fileType,
                                                                         XBinary::PDSTRUCT *pPdStruct)
 {

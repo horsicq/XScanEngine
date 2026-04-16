@@ -40,8 +40,6 @@ set(XSCANENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/xscanengine.h
     ${CMAKE_CURRENT_LIST_DIR}/xscanengineprocess.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xscanengineprocess.h
-    ${CMAKE_CURRENT_LIST_DIR}/xscanengineconsole.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/xscanengineconsole.h
     ${CMAKE_CURRENT_LIST_DIR}/scanitem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/scanitem.h
     ${CMAKE_CURRENT_LIST_DIR}/scanitemmodel.cpp

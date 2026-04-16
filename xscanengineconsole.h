@@ -22,6 +22,7 @@
 #define XSCANENGINECONSOLE_H
 
 #include "xscanengine.h"
+#include "scanitemmodel.h"
 #include "xftree_model.h"
 #include "xfmodel_header.h"
 #include "xfmodel_table.h"
@@ -35,6 +36,7 @@ public:
 
 public slots:
     int process();
+    XOptions::CR handleFiles(QList<QString> *pListArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine *pScanEngine, XBinary::PDSTRUCT *pdStruct);
 
 private:
     QCoreApplication *m_pApp;

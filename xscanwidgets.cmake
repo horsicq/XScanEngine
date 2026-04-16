@@ -36,6 +36,9 @@ set(XSCANWIDGETS_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/xscanenginewidget.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xscanenginewidget.h
     ${CMAKE_CURRENT_LIST_DIR}/xscanenginewidget.ui
+    ${CMAKE_CURRENT_LIST_DIR}/dialogxscansort.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/dialogxscansort.h
+    ${CMAKE_CURRENT_LIST_DIR}/dialogxscansort.ui
     # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanenginedirectory.cpp
     # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanenginedirectory.h
     # ${CMAKE_CURRENT_LIST_DIR}/dialogxscanenginedirectory.ui

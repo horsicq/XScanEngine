@@ -25,7 +25,8 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
 {
     ui->setupUi(this);
 
-    m_pdStruct = XBinary::createPdStruct();
+    m_pScanEngine = nullptr;
+
     // m_pModel = nullptr;
     // m_bProcess = false;
 
@@ -35,9 +36,6 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     // connect(&m_dieScript, SIGNAL(warningMessage(QString)), this, SLOT(handleWarningString(QString)));
 
     // ui->pushButtonDieLog->setEnabled(false);
-
-    m_pTimer = new QTimer(this);
-    connect(m_pTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
 
     clear();
 
@@ -53,18 +51,14 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     // ui->toolButtonElapsedTime->setText(QString("%1 %2").arg(0).arg(tr("msec")));  // TODO Function
 }
 
-void XScanEngineWidget::timerSlot()
-{
-}
-
 XScanEngineWidget::~XScanEngineWidget()
 {
-    if (m_bProcess) {
-        stop();
-        m_watcher.waitForFinished();
-    }
-
     delete ui;
+}
+
+void XScanEngineWidget::setEngine(XScanEngine *pScanEngine)
+{
+    m_pScanEngine = pScanEngine;
 }
 
 void XScanEngineWidget::setData(const QString &sFileName, bool bScan, XBinary::FT fileType)
@@ -85,11 +79,11 @@ void XScanEngineWidget::adjustView()
     this->m_sInfoPath = getGlobalOptions()->getInfoPath();
     m_bInitDatabase = false;
 
-    // quint64 nFlags = XScanEngine::getScanFlagsFromGlobalOptions(getGlobalOptions());
-    // ui->comboBoxFlags->setValue(nFlags);
+    quint64 nFlags = XScanEngine::getScanFlagsFromGlobalOptions(getGlobalOptions());
+    ui->comboBoxFlags->setValue(nFlags);
 
-    // quint64 nDatabases = XScanEngine::getDatabasesFromGlobalOptions(getGlobalOptions());
-    // ui->comboBoxDatabases->setValue(nDatabases);
+    quint64 nDatabases = XScanEngine::getDatabasesFromGlobalOptions(getGlobalOptions());
+    ui->comboBoxDatabases->setValue(nDatabases);
 }
 
 void XScanEngineWidget::setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions)
@@ -108,17 +102,12 @@ void XScanEngineWidget::clear()
     m_scanType = ST_UNKNOWN;
     m_scanOptions = {};
     m_scanResult = {};
-    m_bProcess = false;
 
     ui->treeViewResult->setModel(0);
 }
 
 void XScanEngineWidget::process()
 {
-    if (!m_bProcess) {
-        // enableControls(false);
-        m_bProcess = true;
-
         m_scanOptions.bUseCustomDatabase = true;
         m_scanOptions.bUseExtraDatabase = true;
         m_scanOptions.bShowType = true;
@@ -130,77 +119,55 @@ void XScanEngineWidget::process()
         m_scanOptions.bHideUnknown = getGlobalOptions()->getValue(XOptions::ID_SCAN_HIDEUNKNOWN).toBool();
         m_scanOptions.bIsSort = getGlobalOptions()->getValue(XOptions::ID_SCAN_SORT).toBool();
 
-        // quint64 nFlags = ui->comboBoxFlags->getValue().toULongLong();
-        // XScanEngine::setScanFlags(&m_scanOptions, nFlags);
+        quint64 nFlags = ui->comboBoxFlags->getValue().toULongLong();
+        XScanEngine::setScanFlags(&m_scanOptions, nFlags);
 
-        // quint64 nDatabases = ui->comboBoxDatabases->getValue().toULongLong();
-        // XScanEngine::setDatabases(&m_scanOptions, nDatabases);
+        quint64 nDatabases = ui->comboBoxDatabases->getValue().toULongLong();
+        XScanEngine::setDatabases(&m_scanOptions, nDatabases);
 
-        // XScanEngine::setScanFlagsToGlobalOptions(getGlobalOptions(), nFlags);
-        // XScanEngine::setDatabasesToGlobalOptions(getGlobalOptions(), nDatabases);
+        XScanEngine::setScanFlagsToGlobalOptions(getGlobalOptions(), nFlags);
+        XScanEngine::setDatabasesToGlobalOptions(getGlobalOptions(), nDatabases);
 
-        // m_pTimer->start(200);
+        m_listErrorsAndWarnings.clear();
 
-        // ui->progressBar0->hide();
-        // ui->progressBar1->hide();
-        // ui->progressBar2->hide();
-        // ui->progressBar3->hide();
-        // ui->progressBar4->hide();
+        if (m_scanType != ST_UNKNOWN) {
+            if (m_scanType == ST_FILE) {
+                emit scanStarted();
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        QFuture<void> future = QtConcurrent::run(&XScanEngineWidget::scan, this);
-#else
-        QFuture<void> future = QtConcurrent::run(this, &XScanEngineWidget::scan);
-#endif
+                if (m_pScanEngine->isDatabaseUsing()) {
+                    XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
+                    if(type == XScanEngine::SCANENGINETYPE_DIE) {
+                        m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
+                        m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
+                        m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
+                    } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
+                        m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
+                    }else if (type == XScanEngine::SCANENGINETYPE_YARA) {
+                        m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
+                    }
 
-        m_watcher.setFuture(future);
-    } else {
-        stop();
-        m_watcher.waitForFinished();
-        // enableControls(true);
-    }
-}
+                    if (!m_bInitDatabase) {
+                        m_bInitDatabase = m_pScanEngine->loadDatabase(&m_scanOptions, nullptr);
+                    }
+                }
 
-void XScanEngineWidget::scan()
-{
-    m_listErrorsAndWarnings.clear();
+                XScanEngineProcess scanEngineProcess(m_pScanEngine);
 
-    if (m_scanType != ST_UNKNOWN) {
-        if (m_scanType == ST_FILE) {
-            emit scanStarted();
+                connect(&scanEngineProcess, SIGNAL(scanFinished(qint64)), this, SLOT(onScanFinished(qint64)));
 
-            m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
-            m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
-            m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
+                XDialogProcess ds(this, &scanEngineProcess);
+                ds.setGlobal(getShortcuts(), getGlobalOptions());
+                scanEngineProcess.setData(m_sFileName, &m_scanOptions, &m_scanResult, ds.getPdStruct());
+                ds.start();
+                ds.exec();
 
-            m_pdStruct = XBinary::createPdStruct();
-
-            // if (!m_bInitDatabase) {
-            //     m_bInitDatabase = m_dieScript.loadDatabase(&m_scanOptions, nullptr);
-            // }
-
-            // m_scanResult = m_dieScript.scanFile(m_sFileName, &m_scanOptions, &m_pdStruct);
-
-            // if (m_scanResult.ftInit == XBinary::FT_COM) {
-            //     emit currentFileType(m_scanResult.ftInit);
-            // }
-
-            emit scanFinished();
+                emit scanFinished();
+            }
         }
-    }
 }
 
-void XScanEngineWidget::stop()
+void XScanEngineWidget::onScanFinished(qint64 nMsec)
 {
-    m_pdStruct.bIsStop = true;
-}
-
-void XScanEngineWidget::onScanFinished()
-{
-    m_bProcess = false;
-
-    m_pTimer->stop();
-
     qint32 nNumberOfErrors = m_scanResult.listErrors.count() + m_listErrorsAndWarnings.count();
 
     QString sLogButtonText;
@@ -211,23 +178,62 @@ void XScanEngineWidget::onScanFinished()
         sLogButtonText = tr("Log");
     }
 
-    // ui->pushButtonDieLog->setText(sLogButtonText);
-    // ui->pushButtonDieLog->setEnabled(nNumberOfErrors);
+    ui->pushButtonLog->setText(sLogButtonText);
+    ui->pushButtonLog->setEnabled(nNumberOfErrors);
 
-    // ui->toolButtonElapsedTime->setText(QString("%1 %2").arg(m_scanResult.nScanTime).arg(tr("msec")));
+    ui->toolButtonElapsedTime->setText(QString("%1 %2").arg(nMsec).arg(tr("msec")));
 
-    // ScanItemModel *pOldModel = m_pModel;
+    m_pModel = new ScanItemModel(&m_scanOptions, &(m_scanResult.listRecords), 3, getGlobalOptions());
+    ui->treeViewResult->setModel(m_pModel);
+    ui->treeViewResult->expandAll();
 
-    // m_pModel = new ScanItemModel(&m_scanOptions, &(m_scanResult.listRecords), 3, getGlobalOptions());
-    // ui->treeViewResult->setModel(m_pModel);
-    // ui->treeViewResult->expandAll();
+    ui->treeViewResult->header()->setSectionResizeMode(COLUMN_STRING, QHeaderView::Stretch);
+    ui->treeViewResult->header()->setSectionResizeMode(COLUMN_SIGNATURE, QHeaderView::Fixed);
+    ui->treeViewResult->header()->setSectionResizeMode(COLUMN_INFO, QHeaderView::Fixed);
 
-    // if (pOldModel) {
-    //     delete pOldModel;
-    // }
+    ui->treeViewResult->setColumnWidth(COLUMN_SIGNATURE, 20);
+    ui->treeViewResult->setColumnWidth(COLUMN_INFO, 20);
+
+    ui->treeViewResult->header()->setVisible(false);
 }
 
 void XScanEngineWidget::registerShortcuts(bool bState)
 {
     Q_UNUSED(bState)
 }
+
+void XScanEngineWidget::on_pushButtonScanStart_clicked()
+{
+    process();
+}
+
+
+void XScanEngineWidget::on_pushButtonScanDirectory_clicked()
+{
+
+}
+
+
+void XScanEngineWidget::on_pushButtonCollection_clicked()
+{
+
+}
+
+
+void XScanEngineWidget::on_pushButtonLog_clicked()
+{
+
+}
+
+
+void XScanEngineWidget::on_pushButtonExtraInformation_clicked()
+{
+
+}
+
+
+void XScanEngineWidget::on_toolButtonElapsedTime_clicked()
+{
+
+}
+

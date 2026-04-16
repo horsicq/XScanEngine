@@ -1103,6 +1103,7 @@ public:
         bool bHideUnknown;
         bool bShowEntropy;
         bool bShowFileInfo;
+        QString sStruct;
         QString sSpecial;        // Special info
         QString sSignatureName;  // Optional
         QString sDetectFunction;
@@ -1254,6 +1255,7 @@ public:
     virtual QString getEngineName();
     virtual SCANENGINETYPE getEngineType();
     virtual bool isSignatureFileValid(const QString &sSignatureFilePath);
+    virtual bool isDatabaseUsing();
     virtual QList<SIGNATURE_RECORD> getSignaturesFromData(const QString &sData, const QString &sSignatureFilePath, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
 
     bool loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);

@@ -53,7 +53,11 @@ int XScanEngineConsole::process()
     QCommandLineOption clHeuristicScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_HEURISTICSCAN);
     QCommandLineOption clVerbose = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_VERBOSE);
     QCommandLineOption clAggresiveScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_AGGRESSIVESCAN);
+    QCommandLineOption clResourcesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_RESOURCESSCAN);
+    QCommandLineOption clArchivesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ARCHIVESSCAN);
+    QCommandLineOption clOverlayScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_OVERLAYSCAN);
     QCommandLineOption clAllTypesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ALLTYPES);
+
     QCommandLineOption clProfiling = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_PROFILING);
     QCommandLineOption clMessages = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_MESSAGES);
     QCommandLineOption clHideUnknown = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_HIDEUNKNOWN);
@@ -70,11 +74,9 @@ int XScanEngineConsole::process()
     QCommandLineOption clShowDatabase = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWDATABASE);
     QCommandLineOption clStruct = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_STRUCT);
     QCommandLineOption clShowStructs = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWSTRUCTS);
-    QCommandLineOption clTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_TEST);
-    QCommandLineOption clAddTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ADDTEST);
-    QCommandLineOption clOverlayScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_OVERLAYSCAN);
-    QCommandLineOption clResourcesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_RESOURCESSCAN);
-    QCommandLineOption clArchivesScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ARCHIVESSCAN);
+    // QCommandLineOption clTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_TEST);
+    // QCommandLineOption clAddTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ADDTEST);
+
     QCommandLineOption clFileType = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FILETYPE);
 
     parser.addOption(clRecursiveScan);
@@ -107,8 +109,8 @@ int XScanEngineConsole::process()
     parser.addOption(clArchivesScan);
     parser.addOption(clFileType);
     parser.addOption(clShowStructs);
-    parser.addOption(clTest);
-    parser.addOption(clAddTest);
+    // parser.addOption(clTest);
+    // parser.addOption(clAddTest);
 
     parser.process(*m_pApp);
 
@@ -127,6 +129,9 @@ int XScanEngineConsole::process()
     scanOptions.bIsHeuristicScan = parser.isSet(clHeuristicScan);
     scanOptions.bIsVerbose = parser.isSet(clVerbose);
     scanOptions.bIsAggressiveScan = parser.isSet(clAggresiveScan);
+    scanOptions.bIsOverlayScan = parser.isSet(clOverlayScan);
+    scanOptions.bIsResourcesScan = parser.isSet(clResourcesScan);
+    scanOptions.bIsArchivesScan = parser.isSet(clArchivesScan);
     scanOptions.bIsAllTypesScan = parser.isSet(clAllTypesScan);
     scanOptions.bHideUnknown = parser.isSet(clHideUnknown);
     scanOptions.bLogProfiling = parser.isSet(clProfiling);
@@ -138,10 +143,9 @@ int XScanEngineConsole::process()
     scanOptions.bResultAsTSV = parser.isSet(clResultAsTSV);
     scanOptions.bResultAsPlainText = parser.isSet(clResultAsPlainText);
     scanOptions.bIsSort = true;
-    scanOptions.bIsOverlayScan = parser.isSet(clOverlayScan);
-    scanOptions.bIsResourcesScan = parser.isSet(clResourcesScan);
-    scanOptions.bIsArchivesScan = parser.isSet(clArchivesScan);
     scanOptions.fileType = parser.isSet(clFileType) ? XBinary::ftStringToFileTypeId(parser.value(clFileType)) : XBinary::FT_UNKNOWN;
+
+    scanOptions.sStruct = parser.value(clStruct);
 
     //scanOptions.sSpecial = parser.value(clStruct);
 
@@ -152,8 +156,8 @@ int XScanEngineConsole::process()
         scanOptions.sExtraDatabasePath = parser.value(clDatabaseExtra);
         scanOptions.sCustomDatabasePath = parser.value(clDatabaseCustom);
     }
-    QString sTestDirectory = parser.value(clTest);
-    QString sAddTestFilename = parser.value(clAddTest);
+    // QString sTestDirectory = parser.value(clTest);
+    // QString sAddTestFilename = parser.value(clAddTest);
 
     if (scanOptions.sMainDatabasePath == "") {
         if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
@@ -312,60 +316,40 @@ int XScanEngineConsole::process()
         }
     }
 
-    if (parser.isSet(clTest)) {
-        if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
-            bIsDbUsed = true;
-        }
+    // if (parser.isSet(clTest)) {
+    //     if (!bIsDbUsed) {
+    //         bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
+    //         bIsDbUsed = true;
+    //     }
 
-        // TODO
-    } else if (parser.isSet(clAddTest)) {
-        if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
-            bIsDbUsed = true;
-        }
+    //     // TODO
+    // } else if (parser.isSet(clAddTest)) {
+    //     if (!bIsDbUsed) {
+    //         bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
+    //         bIsDbUsed = true;
+    //     }
 
-        if (listArgs.count() >= 2) {
-            QString sDetectString = listArgs.at(0);
-            QString sDirectory = listArgs.at(1);
-            printf("Adding test for file '%s' with detect string '%s' in directory '%s'\n", sAddTestFilename.toUtf8().data(), sDetectString.toUtf8().data(),
-                   sDirectory.toUtf8().data());
+    //     if (listArgs.count() >= 2) {
+    //         QString sDetectString = listArgs.at(0);
+    //         QString sDirectory = listArgs.at(1);
+    //         printf("Adding test for file '%s' with detect string '%s' in directory '%s'\n", sAddTestFilename.toUtf8().data(), sDetectString.toUtf8().data(),
+    //                sDirectory.toUtf8().data());
 
-            // TODO
-        } else {
-            printf("Error: --addtest requires <filename> <detect_string> <directory>\n");
-            nResult = XOptions::CR_INVALIDPARAMETER;
-        }
-    } else if (listArgs.count()) {
+    //         // TODO
+    //     } else {
+    //         printf("Error: --addtest requires <filename> <detect_string> <directory>\n");
+    //         nResult = XOptions::CR_INVALIDPARAMETER;
+    //     }
+    // }
+
+    if (listArgs.count()) {
         if (!bIsDbUsed) {
             bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
         }
 
         if (bDbLoaded) {
-            qint32 nFiles = listArgs.count();
-
-            for (qint32 i = 0; i < nFiles; i++) {
-                const QString &sFile = listArgs.at(i);
-
-                XScanEngine::SCAN_RESULT scanResult = m_pScanEngine->scanFile(sFile, &scanOptions, &pdStruct);
-
-                QString sResult;
-
-                if (scanOptions.bResultAsJSON) {
-                    sResult = XScanEngine::scanResultToJson(scanResult);
-                } else if (scanOptions.bResultAsXML) {
-                    sResult = XScanEngine::scanResultToXml(scanResult);
-                } else {
-                    sResult = XScanEngine::createResultString(&scanOptions, scanResult);
-                }
-
-                if (nFiles > 1) {
-                    printf("%s:\n", sFile.toUtf8().data());
-                }
-
-                printf("%s", sResult.toUtf8().data());
-            }
+            nResult = handleFiles(&listArgs, &scanOptions, m_pScanEngine, &pdStruct);
         }
     } else if (!parser.isSet(clShowDatabase)) {
         parser.showHelp();
@@ -377,4 +361,122 @@ int XScanEngineConsole::process()
     }
 
     return nResult;
+}
+
+XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine *pScanEngine, XBinary::PDSTRUCT *pdStruct)
+{
+    XOptions::CR result = XOptions::CR_SUCCESS;
+
+    QList<QString> listFileNames;
+
+    for (qint32 i = 0; i < pListArgs->count(); i++) {
+        QString sFileName = pListArgs->at(i);
+
+        if (QFileInfo::exists(sFileName)) {
+            XBinary::findFiles(sFileName, &listFileNames, pdStruct);
+        } else {
+            printf("Cannot find: %s\n", sFileName.toUtf8().data());
+
+            result = XOptions::CR_CANNOTFINDFILE;
+        }
+    }
+
+    bool bShowFileName = listFileNames.count() > 1;
+
+    qint32 nNumberOfFiles = listFileNames.count();
+
+    for (qint32 i = 0; i < nNumberOfFiles; i++) {
+        QString sFileName = listFileNames.at(i);
+
+        if (bShowFileName) {
+            printf("%s:\n", QDir().toNativeSeparators(sFileName).toUtf8().data());
+        }
+
+        if (pScanOptions->bShowEntropy) {
+            QString sResult;
+
+            // EntropyProcess::DATA epData = EntropyProcess::processRegionsFile(sFileName);
+
+            // if (pScanOptions->bResultAsJSON) {
+            //     sResult = EntropyProcess::dataToJsonString(&epData);
+            // } else if (pScanOptions->bResultAsXML) {
+            //     sResult = EntropyProcess::dataToXmlString(&epData);
+            // } else if (pScanOptions->bResultAsCSV) {
+            //     sResult = EntropyProcess::dataToCsvString(&epData);
+            // } else if (pScanOptions->bResultAsTSV) {
+            //     sResult = EntropyProcess::dataToTsvString(&epData);
+            // } else {
+            //     sResult = EntropyProcess::dataToPlainString(&epData);
+            // }
+
+            printf("%s", sResult.toUtf8().data());
+        } else if (pScanOptions->bShowFileInfo) {
+            QString sResult;
+
+            // XFileInfo::OPTIONS options = {};
+
+            // if (pScanOptions->sSpecial != "") {
+            //     options.sString = pScanOptions->sSpecial;
+            // } else {
+            //     options.sString = "Info";
+            // }
+
+            // XFileInfoModel model;
+
+            // if (!XFileInfo::processFile(sFileName, &model, options)) {
+            //     result = XOptions::CR_CANNOTOPENFILE;
+            // }
+
+            // if (pScanOptions->bResultAsJSON) {
+            //     sResult = model.toJSON();
+            // } else if (pScanOptions->bResultAsXML) {
+            //     sResult = model.toXML();
+            // } else if (pScanOptions->bResultAsCSV) {
+            //     sResult = model.toCSV();
+            // } else if (pScanOptions->bResultAsTSV) {
+            //     sResult = model.toTSV();
+            // } else {
+            //     sResult = model.toFormattedString();
+            // }
+
+            printf("%s", sResult.toUtf8().data());
+            printf("\n");
+        } else {
+            XBinary::PDSTRUCT pdStruct = XBinary::createPdStruct();
+            // pdStruct.pCallback = progressCallback;
+            pdStruct.pCallbackUserData = nullptr;
+
+            XScanEngine::SCAN_RESULT scanResult = pScanEngine->scanFile(sFileName, pScanOptions, &pdStruct);
+
+            ScanItemModel model(pScanOptions, &(scanResult.listRecords), 1, nullptr);
+
+            XBinary::FORMATTYPE formatType = XBinary::FORMATTYPE_TEXT;
+
+            if (pScanOptions->bResultAsCSV) formatType = XBinary::FORMATTYPE_CSV;
+            else if (pScanOptions->bResultAsJSON) formatType = XBinary::FORMATTYPE_JSON;
+            else if (pScanOptions->bResultAsTSV) formatType = XBinary::FORMATTYPE_TSV;
+            else if (pScanOptions->bResultAsXML) formatType = XBinary::FORMATTYPE_XML;
+            else if (pScanOptions->bResultAsPlainText) formatType = XBinary::FORMATTYPE_PLAINTEXT;
+
+            if (formatType != XBinary::FORMATTYPE_TEXT) {
+                printf("%s\n", model.toString(formatType).toUtf8().data());
+            } else {
+                // Colored text
+                model.coloredOutput();
+            }
+
+            //            QList<XBinary::SCANSTRUCT> listResult=DiE_Script::convert(&(scanResult.listRecords));
+
+            //            ScanItemModel model(&listResult);
+
+            //            printf("%s",model.toFormattedString().toUtf8().data());
+
+            if (scanResult.listErrors.count()) {
+                printf("%s", XScanEngine::getErrorsString(&scanResult).toUtf8().data());
+            }
+            printf("\n");
+        }
+    }
+
+    return result;
 }
