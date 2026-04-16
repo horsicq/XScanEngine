@@ -84,11 +84,6 @@ SOURCES += \
     include($$PWD/../Formats/xformats.pri)
 }
 
-!contains(XCONFIG, xfmodel) {
-    XCONFIG += xfmodel
-    include($$PWD/../Formats/xfmodel.pri)
-}
-
 !contains(XCONFIG, xarchives) {
     XCONFIG += xarchives
     include($$PWD/../XArchive/xarchives.pri)
