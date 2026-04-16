@@ -2640,13 +2640,13 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                             _options.sScanID = filePart.mapProperties.value(XBinary::FPART_PROP_RESOURCEID).toString();
                         }
 
-                        SCAN_RESULT scanResultOverlay = {};
+                        SCAN_RESULT scanResultFilePart = {};
 
-                        scanProcess(&subDevice, &scanResultOverlay, scanIdSub, &_options, false, pPdStruct);
+                        scanProcess(&subDevice, &scanResultFilePart, scanIdSub, &_options, false, pPdStruct);
 
-                        pScanResult->listRecords.append(scanResultOverlay.listRecords);
-                        pScanResult->listErrors.append(scanResultOverlay.listErrors);
-                        pScanResult->listDebugRecords.append(scanResultOverlay.listDebugRecords);
+                        pScanResult->listRecords.append(scanResultFilePart.listRecords);
+                        pScanResult->listErrors.append(scanResultFilePart.listErrors);
+                        pScanResult->listDebugRecords.append(scanResultFilePart.listDebugRecords);
 
                         subDevice.close();
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1041</width>
-    <height>515</height>
+    <width>766</width>
+    <height>347</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -139,9 +139,6 @@
       </item>
      </layout>
     </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2"/>
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox">

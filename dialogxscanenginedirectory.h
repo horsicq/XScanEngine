@@ -24,7 +24,7 @@
 #include "xshortcutsdialog.h"
 #include "xdialogprocess.h"
 #include "scanitemmodel.h"
-#include "die_script.h"
+#include "xscanengineprocess.h"
 
 namespace Ui {
 class DialogXScanEngineDirectory;
@@ -34,10 +34,12 @@ class DialogXScanEngineDirectory : public XShortcutsDialog {
     Q_OBJECT
 
 public:
-    explicit DialogXScanEngineDirectory(QWidget *pParent, const QString &sDirName);
+    explicit DialogXScanEngineDirectory(QWidget *pParent);
     ~DialogXScanEngineDirectory();
 
+    void setEngine(XScanEngine *pScanEngine);
     virtual void adjustView();
+    virtual void setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions);
 
 private slots:
     void on_pushButtonOpenDirectory_clicked();
@@ -57,6 +59,7 @@ protected:
 
 private:
     Ui::DialogXScanEngineDirectory *ui;
+    XScanEngine *m_pScanEngine;
     XScanEngine::SCAN_OPTIONS m_scanOptions;
 };
 

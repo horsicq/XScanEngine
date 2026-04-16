@@ -21,7 +21,7 @@
 #include "dialogxscanenginedirectory.h"
 #include "ui_dialogxscanenginedirectory.h"
 
-DialogXScanEngineDirectory::DialogXScanEngineDirectory(QWidget *pParent, const QString &sDirName) : XShortcutsDialog(pParent, true), ui(new Ui::DialogXScanEngineDirectory)
+DialogXScanEngineDirectory::DialogXScanEngineDirectory(QWidget *pParent) : XShortcutsDialog(pParent, true), ui(new Ui::DialogXScanEngineDirectory)
 {
     ui->setupUi(this);
 
@@ -29,10 +29,7 @@ DialogXScanEngineDirectory::DialogXScanEngineDirectory(QWidget *pParent, const Q
 
     ui->checkBoxScanSubdirectories->setChecked(true);
 
-    if (sDirName != "") {
-        ui->lineEditDirectoryName->setText(QDir().toNativeSeparators(sDirName));
-    }
-
+    m_pScanEngine = nullptr;
     m_scanOptions = {};
 
     ui->comboBoxFlags->setData(XScanEngine::getScanFlags(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Flags"));
@@ -43,10 +40,25 @@ DialogXScanEngineDirectory::~DialogXScanEngineDirectory()
     delete ui;
 }
 
+void DialogXScanEngineDirectory::setEngine(XScanEngine *pScanEngine)
+{
+    m_pScanEngine = pScanEngine;
+}
+
 void DialogXScanEngineDirectory::adjustView()
 {
     quint64 nFlags = XScanEngine::getScanFlagsFromGlobalOptions(getGlobalOptions());
     ui->comboBoxFlags->setValue(nFlags);
+}
+
+void DialogXScanEngineDirectory::setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions)
+{
+    if (pXOptions) {
+        QString sDirPath = pXOptions->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
+        ui->lineEditDirectoryName->setText(QDir().toNativeSeparators(sDirPath));
+    }
+
+    XShortcutsDialog::setGlobal(pShortcuts, pXOptions);
 }
 
 void DialogXScanEngineDirectory::on_pushButtonOpenDirectory_clicked()
@@ -77,23 +89,33 @@ void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
         m_scanOptions.bShowVersion = true;
         m_scanOptions.bShowInfo = true;
         m_scanOptions.bSubdirectories = ui->checkBoxScanSubdirectories->isChecked();
-        m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
-        m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
-        m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
 
         quint64 nFlags = ui->comboBoxFlags->getValue().toULongLong();
         XScanEngine::setScanFlags(&m_scanOptions, nFlags);
 
         XScanEngine::setScanFlagsToGlobalOptions(getGlobalOptions(), nFlags);
 
-        DiE_Script dieScript;
-        connect(&dieScript, SIGNAL(scanResult(const XScanEngine::SCAN_RESULT &)), this, SLOT(scanResult(const XScanEngine::SCAN_RESULT &)), Qt::DirectConnection);
+        if (m_pScanEngine->isDatabaseUsing()) {
+            XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
+            if(type == XScanEngine::SCANENGINETYPE_DIE) {
+                m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
+                m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
+                m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
+            } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
+                m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
+            }else if (type == XScanEngine::SCANENGINETYPE_YARA) {
+                m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
+            }
 
-        dieScript.loadDatabase(&m_scanOptions, nullptr);
+             m_pScanEngine->loadDatabase(&m_scanOptions, nullptr); // TODO
+        }
 
-        XDialogProcess ds(this, &dieScript);
+        XScanEngineProcess scanEngineProcess(m_pScanEngine);
+        connect(&scanEngineProcess, SIGNAL(scanResult(const XScanEngine::SCAN_RESULT &)), this, SLOT(scanResult(const XScanEngine::SCAN_RESULT &)), Qt::DirectConnection);
+
+        XDialogProcess ds(this, &scanEngineProcess);
         ds.setGlobal(getShortcuts(), getGlobalOptions());
-        dieScript.setData(sDirectoryName, &m_scanOptions, ds.getPdStruct());
+        scanEngineProcess.setData(sDirectoryName, &m_scanOptions, ds.getPdStruct());
         ds.start();
         ds.exec();
     }

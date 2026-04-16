@@ -207,30 +207,43 @@ void XScanEngineWidget::on_pushButtonScanStart_clicked()
     process();
 }
 
-
 void XScanEngineWidget::on_pushButtonScanDirectory_clicked()
 {
+    QString sDirPath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
 
+    if (sDirPath == "") {
+        getGlobalOptions()->setValue(XOptions::ID_SCAN_DIRECTORY_PATH, QFileInfo(m_sFileName).absolutePath());
+    }
+
+    DialogXScanEngineDirectory dialogDirectory(this);
+    dialogDirectory.setGlobal(getShortcuts(), getGlobalOptions());
+    dialogDirectory.setEngine(m_pScanEngine);
+    dialogDirectory.exec();
 }
-
 
 void XScanEngineWidget::on_pushButtonCollection_clicked()
 {
+    QString sDirPath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
 
+    if (sDirPath == "") {
+        getGlobalOptions()->setValue(XOptions::ID_SCAN_DIRECTORY_PATH, QFileInfo(m_sFileName).absolutePath());
+    }
+
+    DialogXScanSort dialogSort(this);
+    dialogSort.setGlobal(getShortcuts(), getGlobalOptions());
+    dialogSort.setEngine(m_pScanEngine);
+    dialogSort.exec();
 }
-
 
 void XScanEngineWidget::on_pushButtonLog_clicked()
 {
 
 }
 
-
 void XScanEngineWidget::on_pushButtonExtraInformation_clicked()
 {
 
 }
-
 
 void XScanEngineWidget::on_toolButtonElapsedTime_clicked()
 {

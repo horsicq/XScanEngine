@@ -32,6 +32,8 @@
 #include "xshortcutswidget.h"
 #include "xdialogprocess.h"
 #include "scanitemmodel.h"
+#include "dialogxscansort.h"
+#include "dialogxscanenginedirectory.h"
 
 namespace Ui {
 class XScanEngineWidget;

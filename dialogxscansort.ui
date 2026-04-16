@@ -21,7 +21,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="XScanEngineWidget" name="widgetResult" native="true">
+    <widget class="XScanSortWidget" name="widgetResult" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -58,9 +58,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>XScanEngineWidget</class>
+   <class>XScanSortWidget</class>
    <extends>QWidget</extends>
-   <header>xscanenginewidget.h</header>
+   <header>xscansortwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
