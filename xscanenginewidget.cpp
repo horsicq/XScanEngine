@@ -261,12 +261,29 @@ void XScanEngineWidget::_on_pushButtonCollection_clicked()
 
 void XScanEngineWidget::_on_pushButtonLog_clicked()
 {
+    DialogTextInfo dialogInfo(this);
+    dialogInfo.setGlobal(getShortcuts(), getGlobalOptions());
 
+    QList<QString> listMessages;
+    listMessages.append(m_listErrorsAndWarnings);
+    listMessages.append(XScanEngine::getErrorsAndWarningsStringList(&m_scanResult));
+
+    dialogInfo.setStringList(listMessages);
+    dialogInfo.setTitle(tr("Log"));
+
+    dialogInfo.exec();
 }
 
 void XScanEngineWidget::_on_pushButtonExtraInformation_clicked()
 {
+    DialogTextInfo dialogInfo(this);
+    dialogInfo.setGlobal(getShortcuts(), getGlobalOptions());
 
+    ScanItemModel model(&m_scanOptions, &(m_scanResult.listRecords), 1, getGlobalOptions());
+
+    dialogInfo.setText(model.toFormattedString());
+
+    dialogInfo.exec();
 }
 
 void XScanEngineWidget::_on_toolButtonElapsedTime_clicked()

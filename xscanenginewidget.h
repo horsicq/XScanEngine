@@ -34,6 +34,7 @@
 #include "scanitemmodel.h"
 #include "dialogxscansort.h"
 #include "dialogxscanenginedirectory.h"
+#include "dialogtextinfo.h"
 
 namespace Ui {
 class XScanEngineWidget;

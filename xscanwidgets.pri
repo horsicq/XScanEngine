@@ -35,5 +35,9 @@ FORMS += \
     include($$PWD/../FormatDialogs/xdialogprocess.pri)
 }
 
+!contains(XCONFIG, dialogtextinfo) {
+    XCONFIG += dialogtextinfo
+    include($$PWD/../FormatDialogs/dialogtextinfo.pri)
+
 DISTFILES += \
     $$PWD/xscanwidgets.cmake
