@@ -52,13 +52,6 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QPushButton" name="pushButtonSignatures">
-           <property name="text">
-            <string>Signatures</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="XComboBoxEx" name="comboBoxFlags">
            <property name="minimumSize">
             <size>
@@ -128,6 +121,13 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButtonSignatures">
+           <property name="text">
+            <string>Signatures</string>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pushButtonExtraInformation">

@@ -37,6 +37,8 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
 
     // ui->pushButtonDieLog->setEnabled(false);
 
+    ui->pushButtonCollection->hide();
+
     connect(ui->pushButtonScanStart, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanStart_clicked()));
     connect(ui->pushButtonScanDirectory, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanDirectory_clicked()));
     connect(ui->pushButtonCollection, SIGNAL(clicked()), this, SLOT(_on_pushButtonCollection_clicked()));
@@ -66,6 +68,19 @@ XScanEngineWidget::~XScanEngineWidget()
 void XScanEngineWidget::setEngine(XScanEngine *pScanEngine)
 {
     m_pScanEngine = pScanEngine;
+
+    XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
+
+    if (type == XScanEngine::SCANENGINETYPE_DIE) {
+        ui->pushButtonSignatures->show();
+        ui->comboBoxDatabases->show();
+    } else if (type == XScanEngine::SCANENGINETYPE_NFD) {
+        ui->pushButtonSignatures->hide();
+        ui->comboBoxDatabases->hide();
+    } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
+        ui->pushButtonSignatures->hide();
+        ui->comboBoxDatabases->hide();
+    }
 }
 
 void XScanEngineWidget::setData(const QString &sFileName, bool bScan, XBinary::FT fileType)
@@ -115,62 +130,64 @@ void XScanEngineWidget::clear()
 
 void XScanEngineWidget::process()
 {
-        m_scanOptions.bUseCustomDatabase = true;
-        m_scanOptions.bUseExtraDatabase = true;
-        m_scanOptions.bShowType = true;
-        m_scanOptions.bShowVersion = true;
-        m_scanOptions.bShowInfo = true;
-        m_scanOptions.bLogProfiling = getGlobalOptions()->getValue(XOptions::ID_SCAN_LOG_PROFILING).toBool();
-        m_scanOptions.fileType = m_fileType;
-        m_scanOptions.bShowScanTime = true;
-        m_scanOptions.bHideUnknown = getGlobalOptions()->getValue(XOptions::ID_SCAN_HIDEUNKNOWN).toBool();
-        m_scanOptions.bIsSort = getGlobalOptions()->getValue(XOptions::ID_SCAN_SORT).toBool();
+    XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
 
-        quint64 nFlags = ui->comboBoxFlags->getValue().toULongLong();
-        XScanEngine::setScanFlags(&m_scanOptions, nFlags);
+    m_scanOptions.bUseCustomDatabase = true;
+    m_scanOptions.bUseExtraDatabase = true;
+    m_scanOptions.bShowType = true;
+    m_scanOptions.bShowVersion = true;
+    m_scanOptions.bShowInfo = true;
+    m_scanOptions.bLogProfiling = getGlobalOptions()->getValue(XOptions::ID_SCAN_LOG_PROFILING).toBool();
+    m_scanOptions.fileType = m_fileType;
+    m_scanOptions.bShowScanTime = true;
+    m_scanOptions.bHideUnknown = getGlobalOptions()->getValue(XOptions::ID_SCAN_HIDEUNKNOWN).toBool();
+    m_scanOptions.bIsSort = getGlobalOptions()->getValue(XOptions::ID_SCAN_SORT).toBool();
 
+    quint64 nFlags = ui->comboBoxFlags->getValue().toULongLong();
+    XScanEngine::setScanFlags(&m_scanOptions, nFlags);
+    XScanEngine::setScanFlagsToGlobalOptions(getGlobalOptions(), nFlags);
+
+    if(type == XScanEngine::SCANENGINETYPE_DIE) {
         quint64 nDatabases = ui->comboBoxDatabases->getValue().toULongLong();
         XScanEngine::setDatabases(&m_scanOptions, nDatabases);
-
-        XScanEngine::setScanFlagsToGlobalOptions(getGlobalOptions(), nFlags);
         XScanEngine::setDatabasesToGlobalOptions(getGlobalOptions(), nDatabases);
+    }
 
-        m_listErrorsAndWarnings.clear();
+    m_listErrorsAndWarnings.clear();
 
-        if (m_scanType != ST_UNKNOWN) {
-            if (m_scanType == ST_FILE) {
-                emit scanStarted();
+    if (m_scanType != ST_UNKNOWN) {
+        if (m_scanType == ST_FILE) {
+            emit scanStarted();
 
-                if (m_pScanEngine->isDatabaseUsing()) {
-                    XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
-                    if(type == XScanEngine::SCANENGINETYPE_DIE) {
-                        m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
-                        m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
-                        m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
-                    } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
-                        m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
-                    }else if (type == XScanEngine::SCANENGINETYPE_YARA) {
-                        m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
-                    }
-
-                    if (!m_bInitDatabase) {
-                        m_bInitDatabase = m_pScanEngine->loadDatabase(&m_scanOptions, nullptr);
-                    }
+            if (m_pScanEngine->isDatabaseUsing()) {
+                if(type == XScanEngine::SCANENGINETYPE_DIE) {
+                    m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
+                    m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
+                    m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
+                } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
+                    m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
+                }else if (type == XScanEngine::SCANENGINETYPE_YARA) {
+                    m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
                 }
 
-                XScanEngineProcess scanEngineProcess(m_pScanEngine);
-
-                connect(&scanEngineProcess, SIGNAL(scanFinished(qint64)), this, SLOT(onScanFinished(qint64)));
-
-                XDialogProcess ds(this, &scanEngineProcess);
-                ds.setGlobal(getShortcuts(), getGlobalOptions());
-                scanEngineProcess.setData(m_sFileName, &m_scanOptions, &m_scanResult, ds.getPdStruct());
-                ds.start();
-                ds.exec();
-
-                emit scanFinished();
+                if (!m_bInitDatabase) {
+                    m_bInitDatabase = m_pScanEngine->loadDatabase(&m_scanOptions, nullptr);
+                }
             }
+
+            XScanEngineProcess scanEngineProcess(m_pScanEngine);
+
+            connect(&scanEngineProcess, SIGNAL(scanFinished(qint64)), this, SLOT(onScanFinished(qint64)));
+
+            XDialogProcess ds(this, &scanEngineProcess);
+            ds.setGlobal(getShortcuts(), getGlobalOptions());
+            scanEngineProcess.setData(m_sFileName, &m_scanOptions, &m_scanResult, ds.getPdStruct());
+            ds.start();
+            ds.exec();
+
+            emit scanFinished();
         }
+    }
 }
 
 void XScanEngineWidget::onScanFinished(qint64 nMsec)
