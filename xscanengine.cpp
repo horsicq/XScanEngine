@@ -3012,17 +3012,19 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
 
 void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags)
 {
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, nFlags & SF_RECURSIVESCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_OVERLAY, nFlags & SF_OVERLAYSCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_DEEP, nFlags & SF_DEEPSCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_HEURISTIC, nFlags & SF_HEURISTICSCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, nFlags & SF_AGGRESSIVESCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, nFlags & SF_VERBOSE);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, nFlags & SF_ALLTYPESSCAN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_USECACHE, nFlags & SF_USECACHE);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_SORT, nFlags & SF_SORT);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_HIDEUNKNOWN, nFlags & SF_HIDEUNKNOWN);
-    pGlobalOptions->setValue(XOptions::ID_SCAN_FORMATRESULT, nFlags & SF_FORMATRESULT);
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, (bool)(nFlags & SF_RECURSIVESCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_OVERLAY, (bool)(nFlags & SF_OVERLAYSCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RESOURCES, (bool)(nFlags & SF_RESOURCESSCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ARCHIVES, (bool)(nFlags & SF_ARCHIVESSCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_DEEP, (bool)(nFlags & SF_DEEPSCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_HEURISTIC, (bool)(nFlags & SF_HEURISTICSCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, (bool)(nFlags & SF_AGGRESSIVESCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, (bool)(nFlags & SF_VERBOSE));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, (bool)(nFlags & SF_ALLTYPESSCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_USECACHE, (bool)(nFlags & SF_USECACHE));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_SORT, (bool)(nFlags & SF_SORT));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_HIDEUNKNOWN, (bool)(nFlags & SF_HIDEUNKNOWN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FORMATRESULT, (bool)(nFlags & SF_FORMATRESULT));
 }
 
 QString XScanEngine::getJsonFromFlags(quint64 nFlags)
@@ -3038,6 +3040,9 @@ QString XScanEngine::getJsonFromFlags(quint64 nFlags)
     jsonObject["aggressiveScan"] = (bool)(nFlags & SF_AGGRESSIVESCAN);
     jsonObject["verbose"] = (bool)(nFlags & SF_VERBOSE);
     jsonObject["allTypesScan"] = (bool)(nFlags & SF_ALLTYPESSCAN);
+    jsonObject["resultAsJSON"] = (bool)(nFlags & SF_RESULTASJSON);
+    jsonObject["resultAsXML"] = (bool)(nFlags & SF_RESULTASXML);
+    jsonObject["resultAsCSV"] = (bool)(nFlags & SF_RESULTASCSV);
     jsonObject["useCache"] = (bool)(nFlags & SF_USECACHE);
     jsonObject["sort"] = (bool)(nFlags & SF_SORT);
     jsonObject["hideUnknown"] = (bool)(nFlags & SF_HIDEUNKNOWN);
@@ -3092,6 +3097,18 @@ quint64 XScanEngine::getFlagsFromJson(const QString &sJson)
 
         if (jsonObject.value("allTypesScan").toBool()) {
             nResult |= SF_ALLTYPESSCAN;
+        }
+
+        if (jsonObject.value("resultAsJSON").toBool()) {
+            nResult |= SF_RESULTASJSON;
+        }
+
+        if (jsonObject.value("resultAsXML").toBool()) {
+            nResult |= SF_RESULTASXML;
+        }
+
+        if (jsonObject.value("resultAsCSV").toBool()) {
+            nResult |= SF_RESULTASCSV;
         }
 
         if (jsonObject.value("useCache").toBool()) {
