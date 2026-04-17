@@ -1114,6 +1114,40 @@ QString XScanEngine::databaseStateToText(const DATABASE_STATE &databaseState)
     return sResult;
 }
 
+static QString _databaseStateToSV(const XScanEngine::DATABASE_STATE &databaseState, QChar sep)
+{
+    QString sResult;
+
+    sResult += QString("mainDatabasePath%1extraDatabasePath%1customDatabasePath%1fileType%1numberOfSignatures\n").arg(sep);
+
+    qint32 nNumberOfRecords = databaseState.listRecords.count();
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const XScanEngine::DATABASE_STATE_RECORD &record = databaseState.listRecords.at(i);
+        sResult += QString("%1%2%3%4%5%6%7%8%9\n")
+                       .arg(databaseState.sMainDatabasePath)
+                       .arg(sep)
+                       .arg(databaseState.sExtraDatabasePath)
+                       .arg(sep)
+                       .arg(databaseState.sCustomDatabasePath)
+                       .arg(sep)
+                       .arg(XBinary::fileTypeIdToString(record.fileType))
+                       .arg(sep)
+                       .arg(record.nNumberOfSignatures);
+    }
+
+    return sResult;
+}
+
+QString XScanEngine::databaseStateToCSV(const DATABASE_STATE &databaseState)
+{
+    return _databaseStateToSV(databaseState, ',');
+}
+
+QString XScanEngine::databaseStateToTSV(const DATABASE_STATE &databaseState)
+{
+    return _databaseStateToSV(databaseState, '\t');
+}
+
 XScanEngine::DATABASE_STATE XScanEngine::getDatabaseState(XScanEngine::SCAN_OPTIONS *pOptions)
 {
     XScanEngine::DATABASE_STATE result = {};

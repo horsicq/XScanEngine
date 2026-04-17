@@ -64,16 +64,20 @@ void XScanEngineOptionsWidget::save()
     m_pOptions->getCheckBox(ui->checkBoxUseCache, XOptions::ID_SCAN_USECACHE);
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
         m_pOptions->getLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH);
+        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL);
         m_pOptions->getLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH);
+        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseExtraUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL);
         m_pOptions->getLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
         m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED);
         m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
     }
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         m_pOptions->getLineEdit(ui->lineEditPeidDatabase, XOptions::ID_SCAN_PEID_DATABASE_PATH);
+        m_pOptions->getLineEdit(ui->lineEditPeidDatabaseUpdateUrl, XOptions::ID_SCAN_PEID_DATABASE_UPDATE_URL);
     }
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
         m_pOptions->getLineEdit(ui->lineEditYaraRules, XOptions::ID_SCAN_YARA_DATABASE_PATH);
+        m_pOptions->getLineEdit(ui->lineEditYaraRulesUpdateUrl, XOptions::ID_SCAN_YARA_DATABASE_UPDATE_URL);
     }
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE)) {
         m_pOptions->getComboBox(ui->comboBoxScanEngine, XOptions::ID_SCAN_ENGINE);
@@ -102,31 +106,43 @@ void XScanEngineOptionsWidget::reload()
     m_pOptions->setCheckBox(ui->checkBoxProfiling, XOptions::ID_SCAN_LOG_PROFILING);
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
         ui->groupBoxDIEDatabase->show();
+        ui->groupBoxDIEDatabaseUpdateUrl->show();
         ui->groupBoxDIEDatabaseExtra->show();
+        ui->groupBoxDIEDatabaseExtraUpdateUrl->show();
         ui->groupBoxDIEDatabaseCustom->show();
         m_pOptions->setLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH);
+        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL);
         m_pOptions->setLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH);
+        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseExtraUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL);
         m_pOptions->setLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
         m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED);
         m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
     } else {
         ui->groupBoxDIEDatabase->hide();
+        ui->groupBoxDIEDatabaseUpdateUrl->hide();
         ui->groupBoxDIEDatabaseExtra->hide();
+        ui->groupBoxDIEDatabaseExtraUpdateUrl->hide();
         ui->groupBoxDIEDatabaseCustom->hide();
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         ui->groupBoxPeidDatabase->show();
+        ui->groupBoxPeidDatabaseUpdateUrl->show();
         m_pOptions->setLineEdit(ui->lineEditPeidDatabase, XOptions::ID_SCAN_PEID_DATABASE_PATH);
+        m_pOptions->setLineEdit(ui->lineEditPeidDatabaseUpdateUrl, XOptions::ID_SCAN_PEID_DATABASE_UPDATE_URL);
     } else {
         ui->groupBoxPeidDatabase->hide();
+        ui->groupBoxPeidDatabaseUpdateUrl->hide();
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
         ui->groupBoxYaraRules->show();
+        ui->groupBoxYaraRulesUpdateUrl->show();
         m_pOptions->setLineEdit(ui->lineEditYaraRules, XOptions::ID_SCAN_YARA_DATABASE_PATH);
+        m_pOptions->setLineEdit(ui->lineEditYaraRulesUpdateUrl, XOptions::ID_SCAN_YARA_DATABASE_UPDATE_URL);
     } else {
         ui->groupBoxYaraRules->hide();
+        ui->groupBoxYaraRulesUpdateUrl->hide();
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE)) {
@@ -226,7 +242,9 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
 
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, "$data/db");
+        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL, "https://github.com/horsicq/Detect-It-Easy/releases/tag/db");
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, "$data/db_extra");
+        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL, "https://github.com/horsicq/Detect-It-Easy/releases/tag/db_extra");
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, "$data/db_custom");
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, true);
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, true);
@@ -234,10 +252,12 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
 
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         pOptions->addID(XOptions::ID_SCAN_PEID_DATABASE_PATH, "$data/peid");
+        pOptions->addID(XOptions::ID_SCAN_PEID_DATABASE_UPDATE_URL, "https://github.com/horsicq/XPEID/releases/tag/peid");
     }
 
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
         pOptions->addID(XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara");
+        pOptions->addID(XOptions::ID_SCAN_YARA_DATABASE_UPDATE_URL, "https://github.com/horsicq/Detect-It-Easy/releases/tag/db");
     }
 }
 

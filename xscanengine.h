@@ -1182,6 +1182,8 @@ public:
     static QString databaseStateToJson(const DATABASE_STATE &databaseState);
     static QString databaseStateToXml(const DATABASE_STATE &databaseState);
     static QString databaseStateToText(const DATABASE_STATE &databaseState);
+    static QString databaseStateToCSV(const DATABASE_STATE &databaseState);
+    static QString databaseStateToTSV(const DATABASE_STATE &databaseState);
 
     QList<SIGNATURE_STATE> getSignatureStates();
     qint32 getNumberOfSignatures(XBinary::FT fileType);

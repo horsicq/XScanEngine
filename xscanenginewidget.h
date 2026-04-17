@@ -83,12 +83,12 @@ private slots:
     // void handleErrorString(const QString &sErrorString);
     // void handleWarningString(const QString &sWarningString);
 
-    void on_pushButtonScanStart_clicked();
-    void on_pushButtonScanDirectory_clicked();
-    void on_pushButtonCollection_clicked();
-    void on_pushButtonLog_clicked();
-    void on_pushButtonExtraInformation_clicked();
-    void on_toolButtonElapsedTime_clicked();
+    void _on_pushButtonScanStart_clicked();
+    void _on_pushButtonScanDirectory_clicked();
+    void _on_pushButtonCollection_clicked();
+    void _on_pushButtonLog_clicked();
+    void _on_pushButtonExtraInformation_clicked();
+    void _on_toolButtonElapsedTime_clicked();
 
 protected:
     virtual void registerShortcuts(bool bState);

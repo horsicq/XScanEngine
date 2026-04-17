@@ -37,6 +37,13 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
 
     // ui->pushButtonDieLog->setEnabled(false);
 
+    connect(ui->pushButtonScanStart, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanStart_clicked()));
+    connect(ui->pushButtonScanDirectory, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanDirectory_clicked()));
+    connect(ui->pushButtonCollection, SIGNAL(clicked()), this, SLOT(_on_pushButtonCollection_clicked()));
+    connect(ui->pushButtonLog, SIGNAL(clicked()), this, SLOT(_on_pushButtonLog_clicked()));
+    connect(ui->pushButtonExtraInformation, SIGNAL(clicked()), this, SLOT(_on_pushButtonExtraInformation_clicked()));
+    connect(ui->toolButtonElapsedTime, SIGNAL(clicked()), this, SLOT(_on_toolButtonElapsedTime_clicked()));
+
     clear();
 
     m_bInitDatabase = false;
@@ -202,12 +209,12 @@ void XScanEngineWidget::registerShortcuts(bool bState)
     Q_UNUSED(bState)
 }
 
-void XScanEngineWidget::on_pushButtonScanStart_clicked()
+void XScanEngineWidget::_on_pushButtonScanStart_clicked()
 {
     process();
 }
 
-void XScanEngineWidget::on_pushButtonScanDirectory_clicked()
+void XScanEngineWidget::_on_pushButtonScanDirectory_clicked()
 {
     QString sDirPath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
 
@@ -221,7 +228,7 @@ void XScanEngineWidget::on_pushButtonScanDirectory_clicked()
     dialogDirectory.exec();
 }
 
-void XScanEngineWidget::on_pushButtonCollection_clicked()
+void XScanEngineWidget::_on_pushButtonCollection_clicked()
 {
     QString sDirPath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
 
@@ -235,17 +242,17 @@ void XScanEngineWidget::on_pushButtonCollection_clicked()
     dialogSort.exec();
 }
 
-void XScanEngineWidget::on_pushButtonLog_clicked()
+void XScanEngineWidget::_on_pushButtonLog_clicked()
 {
 
 }
 
-void XScanEngineWidget::on_pushButtonExtraInformation_clicked()
+void XScanEngineWidget::_on_pushButtonExtraInformation_clicked()
 {
 
 }
 
-void XScanEngineWidget::on_toolButtonElapsedTime_clicked()
+void XScanEngineWidget::_on_toolButtonElapsedTime_clicked()
 {
 
 }

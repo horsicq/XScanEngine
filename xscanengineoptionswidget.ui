@@ -334,6 +334,30 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupBoxDIEDatabaseUpdateUrl">
+         <property name="title">
+          <string>Database update URL</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_dieupdateurl">
+          <property name="leftMargin">
+           <number>2</number>
+          </property>
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="lineEditDIEDatabaseUpdateUrl"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBoxDIEDatabaseExtra">
          <property name="title">
           <string>Extra database</string>
@@ -363,6 +387,30 @@
              <string notr="true">...</string>
             </property>
            </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBoxDIEDatabaseExtraUpdateUrl">
+         <property name="title">
+          <string>Extra database update URL</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_dieextraupdateurl">
+          <property name="leftMargin">
+           <number>2</number>
+          </property>
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="lineEditDIEDatabaseExtraUpdateUrl"/>
           </item>
          </layout>
         </widget>
@@ -433,6 +481,30 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupBoxPeidDatabaseUpdateUrl">
+         <property name="title">
+          <string>PEiD database update URL</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_peidupdateurl">
+          <property name="leftMargin">
+           <number>2</number>
+          </property>
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="lineEditPeidDatabaseUpdateUrl"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBoxYaraRules">
          <property name="title">
           <string notr="true">YARA</string>
@@ -459,6 +531,30 @@
              <string notr="true">...</string>
             </property>
            </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBoxYaraRulesUpdateUrl">
+         <property name="title">
+          <string>YARA database update URL</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_yaraupdateurl">
+          <property name="leftMargin">
+           <number>2</number>
+          </property>
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="lineEditYaraRulesUpdateUrl"/>
           </item>
          </layout>
         </widget>
