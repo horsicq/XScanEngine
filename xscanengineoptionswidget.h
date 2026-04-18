@@ -62,6 +62,7 @@ protected:
 private:
     Ui::XScanEngineOptionsWidget *ui;
     XOptions *m_pOptions;
+    bool m_bIsNetPresent;
 };
 
 #endif  // XSCANENGINEOPTIONSWIDGET_H

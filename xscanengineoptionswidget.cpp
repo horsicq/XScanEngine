@@ -25,6 +25,16 @@
 XScanEngineOptionsWidget::XScanEngineOptionsWidget(QWidget *pParent) : XShortcutsWidget(pParent), ui(new Ui::XScanEngineOptionsWidget)
 {
     ui->setupUi(this);
+    m_bIsNetPresent = false;
+
+#ifdef QT_NETWORK_LIB
+    m_bIsNetPresent = true;
+#endif
+
+    ui->pushButtonUpdateDIEDatabase->hide();
+    ui->pushButtonUpdateDIEDatabaseExtra->hide();
+    ui->pushButtonUpdatePEIDDatabase->hide();
+    ui->pushButtonUpdateYARADatabase->hide();
 }
 
 XScanEngineOptionsWidget::~XScanEngineOptionsWidget()
@@ -104,11 +114,10 @@ void XScanEngineOptionsWidget::reload()
     m_pOptions->setCheckBox(ui->checkBoxHideUnknown, XOptions::ID_SCAN_HIDEUNKNOWN);
     m_pOptions->setCheckBox(ui->checkBoxUseCache, XOptions::ID_SCAN_USECACHE);
     m_pOptions->setCheckBox(ui->checkBoxProfiling, XOptions::ID_SCAN_LOG_PROFILING);
+
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
         ui->groupBoxDIEDatabase->show();
-        ui->groupBoxDIEDatabaseUpdateUrl->show();
         ui->groupBoxDIEDatabaseExtra->show();
-        ui->groupBoxDIEDatabaseExtraUpdateUrl->show();
         ui->groupBoxDIEDatabaseCustom->show();
         m_pOptions->setLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH);
         m_pOptions->setLineEdit(ui->lineEditDIEDatabaseUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL);
@@ -117,32 +126,39 @@ void XScanEngineOptionsWidget::reload()
         m_pOptions->setLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
         m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED);
         m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
+
+        if (m_bIsNetPresent) {
+            ui->pushButtonUpdateDIEDatabase->show();
+            ui->pushButtonUpdateDIEDatabaseExtra->show();
+        }
     } else {
         ui->groupBoxDIEDatabase->hide();
-        ui->groupBoxDIEDatabaseUpdateUrl->hide();
         ui->groupBoxDIEDatabaseExtra->hide();
-        ui->groupBoxDIEDatabaseExtraUpdateUrl->hide();
         ui->groupBoxDIEDatabaseCustom->hide();
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         ui->groupBoxPeidDatabase->show();
-        ui->groupBoxPeidDatabaseUpdateUrl->show();
         m_pOptions->setLineEdit(ui->lineEditPeidDatabase, XOptions::ID_SCAN_PEID_DATABASE_PATH);
         m_pOptions->setLineEdit(ui->lineEditPeidDatabaseUpdateUrl, XOptions::ID_SCAN_PEID_DATABASE_UPDATE_URL);
+
+        if (m_bIsNetPresent) {
+            ui->pushButtonUpdatePEIDDatabase->show();
+        }
     } else {
         ui->groupBoxPeidDatabase->hide();
-        ui->groupBoxPeidDatabaseUpdateUrl->hide();
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
         ui->groupBoxYaraRules->show();
-        ui->groupBoxYaraRulesUpdateUrl->show();
         m_pOptions->setLineEdit(ui->lineEditYaraRules, XOptions::ID_SCAN_YARA_DATABASE_PATH);
         m_pOptions->setLineEdit(ui->lineEditYaraRulesUpdateUrl, XOptions::ID_SCAN_YARA_DATABASE_UPDATE_URL);
+
+        if (m_bIsNetPresent) {
+            ui->pushButtonUpdateYARADatabase->show();
+        }
     } else {
         ui->groupBoxYaraRules->hide();
-        ui->groupBoxYaraRulesUpdateUrl->hide();
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE)) {
