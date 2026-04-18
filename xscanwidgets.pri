@@ -35,9 +35,20 @@ FORMS += \
     include($$PWD/../FormatDialogs/xdialogprocess.pri)
 }
 
+!contains(XCONFIG, xoptionswidget) {
+    XCONFIG += xoptionswidget
+    include($$PWD/../XOptions/xoptionswidget.pri)
+}
+
+!contains(XCONFIG, xcomboboxex) {
+    XCONFIG += xcomboboxex
+    include($$PWD/../Controls/xcomboboxex.pri)
+}
+
 !contains(XCONFIG, dialogtextinfo) {
     XCONFIG += dialogtextinfo
     include($$PWD/../FormatDialogs/dialogtextinfo.pri)
+}
 
 DISTFILES += \
     $$PWD/xscanwidgets.cmake
