@@ -545,6 +545,26 @@ QList<DialogViewColors::RECORD> XScanEngineOptionsWidget::getRecords()
     return listResult;
 }
 
+void XScanEngineOptionsWidget::on_pushButtonUpdateDIEDatabase_clicked()
+{
+    QDesktopServices::openUrl(QUrl(ui->lineEditDIEDatabaseUpdateUrl->text()));
+}
+
+void XScanEngineOptionsWidget::on_pushButtonUpdateDIEDatabaseExtra_clicked()
+{
+    QDesktopServices::openUrl(QUrl(ui->lineEditDIEDatabaseExtraUpdateUrl->text()));
+}
+
+void XScanEngineOptionsWidget::on_pushButtonUpdatePEIDDatabase_clicked()
+{
+    QDesktopServices::openUrl(QUrl(ui->lineEditPeidDatabaseUpdateUrl->text()));
+}
+
+void XScanEngineOptionsWidget::on_pushButtonUpdateYARADatabase_clicked()
+{
+    QDesktopServices::openUrl(QUrl(ui->lineEditYaraRulesUpdateUrl->text()));
+}
+
 void XScanEngineOptionsWidget::on_pushButtonScanColors_clicked()
 {
     DialogViewColors dialogColors(this);
