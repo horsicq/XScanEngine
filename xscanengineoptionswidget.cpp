@@ -506,7 +506,7 @@ QList<DialogViewColors::RECORD> XScanEngineOptionsWidget::getRecords()
         listResult.append(record);
     }
     {
-        DialogViewColors::RECORD record = {"", tr("SFX"), XOptions::ID_SCAN_COLOR_SFX};
+        DialogViewColors::RECORD record = {"", QString("SFX"), XOptions::ID_SCAN_COLOR_SFX};
         listResult.append(record);
     }
     {
