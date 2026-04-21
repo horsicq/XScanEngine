@@ -1260,7 +1260,7 @@ public:
     virtual bool isDatabaseUsing();
     virtual QList<SIGNATURE_RECORD> getSignaturesFromData(const QString &sData, const QString &sSignatureFilePath, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
 
-    bool loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
+    bool loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct);
     bool _loadDatabase(const QString &sDatabasePath, DT databaseType);
 
 private:
