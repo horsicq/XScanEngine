@@ -37,7 +37,7 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
 
     // ui->pushButtonDieLog->setEnabled(false);
 
-    ui->pushButtonCollection->hide();
+    // ui->pushButtonCollection->hide();
 
     connect(ui->pushButtonScanStart, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanStart_clicked()));
     connect(ui->pushButtonScanDirectory, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanDirectory_clicked()));

@@ -28,6 +28,8 @@ XScanSortWidget::XScanSortWidget(QWidget *pParent)
     ui->setupUi(this);
 
     m_pScanEngine = nullptr;
+
+    m_sortOptions.setName("collections");
 }
 
 XScanSortWidget::~XScanSortWidget()

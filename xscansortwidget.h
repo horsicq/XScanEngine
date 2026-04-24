@@ -54,6 +54,7 @@ private slots:
 private:
     Ui::XScanSortWidget *ui;
     XScanEngine *m_pScanEngine;
+    XOptions m_sortOptions;
 };
 
 #endif  // XSCANSORTWIDGET_H
