@@ -29,8 +29,7 @@ namespace Ui {
 class DialogXScanSort;
 }
 
-class DialogXScanSort : public XShortcutsDialog
-{
+class DialogXScanSort : public XShortcutsDialog {
     Q_OBJECT
 
 public:
@@ -52,4 +51,4 @@ private:
     XScanEngine *m_pScanEngine;
 };
 
-#endif // DIALOGXSCANSORT_H
+#endif  // DIALOGXSCANSORT_H

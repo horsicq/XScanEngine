@@ -151,7 +151,7 @@ int XScanEngineConsole::process()
 
     scanOptions.sStruct = parser.value(clStruct);
 
-    //scanOptions.sSpecial = parser.value(clStruct);
+    // scanOptions.sSpecial = parser.value(clStruct);
 
     if (bHasMainDb) {
         scanOptions.sMainDatabasePath = parser.value(clDatabaseMain);
@@ -230,7 +230,6 @@ int XScanEngineConsole::process()
             file.setFileName(listArgs.at(0));
 
             if (file.open(QIODevice::ReadOnly)) {
-
                 if (fileType == XBinary::FT_UNKNOWN) {
                     fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
                 }
@@ -357,11 +356,11 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
                 QVector<XBinary::KeyValueItem> listItems = XFormats::getEntropy(&file, false, -1, pPdStruct);
 
                 QString sResult;
-                if (pScanOptions->bResultAsJSON)           sResult = XFormats::toJSON(listItems);
-                else if (pScanOptions->bResultAsXML)       sResult = XFormats::toXML(listItems);
-                else if (pScanOptions->bResultAsCSV)       sResult = XFormats::toCSV(listItems);
-                else if (pScanOptions->bResultAsTSV)       sResult = XFormats::toTSV(listItems);
-                else                                       sResult = XFormats::toFormattedString(listItems);
+                if (pScanOptions->bResultAsJSON) sResult = XFormats::toJSON(listItems);
+                else if (pScanOptions->bResultAsXML) sResult = XFormats::toXML(listItems);
+                else if (pScanOptions->bResultAsCSV) sResult = XFormats::toCSV(listItems);
+                else if (pScanOptions->bResultAsTSV) sResult = XFormats::toTSV(listItems);
+                else sResult = XFormats::toFormattedString(listItems);
 
                 printf("%s", sResult.toUtf8().data());
                 file.close();
@@ -374,11 +373,11 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
                 QVector<XBinary::KeyValueItem> listItems = XFormats::getFileInfo(&file, false, -1, pPdStruct);
 
                 QString sResult;
-                if (pScanOptions->bResultAsJSON)           sResult = XFormats::toJSON(listItems);
-                else if (pScanOptions->bResultAsXML)       sResult = XFormats::toXML(listItems);
-                else if (pScanOptions->bResultAsCSV)       sResult = XFormats::toCSV(listItems);
-                else if (pScanOptions->bResultAsTSV)       sResult = XFormats::toTSV(listItems);
-                else                                       sResult = XFormats::toFormattedString(listItems);
+                if (pScanOptions->bResultAsJSON) sResult = XFormats::toJSON(listItems);
+                else if (pScanOptions->bResultAsXML) sResult = XFormats::toXML(listItems);
+                else if (pScanOptions->bResultAsCSV) sResult = XFormats::toCSV(listItems);
+                else if (pScanOptions->bResultAsTSV) sResult = XFormats::toTSV(listItems);
+                else sResult = XFormats::toFormattedString(listItems);
 
                 printf("%s", sResult.toUtf8().data());
                 file.close();
@@ -392,7 +391,6 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
                 XBinary::XFHEADER xFHeader = XFormats::getXFHeaderFromStructName(&file, pScanOptions->sStruct, false, -1, pPdStruct);
 
                 if (xFHeader.xfType != XBinary::XFTYPE_UNKNOWN) {
-
                     XBinary *pBinary = XFormats::getClass(xFHeader.fileType, &file);
 
                     if (pBinary) {

@@ -22,8 +22,7 @@
 
 #include "ui_xscansortwidget.h"
 
-XScanSortWidget::XScanSortWidget(QWidget *pParent)
-    : XShortcutsWidget(pParent), ui(new Ui::XScanSortWidget)
+XScanSortWidget::XScanSortWidget(QWidget *pParent) : XShortcutsWidget(pParent), ui(new Ui::XScanSortWidget)
 {
     ui->setupUi(this);
 
@@ -39,7 +38,6 @@ XScanSortWidget::~XScanSortWidget()
 
 void XScanSortWidget::adjustView()
 {
-
 }
 
 void XScanSortWidget::setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions)
@@ -68,5 +66,5 @@ void XScanSortWidget::on_pushButtonOpenDirectory_clicked()
 
 void XScanSortWidget::on_pushButtonScan_clicked()
 {
-    //startScan();
+    // startScan();
 }

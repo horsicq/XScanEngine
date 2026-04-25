@@ -97,17 +97,17 @@ void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
 
         if (m_pScanEngine->isDatabaseUsing()) {
             XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
-            if(type == XScanEngine::SCANENGINETYPE_DIE) {
+            if (type == XScanEngine::SCANENGINETYPE_DIE) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
                 m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
                 m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
             } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
-            }else if (type == XScanEngine::SCANENGINETYPE_YARA) {
+            } else if (type == XScanEngine::SCANENGINETYPE_YARA) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
             }
 
-             m_pScanEngine->loadDatabase(&m_scanOptions, nullptr); // TODO
+            m_pScanEngine->loadDatabase(&m_scanOptions, nullptr);  // TODO
         }
 
         XScanEngineProcess scanEngineProcess(m_pScanEngine);

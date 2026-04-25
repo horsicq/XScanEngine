@@ -22,9 +22,7 @@
 #include "ui_dialogxscansort.h"
 #include "xscanengine.h"
 
-DialogXScanSort::DialogXScanSort(QWidget *parent)
-    : XShortcutsDialog(parent)
-    , ui(new Ui::DialogXScanSort)
+DialogXScanSort::DialogXScanSort(QWidget *parent) : XShortcutsDialog(parent), ui(new Ui::DialogXScanSort)
 {
     ui->setupUi(this);
 
@@ -40,7 +38,6 @@ void DialogXScanSort::setEngine(XScanEngine *pScanEngine)
 
 void DialogXScanSort::adjustView()
 {
-
 }
 
 void DialogXScanSort::setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions)
@@ -61,6 +58,4 @@ void DialogXScanSort::on_pushButtonClose_clicked()
 
 void DialogXScanSort::registerShortcuts(bool bState)
 {
-
 }
-

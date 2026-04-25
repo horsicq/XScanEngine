@@ -32,7 +32,6 @@ class XScanEngineConsole : public QObject {
     Q_OBJECT
 
 public:
-
     explicit XScanEngineConsole(QCoreApplication *pApp, XScanEngine *pScanEngine, const QString &sDescription, QObject *pParent = nullptr);
 
 public slots:
