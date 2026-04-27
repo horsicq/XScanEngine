@@ -66,9 +66,11 @@ public:
     virtual void reloadData(bool bSaveSelection);
 
 private slots:
+    void _setFileType(XBinary::FT fileType);
     void clear();
     void process();
     void onScanFinished(qint64 nMsec);
+    void _on_comboBoxType_currentIndexChanged(int nIndex);
     // void on_pushButtonDieSignatures_clicked();
     // void on_pushButtonDieExtraInformation_clicked();
     // void on_pushButtonDieLog_clicked();

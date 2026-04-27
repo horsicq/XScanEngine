@@ -2719,24 +2719,24 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         delete pScanTimer;
     }
 
-    if (pScanOptions->bFilter) {
+    if (pScanOptions->bCollection) {
         QString sFileName = XBinary::getDeviceFileName(_pDevice);
 
-        if (pScanOptions->sFilterResultDirectory != "") {
-            if (!XBinary::isDirectoryExists(pScanOptions->sFilterResultDirectory)) {
-                XBinary::createDirectory(pScanOptions->sFilterResultDirectory);
+        if (pScanOptions->sCollectionResultDirectory != "") {
+            if (!XBinary::isDirectoryExists(pScanOptions->sCollectionResultDirectory)) {
+                XBinary::createDirectory(pScanOptions->sCollectionResultDirectory);
             }
         }
 
-        if (pScanOptions->bFilterLog) {
-            QString sLogFile = pScanOptions->sFilterResultDirectory + QDir::separator() + "info.log";
+        if (pScanOptions->bCollectionLog) {
+            QString sLogFile = pScanOptions->sCollectionResultDirectory + QDir::separator() + "info.log";
             QString sInfo = createResultString(pScanOptions, *pScanResult);
             XBinary::appendToFile(sLogFile, sFileName.toUtf8());
             XBinary::appendToFile(sLogFile, sInfo.toUtf8());
         }
 
         if (pScanResult->listErrors.count()) {
-            QString sLogFile = pScanOptions->sFilterResultDirectory + QDir::separator() + "error.log";
+            QString sLogFile = pScanOptions->sCollectionResultDirectory + QDir::separator() + "error.log";
             QString sErrors = getErrorsString(pScanResult);
             XBinary::appendToFile(sLogFile, sFileName.toUtf8());
             XBinary::appendToFile(sLogFile, sErrors.toUtf8());
@@ -2745,9 +2745,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         qint32 nNumberOfDetects = pScanResult->listRecords.count();
 
         for (int i = 0; i < nNumberOfDetects; i++) {
-            if (pScanOptions->bFilterCopyFiles) {
+            if (pScanOptions->bCollectionCopyFiles) {
                 QString sPath =
-                    pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCopyFormat);
+                    pScanOptions->sCollectionResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sCollectionCopyFormat);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
                 if (sDirPath != "") {
@@ -2767,9 +2767,9 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                 }
             }
 
-            if (pScanOptions->bFilterCreateCatalog) {
+            if (pScanOptions->bCollectionCreateCatalog) {
                 QString sPath =
-                    pScanOptions->sFilterResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sFilterCatalogFormat);
+                    pScanOptions->sCollectionResultDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sCollectionCatalogFormat);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
                 if (sDirPath != "") {
@@ -2836,6 +2836,21 @@ QString XScanEngine::convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruc
             sResult = sResult.replace("{original_extension}", XBinary::convertFileNameSymbols(sExtension));
         }
     }
+
+    return sResult;
+}
+
+QString XScanEngine::getAvailablePathVariables()
+{
+    QString sResult;
+
+    sResult += "{ft} - " + tr("File type") + "\n";
+    sResult += "{type} - " + tr("Type") + "\n";
+    sResult += "{name} - " + tr("Name") + "\n";
+    sResult += "{version} - " + tr("Version") + "\n";
+    sResult += "{info} - " + tr("Info") + "\n";
+    sResult += "{original_basename} - " + tr("Original file base name") + "\n";
+    sResult += "{original_extension} - " + tr("Original file extension") + "\n";
 
     return sResult;
 }
@@ -3313,11 +3328,20 @@ QSet<XBinary::FT> XScanEngine::getFileTypesSupported()
     stResult.insert(XBinary::FT_RAR);
     stResult.insert(XBinary::FT_ISO9660);
     stResult.insert(XBinary::FT_MSDOS);
-    stResult.insert(XBinary::FT_PE);
-    stResult.insert(XBinary::FT_ELF);
-    stResult.insert(XBinary::FT_MACHO);
+    stResult.insert(XBinary::FT_NE);
+    stResult.insert(XBinary::FT_LE);
+    stResult.insert(XBinary::FT_LX);
+    stResult.insert(XBinary::FT_PE32);
+    stResult.insert(XBinary::FT_PE64);
+    stResult.insert(XBinary::FT_ELF32);
+    stResult.insert(XBinary::FT_ELF64);
+    stResult.insert(XBinary::FT_MACHO32);
+    stResult.insert(XBinary::FT_MACHO64);
     stResult.insert(XBinary::FT_MACHOFAT);
+    stResult.insert(XBinary::FT_AMIGAHUNK);
+    stResult.insert(XBinary::FT_ATARIST);
     stResult.insert(XBinary::FT_DOS16M);
+    stResult.insert(XBinary::FT_DOS4G);
     stResult.insert(XBinary::FT_DEX);
     stResult.insert(XBinary::FT_JAVACLASS);
     stResult.insert(XBinary::FT_PYC);
@@ -3347,61 +3371,9 @@ QSet<XScanEngine::RECORD_TYPE> XScanEngine::getTypesSupported()
 {
     QSet<RECORD_TYPE> stResult;
 
-    stResult.insert(RECORD_TYPE_APKOBFUSCATOR);
-    stResult.insert(RECORD_TYPE_APKTOOL);
-    stResult.insert(RECORD_TYPE_CERTIFICATE);
-    stResult.insert(RECORD_TYPE_COMPILER);
-    stResult.insert(RECORD_TYPE_COMPRESSOR);
-    stResult.insert(RECORD_TYPE_CONVERTER);
-    stResult.insert(RECORD_TYPE_CRYPTER);
-    stResult.insert(RECORD_TYPE_DATABASE);
-    stResult.insert(RECORD_TYPE_DEBUGDATA);
-    stResult.insert(RECORD_TYPE_DOCUMENT);
-    stResult.insert(RECORD_TYPE_DONGLEPROTECTION);
-    stResult.insert(RECORD_TYPE_DOSEXTENDER);
-    stResult.insert(RECORD_TYPE_FORMAT);
-    stResult.insert(RECORD_TYPE_GENERIC);
-    stResult.insert(RECORD_TYPE_IMAGE);
-    stResult.insert(RECORD_TYPE_INSTALLER);
-    stResult.insert(RECORD_TYPE_INSTALLERDATA);
-    stResult.insert(RECORD_TYPE_JAROBFUSCATOR);
-    stResult.insert(RECORD_TYPE_JOINER);
-    stResult.insert(RECORD_TYPE_LANGUAGE);
-    stResult.insert(RECORD_TYPE_LIBRARY);
-    stResult.insert(RECORD_TYPE_LINKER);
-    stResult.insert(RECORD_TYPE_LOADER);
-    stResult.insert(RECORD_TYPE_NETCOMPRESSOR);
-    stResult.insert(RECORD_TYPE_NETOBFUSCATOR);
-    stResult.insert(RECORD_TYPE_OBFUSCATOR);
-    stResult.insert(RECORD_TYPE_OPERATIONSYSTEM);
-    stResult.insert(RECORD_TYPE_PACKER);
-    stResult.insert(RECORD_TYPE_PETOOL);
-    stResult.insert(RECORD_TYPE_PROTECTION);
-    stResult.insert(RECORD_TYPE_PROTECTOR);
-    stResult.insert(RECORD_TYPE_PROTECTORDATA);
-    stResult.insert(RECORD_TYPE_SFX);
-    stResult.insert(RECORD_TYPE_SFXDATA);
-    stResult.insert(RECORD_TYPE_SIGNTOOL);
-    stResult.insert(RECORD_TYPE_SOURCECODE);
-    stResult.insert(RECORD_TYPE_STUB);
-    stResult.insert(RECORD_TYPE_TOOL);
-    stResult.insert(RECORD_TYPE_VIRTUALMACHINE);
-    stResult.insert(RECORD_TYPE_VIRUS);
-    stResult.insert(RECORD_TYPE_ARCHIVE);
-    stResult.insert(RECORD_TYPE_CRYPTOR);
-    stResult.insert(RECORD_TYPE_OVERLAY);
-    stResult.insert(RECORD_TYPE_PLATFORM);
-    stResult.insert(RECORD_TYPE_PLAYER);
-    stResult.insert(RECORD_TYPE_TROJAN);
-    stResult.insert(RECORD_TYPE_MALWARE);
-    stResult.insert(RECORD_TYPE_PACKAGE);
-    stResult.insert(RECORD_TYPE_LICENSING);
-    stResult.insert(RECORD_TYPE_ROM);
-    stResult.insert(RECORD_TYPE_CORRUPTEDDATA);
-    stResult.insert(RECORD_TYPE_PERSONALDATA);
-    stResult.insert(RECORD_TYPE_AUTHOR);
-    stResult.insert(RECORD_TYPE_CREATOR);
-    stResult.insert(RECORD_TYPE_PRODUCER);
+    for (qint32 i = RECORD_TYPE_UNKNOWN + 1; i < __RECORD_TYPE_SIZE; i++) {
+        stResult.insert(static_cast<RECORD_TYPE>(i));
+    }
 
     return stResult;
 }
@@ -3482,6 +3454,27 @@ void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessa
 QString XScanEngine::recordTypeIdToString(RECORD_TYPE _type)
 {
     return XBinary::XCONVERT_idToTransString((quint32)_type, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
+}
+
+QString XScanEngine::recordTypesToString(const QSet<RECORD_TYPE> &stTypes)
+{
+    QString sResult;
+
+    qint32 nNumberOfRecords = sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT);
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        RECORD_TYPE recordType = (RECORD_TYPE)_TABLE_XScanEngine_RECORD_TYPE[i].nID;
+
+        if (stTypes.contains(recordType)) {
+            if (!sResult.isEmpty()) {
+                sResult += QString("|");
+            }
+
+            sResult += recordTypeIdToString(recordType);
+        }
+    }
+
+    return sResult;
 }
 
 QString XScanEngine::scanEngineTypeIdToString(qint32 nId)

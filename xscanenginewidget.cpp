@@ -26,6 +26,22 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     ui->setupUi(this);
 
     m_pScanEngine = nullptr;
+    m_fileType = XBinary::FT_UNKNOWN;
+
+    ui->comboBoxType->setToolTip(tr("Type"));
+    ui->lineEditMode->setToolTip(tr("Mode"));
+    ui->lineEditEndianness->setToolTip(tr("Endianness"));
+    ui->lineEditArch->setToolTip(tr("Architecture"));
+    ui->treeViewResult->setToolTip(tr("Result"));
+    ui->comboBoxFlags->setToolTip(tr("Flags"));
+    ui->comboBoxDatabases->setToolTip(tr("Database"));
+    ui->pushButtonScanStart->setToolTip(tr("Scan"));
+    ui->pushButtonScanDirectory->setToolTip(tr("Scan directory"));
+    ui->pushButtonCollection->setToolTip(tr("Collection"));
+    ui->pushButtonLog->setToolTip(tr("Log"));
+    ui->pushButtonSignatures->setToolTip(tr("Signatures"));
+    ui->pushButtonExtraInformation->setToolTip(tr("Extra information"));
+    ui->toolButtonElapsedTime->setToolTip(tr("Elapsed time"));
 
     // m_pModel = nullptr;
     // m_bProcess = false;
@@ -37,7 +53,9 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
 
     // ui->pushButtonDieLog->setEnabled(false);
 
-    // ui->pushButtonCollection->hide();
+#ifndef QT_DEBUG
+    ui->pushButtonCollection->hide();
+#endif
 
     connect(ui->pushButtonScanStart, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanStart_clicked()));
     connect(ui->pushButtonScanDirectory, SIGNAL(clicked()), this, SLOT(_on_pushButtonScanDirectory_clicked()));
@@ -45,6 +63,7 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     connect(ui->pushButtonLog, SIGNAL(clicked()), this, SLOT(_on_pushButtonLog_clicked()));
     connect(ui->pushButtonExtraInformation, SIGNAL(clicked()), this, SLOT(_on_pushButtonExtraInformation_clicked()));
     connect(ui->toolButtonElapsedTime, SIGNAL(clicked()), this, SLOT(_on_toolButtonElapsedTime_clicked()));
+    connect(ui->comboBoxType, SIGNAL(currentIndexChanged(int)), this, SLOT(_on_comboBoxType_currentIndexChanged(int)));
 
     clear();
 
@@ -88,8 +107,9 @@ void XScanEngineWidget::setData(const QString &sFileName, bool bScan, XBinary::F
     clear();
 
     this->m_sFileName = sFileName;
-    this->m_fileType = fileType;
     m_scanType = ST_FILE;
+
+    _setFileType(XFormats::setFileTypeComboBox(fileType, m_sFileName, ui->comboBoxType));
 
     if (bScan) {
         process();
@@ -117,6 +137,26 @@ void XScanEngineWidget::reloadData(bool bSaveSelection)
 {
     Q_UNUSED(bSaveSelection)
     process();
+}
+
+void XScanEngineWidget::_setFileType(XBinary::FT fileType)
+{
+    if (m_fileType !=fileType) {
+        m_fileType = fileType;
+
+        QFile file;
+        file.setFileName(m_sFileName);
+
+        if (file.open(QIODevice::ReadOnly)) {
+            XBinary::FILEFORMATINFO ffi = XFormats::getFileFormatInfo(m_fileType, &file);
+
+            ui->lineEditMode->setText(XBinary::modeIdToString(ffi.mode));
+            ui->lineEditEndianness->setText(XBinary::endianToString(ffi.endian));
+            ui->lineEditArch->setText(ffi.sArch);
+
+            file.close();
+        }
+    }
 }
 
 void XScanEngineWidget::clear()
@@ -147,7 +187,7 @@ void XScanEngineWidget::process()
     XScanEngine::setScanFlags(&m_scanOptions, nFlags);
     XScanEngine::setScanFlagsToGlobalOptions(getGlobalOptions(), nFlags);
 
-    if (type == XScanEngine::SCANENGINETYPE_DIE) {
+    if(type == XScanEngine::SCANENGINETYPE_DIE) {
         quint64 nDatabases = ui->comboBoxDatabases->getValue().toULongLong();
         XScanEngine::setDatabases(&m_scanOptions, nDatabases);
         XScanEngine::setDatabasesToGlobalOptions(getGlobalOptions(), nDatabases);
@@ -160,13 +200,13 @@ void XScanEngineWidget::process()
             emit scanStarted();
 
             if (m_pScanEngine->isDatabaseUsing()) {
-                if (type == XScanEngine::SCANENGINETYPE_DIE) {
+                if(type == XScanEngine::SCANENGINETYPE_DIE) {
                     m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
                     m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
                     m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
                 } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
                     m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
-                } else if (type == XScanEngine::SCANENGINETYPE_YARA) {
+                }else if (type == XScanEngine::SCANENGINETYPE_YARA) {
                     m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
                 }
 
@@ -184,6 +224,11 @@ void XScanEngineWidget::process()
             scanEngineProcess.setData(m_sFileName, &m_scanOptions, &m_scanResult, ds.getPdStruct());
             ds.start();
             ds.exec();
+
+            if (m_scanResult.ftInit == XBinary::FT_COM) {
+                XFormats::setComboBoxCurrent(ui->comboBoxType, m_scanResult.ftInit);
+                emit currentFileType(m_scanResult.ftInit);
+            }
 
             emit scanFinished();
         }
@@ -219,6 +264,15 @@ void XScanEngineWidget::onScanFinished(qint64 nMsec)
     ui->treeViewResult->setColumnWidth(COLUMN_INFO, 20);
 
     ui->treeViewResult->header()->setVisible(false);
+}
+
+void XScanEngineWidget::_on_comboBoxType_currentIndexChanged(int nIndex)
+{
+    Q_UNUSED(nIndex)
+
+    _setFileType((XBinary::FT)(ui->comboBoxType->currentData().toInt()));
+
+    process();
 }
 
 void XScanEngineWidget::registerShortcuts(bool bState)
@@ -288,4 +342,6 @@ void XScanEngineWidget::_on_pushButtonExtraInformation_clicked()
 
 void XScanEngineWidget::_on_toolButtonElapsedTime_clicked()
 {
+
 }
+

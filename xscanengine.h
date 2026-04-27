@@ -156,6 +156,7 @@ public:
         RECORD_TYPE_PRODUCER,
         RECORD_TYPE_DATA,
         // TODO more
+        __RECORD_TYPE_SIZE
     };
 
     enum SCANENGINETYPE {
@@ -168,6 +169,7 @@ public:
     };
 
     static QString recordTypeIdToString(RECORD_TYPE _type);
+    static QString recordTypesToString(const QSet<RECORD_TYPE> &stTypes);
     static QString heurTypeIdToString(qint32 nId);
     static QString scanEngineTypeIdToString(qint32 nId);
     static RECORD_TYPE recordTypeStringToId(const QString &sType);
@@ -1115,18 +1117,18 @@ public:
         bool bUseCustomDatabase;
         SCAN_ENGINE_CALLBACK scanEngineCallback;
         void *pUserData;
-        // Filter
-        bool bFilter;
-        bool bFilterAllFileTypes;
-        QSet<XBinary::FT> stFilterFileTypes;
-        bool bFilterAllTypes;
-        QSet<RECORD_TYPE> stFilterTypes;
-        QString sFilterResultDirectory;
-        bool bFilterCopyFiles;
-        bool bFilterCreateCatalog;
-        bool bFilterLog;
-        QString sFilterCopyFormat;
-        QString sFilterCatalogFormat;
+        // Collection
+        bool bCollection;
+        bool bCollectionAllFileTypes;
+        QSet<XBinary::FT> stCollectionFileTypes;
+        bool bCollectionAllTypes;
+        QSet<RECORD_TYPE> stCollectionTypes;
+        QString sCollectionResultDirectory;
+        bool bCollectionCopyFiles;
+        bool bCollectionCreateCatalog;
+        bool bCollectionLog;
+        QString sCollectionCopyFormat;
+        QString sCollectionCatalogFormat;
         QString sScanID;  // Optional
     };
 
@@ -1224,6 +1226,7 @@ public:
                      XBinary::PDSTRUCT *pPdStruct);
 
     QString convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruct, const QString &sString);
+    static QString getAvailablePathVariables();
 
     static QMap<quint64, QString> getScanFlags();
     static quint64 getScanFlags(SCAN_OPTIONS *pScanOptions);
@@ -1240,10 +1243,10 @@ public:
     static quint64 getDatabasesFromGlobalOptions(XOptions *pGlobalOptions);
     static void setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases);
 
-    static QMap<quint64, QString> getFileTypes(const QSet<XBinary::FT> &stFileTypes);
+    static QMap<quint64, QString> getFileTypes(const QSet<XBinary::FT> &stFileTypes); // TODO Check -> remove
     virtual QSet<XBinary::FT> getFileTypesSupported();
 
-    static QMap<quint64, QString> getTypes(const QSet<RECORD_TYPE> &stTypes);
+    static QMap<quint64, QString> getTypes(const QSet<RECORD_TYPE> &stTypes); // TODO Check -> remove
     virtual QSet<RECORD_TYPE> getTypesSupported();
 
     static bool isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type = RECORD_TYPE_UNKNOWN,

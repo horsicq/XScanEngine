@@ -48,7 +48,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QComboBox" name="comboBoxFlags">
+      <widget class="XComboBoxEx" name="comboBoxFlags">
        <property name="minimumSize">
         <size>
          <width>200</width>
@@ -98,7 +98,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="comboBoxFileType">
+       <widget class="XComboBoxEx" name="comboBoxFileType">
         <property name="minimumSize">
          <size>
           <width>200</width>
@@ -115,7 +115,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="comboBoxType">
+       <widget class="XComboBoxEx" name="comboBoxType">
         <property name="minimumSize">
          <size>
           <width>200</width>
@@ -187,7 +187,7 @@
      <property name="checked">
       <bool>false</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
       <property name="leftMargin">
        <number>0</number>
       </property>
@@ -203,6 +203,13 @@
       <item>
        <widget class="QLineEdit" name="lineEditCatalogFormat"/>
       </item>
+      <item>
+       <widget class="QToolButton" name="toolButtonCatalogInfo">
+        <property name="text">
+         <string notr="true">?</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -217,7 +224,7 @@
      <property name="checked">
       <bool>false</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
+     <layout class="QHBoxLayout" name="horizontalLayout_7">
       <property name="leftMargin">
        <number>0</number>
       </property>
@@ -232,6 +239,13 @@
       </property>
       <item>
        <widget class="QLineEdit" name="lineEditCopyFormat"/>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButtonCopyInfo">
+        <property name="text">
+         <string notr="true">?</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -275,6 +289,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>XComboBoxEx</class>
+   <extends>QComboBox</extends>
+   <header>xcomboboxex.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
