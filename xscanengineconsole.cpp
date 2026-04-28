@@ -268,6 +268,67 @@ int XScanEngineConsole::process()
         bProcessed = true;
     }
 
+    if (scanOptions.sStruct != "" && listArgs.count() > 0) {
+        QString sFileName = listArgs.at(0);
+        QFile file;
+        file.setFileName(sFileName);
+
+        if (file.open(QIODevice::ReadOnly)) {
+            XBinary::XFHEADER xFHeader = XFormats::getXFHeaderFromStructName(&file, scanOptions.sStruct, false, -1, &pdStruct);
+
+            if (xFHeader.xfType != XBinary::XFTYPE_UNKNOWN) {
+                XBinary *pBinary = XFormats::getClass(xFHeader.fileType, &file);
+
+                if (pBinary) {
+                    QString sStructInfo;
+
+                    if (xFHeader.xfType == XBinary::XFTYPE_HEADER) {
+                        XFModel_header modelHeader(nullptr);
+                        modelHeader.setData(pBinary, xFHeader);
+
+                        if (scanOptions.bResultAsJSON) {
+                            sStructInfo = modelHeader.toJSON();
+                        } else if (scanOptions.bResultAsXML) {
+                            sStructInfo = modelHeader.toXML();
+                        } else if (scanOptions.bResultAsCSV) {
+                            sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_CSV);
+                        } else if (scanOptions.bResultAsTSV) {
+                            sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_TSV);
+                        } else {
+                            XOptions::printModel(&modelHeader);
+                        }
+	                    } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
+	                        XFModel_table modelTable;
+	                        modelTable.setData(pBinary, xFHeader);
+	                        modelTable.setShowPresentation(true);
+
+	                        if (scanOptions.bResultAsJSON) {
+	                            sStructInfo = modelTable.toJSON();
+                        } else if (scanOptions.bResultAsXML) {
+                            sStructInfo = modelTable.toXML();
+                        } else if (scanOptions.bResultAsCSV) {
+                            sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_CSV);
+                        } else if (scanOptions.bResultAsTSV) {
+                            sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_TSV);
+                        } else {
+                            XOptions::printModel(&modelTable);
+                        }
+                    }
+
+                    if (sStructInfo != "") {
+                        printf("%s", sStructInfo.toUtf8().data());
+                    }
+
+                    delete pBinary;
+                }
+            }
+
+            file.close();
+        }
+
+        bProcessed = true;
+    }
+
     // if (parser.isSet(clTest)) {
     //     if (!bIsDbUsed) {
     //         bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
@@ -294,7 +355,7 @@ int XScanEngineConsole::process()
     //     }
     // }
 
-    if (listArgs.count()) {
+    if (!bProcessed && listArgs.count()) {
         if (!bIsDbUsed) {
             bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
@@ -411,12 +472,13 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
                             } else {
                                 XOptions::printModel(&modelHeader);
                             }
-                        } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
-                            XFModel_table modelTable;
-                            modelTable.setData(pBinary, xFHeader);
+	                        } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
+	                            XFModel_table modelTable;
+	                            modelTable.setData(pBinary, xFHeader);
+	                            modelTable.setShowPresentation(true);
 
-                            if (pScanOptions->bResultAsJSON) {
-                                sStructInfo = modelTable.toJSON();
+	                            if (pScanOptions->bResultAsJSON) {
+	                                sStructInfo = modelTable.toJSON();
                             } else if (pScanOptions->bResultAsXML) {
                                 sStructInfo = modelTable.toXML();
                             } else if (pScanOptions->bResultAsCSV) {
