@@ -31,6 +31,8 @@
 #include "scanitemmodel.h"
 #include "xshortcutswidget.h"
 #include "xcomboboxex.h"
+#include "xdialogprocess.h"
+#include "xscanengineprocess.h"
 
 namespace Ui {
 class XScanSortWidget;
@@ -55,6 +57,7 @@ private slots:
     void on_checkBoxAllTypes_stateChanged(int nState);
     void on_toolButtonCatalogInfo_clicked();
     void on_toolButtonCopyInfo_clicked();
+    void on_pushButtonResult_clicked();
 
 private:
     Ui::XScanSortWidget *ui;

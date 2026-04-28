@@ -56,6 +56,10 @@ void DialogXScanEngineDirectory::setGlobal(XShortcuts *pShortcuts, XOptions *pXO
     if (pXOptions) {
         QString sDirPath = pXOptions->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
         ui->lineEditDirectoryName->setText(QDir().toNativeSeparators(sDirPath));
+
+        if (pXOptions->isIDPresent(XOptions::ID_SCAN_SUBDIRECTORIES)) {
+            ui->checkBoxScanSubdirectories->setChecked(pXOptions->getValue(XOptions::ID_SCAN_SUBDIRECTORIES).toBool());
+        }
     }
 
     XShortcutsDialog::setGlobal(pShortcuts, pXOptions);

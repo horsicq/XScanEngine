@@ -191,6 +191,7 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
     pOptions->addID(XOptions::ID_SCAN_HIDEUNKNOWN, false);
     pOptions->addID(XOptions::ID_SCAN_USECACHE, false);
     pOptions->addID(XOptions::ID_SCAN_DIRECTORY_PATH, "");
+    pOptions->addID(XOptions::ID_SCAN_SUBDIRECTORIES, true);
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     pOptions->addID(XOptions::ID_SCAN_COLOR_INSTALLER, QString("%1|%2").arg(QColor(Qt::darkGreen).name(), ""));

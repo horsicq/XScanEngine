@@ -58,6 +58,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="checkBoxScanSubdirectories">
+       <property name="text">
+        <string>Subdirectories</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBoxScanLog">
+       <property name="text">
+        <string>Log</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

@@ -49,22 +49,22 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QCheckBox" name="checkBoxScanSubdirectories">
-            <property name="text">
-             <string>Subdirectories</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="XComboBoxEx" name="comboBoxFlags">
             <property name="minimumSize">
              <size>
               <width>150</width>
               <height>0</height>
              </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxScanSubdirectories">
+            <property name="text">
+             <string>Subdirectories</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
             </property>
            </widget>
           </item>

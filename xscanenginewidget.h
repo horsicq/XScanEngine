@@ -92,6 +92,7 @@ private slots:
     void _on_pushButtonLog_clicked();
     void _on_pushButtonExtraInformation_clicked();
     void _on_toolButtonElapsedTime_clicked();
+    void on_treeViewResult_clicked(const QModelIndex &index);
 
 protected:
     virtual void registerShortcuts(bool bState);

@@ -345,3 +345,8 @@ void XScanEngineWidget::_on_toolButtonElapsedTime_clicked()
 
 }
 
+void XScanEngineWidget::on_treeViewResult_clicked(const QModelIndex &index)
+{
+
+}
+

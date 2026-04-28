@@ -139,9 +139,16 @@ void XScanEngineProcess::process()
 
                     emit scanFileStarted(sFileName);
 
-                    XScanEngine::SCAN_RESULT _scanResult = m_pScanEngine->scanFile(sFileName, m_pScanOptions, pPdStruct);
+                    if (sFileName != "") {
+                        QFile file;
+                        file.setFileName(sFileName);
 
-                    emit scanResult(_scanResult);
+                        if (file.open(QIODevice::ReadOnly)) {
+                            _scanDevice(&file, m_pScanOptions, pPdStruct);
+
+                            file.close();
+                        }
+                    }
                 }
             }
         }
@@ -150,4 +157,90 @@ void XScanEngineProcess::process()
     }
 
     emit scanFinished(elapsedTimer.elapsed());
+}
+
+void XScanEngineProcess::_scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    XScanEngine::SCAN_RESULT _scanResult = m_pScanEngine->scanDevice(pDevice, m_pScanOptions, pPdStruct);
+    emit scanResult(_scanResult);
+
+    if (m_pScanOptions->bCollection) {
+        QSet<XBinary::FT> stFT = XFormats::getFileTypes(pDevice, true, pPdStruct);
+
+        if (m_pScanOptions->bIsArchivesScan) {
+            bool bScanableArchive = false;
+
+            if (stFT.contains(XBinary::FT_ZIP) || stFT.contains(XBinary::FT_7Z) || stFT.contains(XBinary::FT_RAR) || stFT.contains(XBinary::FT_CAB) ||
+                stFT.contains(XBinary::FT_ISO9660)) {
+                bScanableArchive = true;
+            }
+
+            if (bScanableArchive) {
+                XBinary::FT _fileType = XBinary::_getPrefFileType(&stFT);
+
+                XBinary *pArchive = XFormats::getClass(_fileType, pDevice, false, -1);
+
+                XBinary::UNPACK_STATE state = {};
+                QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;
+
+                QString sError;
+
+                if (pArchive->initUnpack(&state, mapProperties, pPdStruct)) {
+                    qint32 nFreeIndex = XBinary::getFreeIndex(pPdStruct);
+                    XBinary::setPdStructInit(pPdStruct, nFreeIndex, state.nNumberOfRecords);
+
+                    qint32 nCurrentIndex = 0;
+                    for (qint32 i = 0; (i < 100000) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+                        XBinary::ARCHIVERECORD archiveRecord = pArchive->infoCurrent(&state, pPdStruct);
+
+                        if (!(archiveRecord.mapProperties.value(XBinary::FPART_PROP_ISFOLDER, false).toBool())) {
+                            QIODevice *pArchiveRecord =
+                                XBinary::createFileBuffer(archiveRecord.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong(), pPdStruct);
+
+                            if (pArchiveRecord) {
+                                if (pArchive->unpackCurrent(&state, pArchiveRecord, pPdStruct)) {
+                                    QString sOriginalName = archiveRecord.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
+
+                                    XBinary::setPdStructStatus(pPdStruct, nFreeIndex, sOriginalName);
+
+                                    pArchiveRecord->setProperty("FileName", XBinary::getDeviceDirectory(pDevice) + QDir::separator() +
+                                                                                XBinary::getDeviceFileBaseName(pDevice) + "_ARCHIVE_RECORD_" + sOriginalName);
+
+                                    _scanDevice(pArchiveRecord, pScanOptions, pPdStruct);
+
+                                    nCurrentIndex++;
+                                } else {
+                                    sError = "Cannot unpack the current record";
+                                }
+                            }
+
+                            XBinary::freeFileBuffer(&pArchiveRecord);
+                        }
+
+                        if (!pArchive->moveToNext(&state, pPdStruct)) {
+                            break;
+                        }
+
+                        XBinary::setPdStructCurrentIncrement(pPdStruct, nFreeIndex);
+                    }
+
+                    pArchive->finishUnpack(&state, pPdStruct);
+
+                    XBinary::setPdStructFinished(pPdStruct, nFreeIndex);
+                } else {
+                    sError = "Cannot open archive";
+                }
+
+                if (pArchive) {
+                    delete pArchive;
+                }
+
+                if (sError != "") {
+                    QString sLogFile = pScanOptions->sCollectionResultDirectory + QDir::separator() + "error.log";
+                    XBinary::appendToFile(sLogFile, XBinary::getDeviceFileName(pDevice));
+                    XBinary::appendToFile(sLogFile, sError.toUtf8());
+                }
+            }
+        }
+    }
 }

@@ -45,6 +45,9 @@ public:
 
     virtual void process() override;
 
+private:
+    void _scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct);
+
 signals:
     void scanFileStarted(const QString &sFileName);
     void scanResult(const XScanEngine::SCAN_RESULT &scanResult);
