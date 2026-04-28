@@ -201,7 +201,7 @@ int XScanEngineConsole::process()
     bool bDbLoaded = false;
     bool bProcessed = false;
 
-    if (parser.isSet(clShowDatabase)) {
+    if (bHasMainDb && parser.isSet(clShowDatabase)) {
         if (!bIsDbUsed) {
             bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
