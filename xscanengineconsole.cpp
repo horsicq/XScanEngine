@@ -82,6 +82,7 @@ int XScanEngineConsole::process()
     // QCommandLineOption clAddTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ADDTEST);
 
     QCommandLineOption clFileType = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FILETYPE);
+    QCommandLineOption clNoColor = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_NOCOLOR);
 
     parser.addOption(clRecursiveScan);
     parser.addOption(clDeepScan);
@@ -113,6 +114,7 @@ int XScanEngineConsole::process()
     parser.addOption(clArchivesScan);
     parser.addOption(clFileType);
     parser.addOption(clShowStructs);
+    parser.addOption(clNoColor);
     // parser.addOption(clTest);
     // parser.addOption(clAddTest);
 
@@ -148,6 +150,10 @@ int XScanEngineConsole::process()
     scanOptions.bResultAsPlainText = parser.isSet(clResultAsPlainText);
     scanOptions.bIsSort = true;
     scanOptions.fileType = parser.isSet(clFileType) ? XBinary::ftStringToFileTypeId(parser.value(clFileType)) : XBinary::FT_UNKNOWN;
+
+    if (parser.isSet(clNoColor)) {
+        XOptions::setNoColor(true);
+    }
 
     scanOptions.sStruct = parser.value(clStruct);
 
