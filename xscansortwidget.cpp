@@ -84,6 +84,7 @@ XScanSortWidget::XScanSortWidget(QWidget *pParent)
     ui->setupUi(this);
 
     m_pScanEngine = nullptr;
+    m_engineType = XScanEngine::SCANENGINETYPE_UNKNOWN;
     m_scanOptions = {};
 }
 
@@ -104,17 +105,15 @@ XScanSortWidget::~XScanSortWidget()
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_LOG, ui->checkBoxScanLog->isChecked());
 
     if (m_pScanEngine) {
-        XScanEngine::SCANENGINETYPE engineType = m_pScanEngine->getEngineType();
-
-        if (engineType == XScanEngine::SCANENGINETYPE_DIE) {
+        if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, ui->lineEditDatabaseMain->text());
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, ui->lineEditDatabaseExtra->text());
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, ui->lineEditDatabaseCustom->text());
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, ui->checkBoxDatabaseExtra->isChecked());
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, ui->checkBoxDatabaseCustom->isChecked());
-        } else if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
+        } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
             m_sortOptions.setValue(XOptions::ID_SCAN_PEID_DATABASE_PATH, ui->lineEditDatabaseMain->text());
-        } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
+        } else if (m_engineType == XScanEngine::SCANENGINETYPE_YARA) {
             m_sortOptions.setValue(XOptions::ID_SCAN_YARA_DATABASE_PATH, ui->lineEditDatabaseMain->text());
         }
     }
@@ -171,22 +170,22 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_CATALOG_ENABLED, false);
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_CATALOG_FORMAT, "{ft}.{type}.{name}.{version}.{info}.txt");
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_COPY_ENABLED, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_COPY_FORMAT, "{ft}/{type}/{md5}_{name}.{version}.{info}");
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_COPY_FORMAT, "{ft}/{type}/{name}({version})[{info}]/{md5}_{original_filename}");
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_RESULT_PATH, "collection");
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_LOG, false);
 
     XOptions *pGlobalOptions = getGlobalOptions();
-    XScanEngine::SCANENGINETYPE engineType = pScanEngine->getEngineType();
+    m_engineType = pScanEngine->getEngineType();
 
-    if (engineType == XScanEngine::SCANENGINETYPE_DIE) {
+    if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, "$data/db"));
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, "$data/db_extra"));
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, "$data/db_custom"));
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, getOptionBool(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, true));
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, getOptionBool(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, true));
-    } else if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
+    } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
         m_sortOptions.addID(XOptions::ID_SCAN_PEID_DATABASE_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_PEID_DATABASE_PATH, "$data/peid"));
-    } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
+    } else if (m_engineType == XScanEngine::SCANENGINETYPE_YARA) {
         m_sortOptions.addID(XOptions::ID_SCAN_YARA_DATABASE_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara"));
     }
 
@@ -260,7 +259,7 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     ui->lineEditResult->setText(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_RESULT_PATH).toString());
     ui->checkBoxScanLog->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_LOG).toBool());
 
-    if (engineType == XScanEngine::SCANENGINETYPE_DIE) {
+    if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
         ui->groupBoxDatabases->show();
         setDatabaseControlsVisible(ui, true, true, true);
 
@@ -270,12 +269,12 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
         ui->checkBoxDatabaseMain->setChecked(true);
         ui->checkBoxDatabaseExtra->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED).toBool());
         ui->checkBoxDatabaseCustom->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED).toBool());
-    } else if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
+    } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
         ui->groupBoxDatabases->show();
         setDatabaseControlsVisible(ui, true, false, false);
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString());
         ui->checkBoxDatabaseMain->setChecked(true);
-    } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
+    } else if (m_engineType == XScanEngine::SCANENGINETYPE_YARA) {
         ui->groupBoxDatabases->show();
         setDatabaseControlsVisible(ui, true, false, false);
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString());
@@ -360,17 +359,15 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     }
 
     if (m_pScanEngine && m_pScanEngine->isDatabaseUsing()) {
-        XScanEngine::SCANENGINETYPE engineType = m_pScanEngine->getEngineType();
-
-        if (engineType == XScanEngine::SCANENGINETYPE_DIE) {
+        if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
             m_scanOptions.sMainDatabasePath = ui->lineEditDatabaseMain->text();
             m_scanOptions.sExtraDatabasePath = ui->lineEditDatabaseExtra->text();
             m_scanOptions.sCustomDatabasePath = ui->lineEditDatabaseCustom->text();
             m_scanOptions.bUseExtraDatabase = ui->checkBoxDatabaseExtra->isChecked();
             m_scanOptions.bUseCustomDatabase = ui->checkBoxDatabaseCustom->isChecked();
-        } else if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
+        } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
             m_scanOptions.sMainDatabasePath = ui->lineEditDatabaseMain->text();
-        } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
+        } else if (m_engineType == XScanEngine::SCANENGINETYPE_YARA) {
             m_scanOptions.sMainDatabasePath = ui->lineEditDatabaseMain->text();
         }
 

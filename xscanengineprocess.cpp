@@ -90,10 +90,10 @@ void XScanEngineProcess::process()
         }
 
         qint32 nFreeIndex = XBinary::getFreeIndex(pPdStruct);
+        XBinary::setPdStructInit(pPdStruct, nFreeIndex, 0);
 
         if (m_scanType == SCAN_TYPE_FILE) {
             if ((m_pScanResult) && (m_pScanOptions) && (m_sFileName != "")) {
-                XBinary::setPdStructInit(pPdStruct, nFreeIndex, 0);
                 XBinary::setPdStructStatus(pPdStruct, nFreeIndex, tr("File scan"));
 
                 emit scanFileStarted(m_sFileName);
@@ -104,7 +104,6 @@ void XScanEngineProcess::process()
             }
         } else if (m_scanType == SCAN_TYPE_DEVICE) {
             if ((m_pDevice) && (m_pScanResult) && (m_pScanOptions)) {
-                XBinary::setPdStructInit(pPdStruct, nFreeIndex, 0);
                 XBinary::setPdStructStatus(pPdStruct, nFreeIndex, tr("Device scan"));
 
                 *m_pScanResult = m_pScanEngine->scanDevice(m_pDevice, m_pScanOptions, pPdStruct);
@@ -113,7 +112,6 @@ void XScanEngineProcess::process()
             }
         } else if (m_scanType == SCAN_TYPE_MEMORY) {
             if ((m_pData) && (m_nDataSize > 0) && (m_pScanResult) && (m_pScanOptions)) {
-                XBinary::setPdStructInit(pPdStruct, nFreeIndex, 0);
                 XBinary::setPdStructStatus(pPdStruct, nFreeIndex, tr("Memory scan"));
 
                 *m_pScanResult = m_pScanEngine->scanMemory(m_pData, m_nDataSize, m_pScanOptions, pPdStruct);
@@ -129,7 +127,7 @@ void XScanEngineProcess::process()
 
                 qint32 nTotal = listFileNames.count();
 
-                XBinary::setPdStructInit(pPdStruct, nFreeIndex, nTotal);
+                XBinary::setPdStructTotal(pPdStruct, nFreeIndex, nTotal);
 
                 for (qint32 i = 0; (i < nTotal) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
                     QString sFileName = listFileNames.at(i);

@@ -2904,20 +2904,26 @@ QString XScanEngine::convertPath(QIODevice *pDevice, const XScanEngine::SCANSTRU
         sResult = sResult.replace("{md5}", XBinary::convertFileNameSymbols(sMd5, "_"));
     }
 
-    bool bOriginalBasename = sResult.contains("{original_basename}");
-    bool bOriginalExtension = sResult.contains("{original_extension}");
+    bool bOriginalName = sResult.contains("{original_filename}");
+    bool bOriginalBasename = sResult.contains("{original_filebasename}");
+    bool bOriginalExtension = sResult.contains("{original_fileextension}");
 
-    if (bOriginalBasename || bOriginalExtension) {
+    if (bOriginalName || bOriginalBasename || bOriginalExtension) {
         QString sOriginalFileName = XBinary::getDeviceFileName(pDevice);
+
+        if (bOriginalName) {
+            QString sName = QFileInfo(sOriginalFileName).fileName();
+            sResult = sResult.replace("{original_filename}", XBinary::convertFileNameSymbols(sName, "_"));
+        }
 
         if (bOriginalBasename) {
             QString sBaseName = QFileInfo(sOriginalFileName).completeBaseName();
-            sResult = sResult.replace("{original_basename}", XBinary::convertFileNameSymbols(sBaseName, "_"));
+            sResult = sResult.replace("{original_filebasename}", XBinary::convertFileNameSymbols(sBaseName, "_"));
         }
 
         if (bOriginalExtension) {
             QString sExtension = QFileInfo(sOriginalFileName).completeSuffix();
-            sResult = sResult.replace("{original_extension}", XBinary::convertFileNameSymbols(sExtension, "_"));
+            sResult = sResult.replace("{original_filebasename}", XBinary::convertFileNameSymbols(sExtension, "_"));
         }
     }
 
@@ -2935,8 +2941,9 @@ QString XScanEngine::getAvailablePathVariables()
     sResult += "{version} - " + tr("Version") + "\n";
     sResult += "{info} - " + tr("Info") + "\n";
     sResult += "{md5} - " + tr("MD5") + "\n";
-    sResult += "{original_basename} - " + tr("Original file base name") + "\n";
-    sResult += "{original_extension} - " + tr("Original file extension") + "\n";
+    sResult += "{original_filename} - " + tr("Original file name") + "\n";
+    sResult += "{original_filebasename} - " + tr("Original file base name") + "\n";
+    sResult += "{original_fileextension} - " + tr("Original file extension") + "\n";
 
     return sResult;
 }
