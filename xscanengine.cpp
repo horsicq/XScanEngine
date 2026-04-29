@@ -3392,7 +3392,6 @@ QSet<XBinary::FT> XScanEngine::getFileTypesSupported()
 
     stResult.insert(XBinary::FT_BINARY);
     stResult.insert(XBinary::FT_COM);
-    stResult.insert(XBinary::FT_ARCHIVE);
     stResult.insert(XBinary::FT_ZIP);
     stResult.insert(XBinary::FT_JAR);
     stResult.insert(XBinary::FT_APK);
