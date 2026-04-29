@@ -85,6 +85,37 @@ bool sort_signature_name(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEn
     return (sr1.sName < sr2.sName);
 }
 
+static bool isCollectionFileTypeAllowed(const XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::FT fileType)
+{
+    bool bResult = pScanOptions->bCollectionAllFileTypes || pScanOptions->stCollectionFileTypes.isEmpty();
+
+    if (!bResult) {
+        QSet<XBinary::FT>::const_iterator iter = pScanOptions->stCollectionFileTypes.constBegin();
+
+        while (iter != pScanOptions->stCollectionFileTypes.constEnd()) {
+            if (XBinary::checkFileType(*iter, fileType)) {
+                bResult = true;
+                break;
+            }
+
+            ++iter;
+        }
+    }
+
+    return bResult;
+}
+
+static bool isCollectionRecordAllowed(const XScanEngine::SCAN_OPTIONS *pScanOptions, const XScanEngine::SCANSTRUCT &scanStruct)
+{
+    bool bResult = isCollectionFileTypeAllowed(pScanOptions, scanStruct.id.fileType);
+
+    if (bResult && !(pScanOptions->bCollectionAllTypes) && !(pScanOptions->stCollectionTypes.isEmpty())) {
+        bResult = pScanOptions->stCollectionTypes.contains(scanStruct.type);
+    }
+
+    return bResult;
+}
+
 QString XScanEngine::heurTypeIdToString(qint32 nId)
 {
     // Values are defined in global DETECTTYPE enum (nfd_binary.h). We use constants to avoid include cycles.
@@ -2725,6 +2756,18 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         QString sFileName = XBinary::getDeviceFileName(_pDevice);
         QString sCopyDirectory;
         QString sCatalogDirectory;
+        XScanEngine::SCAN_RESULT collectionScanResult = *pScanResult;
+        collectionScanResult.listRecords.clear();
+
+        qint32 nNumberOfDetects = pScanResult->listRecords.count();
+
+        for (int i = 0; i < nNumberOfDetects; i++) {
+            const XScanEngine::SCANSTRUCT &scanStruct = pScanResult->listRecords.at(i);
+
+            if (isCollectionRecordAllowed(pScanOptions, scanStruct)) {
+                collectionScanResult.listRecords.append(scanStruct);
+            }
+        }
 
         if (pScanOptions->sCollectionResultDirectory != "") {
             if (!XBinary::isDirectoryExists(pScanOptions->sCollectionResultDirectory)) {
@@ -2748,9 +2791,11 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
         if (pScanOptions->bCollectionLog) {
             QString sLogFile = pScanOptions->sCollectionResultDirectory + QDir::separator() + "info.log";
-            QString sInfo = createResultString(pScanOptions, *pScanResult);
             XBinary::appendToFile(sLogFile, sFileName.toUtf8());
-            XBinary::appendToFile(sLogFile, sInfo.toUtf8());
+            XBinary::appendToFile(sLogFile, "Original");
+            XBinary::appendToFile(sLogFile, createResultString(pScanOptions, *pScanResult).toUtf8());
+            XBinary::appendToFile(sLogFile, "Filtered");
+            XBinary::appendToFile(sLogFile, createResultString(pScanOptions, collectionScanResult).toUtf8());
         }
 
         if (pScanResult->listErrors.count()) {
@@ -2760,12 +2805,13 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             XBinary::appendToFile(sLogFile, sErrors.toUtf8());
         }
 
-        qint32 nNumberOfDetects = pScanResult->listRecords.count();
+        nNumberOfDetects = collectionScanResult.listRecords.count();
 
         for (int i = 0; i < nNumberOfDetects; i++) {
+            const XScanEngine::SCANSTRUCT &scanStruct = collectionScanResult.listRecords.at(i);
+
             if (pScanOptions->bCollectionCopyFiles) {
-                QString sPath =
-                    sCopyDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sCollectionCopyFormat);
+                QString sPath = sCopyDirectory + QDir::separator() + convertPath(_pDevice, scanStruct, pScanOptions->sCollectionCopyFormat, pPdStruct);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
                 if (sDirPath != "") {
@@ -2786,8 +2832,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             }
 
             if (pScanOptions->bCollectionCreateCatalog) {
-                QString sPath =
-                    sCatalogDirectory + QDir::separator() + convertPath(_pDevice, pScanResult->listRecords.at(i), pScanOptions->sCollectionCatalogFormat);
+                QString sPath = sCatalogDirectory + QDir::separator() + convertPath(_pDevice, scanStruct, pScanOptions->sCollectionCatalogFormat, pPdStruct);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
                 if (sDirPath != "") {
@@ -2811,7 +2856,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     }
 }
 
-QString XScanEngine::convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruct, const QString &sString)
+QString XScanEngine::convertPath(QIODevice *pDevice, const XScanEngine::SCANSTRUCT &scanStruct, const QString &sString, XBinary::PDSTRUCT *pPdStruct)
 {
     QString sResult = sString;
 
@@ -2820,6 +2865,17 @@ QString XScanEngine::convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruc
 
     if (sResult.contains("{ft}")) {
         sResult = sResult.replace("{ft}", XBinary::convertFileNameSymbols(XBinary::fileTypeIdToString(scanStruct.id.fileType), "_"));
+    }
+
+    if (sResult.contains("{arch}")) {
+        QString sArch;
+
+        if (pDevice) {
+            XBinary::FILEFORMATINFO fileFormatInfo = XFormats::getFileFormatInfo(scanStruct.id.fileType, pDevice, false, -1, pPdStruct);
+            sArch = fileFormatInfo.sArch;
+        }
+
+        sResult = sResult.replace("{arch}", XBinary::convertFileNameSymbols(sArch, "_"));
     }
 
     if (sResult.contains("{type}")) {
@@ -2836,6 +2892,16 @@ QString XScanEngine::convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruc
 
     if (sResult.contains("{info}")) {
         sResult = sResult.replace("{info}", XBinary::convertFileNameSymbols(scanStruct.sInfo, "_"));
+    }
+
+    if (sResult.contains("{md5}")) {
+        QString sMd5;
+
+        if (pDevice) {
+            sMd5 = XBinary::getHash(XBinary::HASH_MD5, pDevice, pPdStruct);
+        }
+
+        sResult = sResult.replace("{md5}", XBinary::convertFileNameSymbols(sMd5, "_"));
     }
 
     bool bOriginalBasename = sResult.contains("{original_basename}");
@@ -2863,10 +2929,12 @@ QString XScanEngine::getAvailablePathVariables()
     QString sResult;
 
     sResult += "{ft} - " + tr("File type") + "\n";
+    sResult += "{arch} - " + tr("Architecture") + "\n";
     sResult += "{type} - " + tr("Type") + "\n";
     sResult += "{name} - " + tr("Name") + "\n";
     sResult += "{version} - " + tr("Version") + "\n";
     sResult += "{info} - " + tr("Info") + "\n";
+    sResult += "{md5} - " + tr("MD5") + "\n";
     sResult += "{original_basename} - " + tr("Original file base name") + "\n";
     sResult += "{original_extension} - " + tr("Original file extension") + "\n";
 
@@ -3318,19 +3386,6 @@ void XScanEngine::setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, nDatabases & DATABASE_CUSTOM);
 }
 
-QMap<quint64, QString> XScanEngine::getFileTypes(const QSet<XBinary::FT> &stFileTypes)
-{
-    QMap<quint64, QString> mapResult;
-
-    QSetIterator<XBinary::FT> i(stFileTypes);
-    while (i.hasNext()) {
-        XBinary::FT fileType = i.next();
-        mapResult.insert(static_cast<quint64>(fileType), XBinary::fileTypeIdToString(fileType));
-    }
-
-    return mapResult;
-}
-
 QSet<XBinary::FT> XScanEngine::getFileTypesSupported()
 {
     QSet<XBinary::FT> stResult;
@@ -3370,19 +3425,6 @@ QSet<XBinary::FT> XScanEngine::getFileTypesSupported()
     stResult.insert(XBinary::FT_PNG);
 
     return stResult;
-}
-
-QMap<quint64, QString> XScanEngine::getTypes(const QSet<RECORD_TYPE> &stTypes)
-{
-    QMap<quint64, QString> mapResult;
-
-    QSetIterator<RECORD_TYPE> i(stTypes);
-    while (i.hasNext()) {
-        RECORD_TYPE recordType = i.next();
-        mapResult.insert(static_cast<quint64>(recordType), recordTypeIdToString(recordType));
-    }
-
-    return mapResult;
 }
 
 QSet<XScanEngine::RECORD_TYPE> XScanEngine::getTypesSupported()
@@ -3469,6 +3511,11 @@ void XScanEngine::_infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessa
     emit errorMessage(sInfoMessage);
 }
 
+QString XScanEngine::recordTypeIdToFtString(RECORD_TYPE _type)
+{
+    return XBinary::XCONVERT_idToFtString((quint32)_type, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
+}
+
 QString XScanEngine::recordTypeIdToString(RECORD_TYPE _type)
 {
     return XBinary::XCONVERT_idToTransString((quint32)_type, _TABLE_XScanEngine_RECORD_TYPE, sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
@@ -3500,7 +3547,7 @@ QString XScanEngine::scanEngineTypeIdToString(qint32 nId)
     return XBinary::XCONVERT_idToTransString(nId, _TABLE_XScanEngine_SCANENGINETYPE, sizeof(_TABLE_XScanEngine_SCANENGINETYPE) / sizeof(XBinary::XCONVERT));
 }
 
-XScanEngine::RECORD_TYPE XScanEngine::recordTypeStringToId(const QString &sType)
+XScanEngine::RECORD_TYPE XScanEngine::ftStringToRecordTypeId(const QString &sType)
 {
     QString _sType = sType.toUpper().remove(" ").remove("-");
 
@@ -3518,6 +3565,11 @@ XScanEngine::RECORD_TYPE XScanEngine::recordTypeStringToId(const QString &sType)
 
     return (XScanEngine::RECORD_TYPE)XBinary::XCONVERT_ftStringToId(_sType, _TABLE_XScanEngine_RECORD_TYPE,
                                                                     sizeof(_TABLE_XScanEngine_RECORD_TYPE) / sizeof(XBinary::XCONVERT));
+}
+
+XScanEngine::RECORD_TYPE XScanEngine::recordTypeStringToId(const QString &sType)
+{
+    return ftStringToRecordTypeId(sType);
 }
 
 QString XScanEngine::recordNameIdToString(RECORD_NAME name)

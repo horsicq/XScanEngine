@@ -59,6 +59,10 @@ private slots:
     void on_toolButtonCopyInfo_clicked();
     void on_pushButtonResult_clicked();
 
+    void on_pushButtonDatabaseMain_clicked();
+    void on_pushButtonDatabaseExtra_clicked();
+    void on_pushButtonDatabaseCustom_clicked();
+
 private:
     Ui::XScanSortWidget *ui;
     XScanEngine *m_pScanEngine;

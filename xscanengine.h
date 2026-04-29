@@ -168,10 +168,12 @@ public:
         SCANENGINETYPE_PEID,
     };
 
+    static QString recordTypeIdToFtString(RECORD_TYPE _type);
     static QString recordTypeIdToString(RECORD_TYPE _type);
     static QString recordTypesToString(const QSet<RECORD_TYPE> &stTypes);
     static QString heurTypeIdToString(qint32 nId);
     static QString scanEngineTypeIdToString(qint32 nId);
+    static RECORD_TYPE ftStringToRecordTypeId(const QString &sType);
     static RECORD_TYPE recordTypeStringToId(const QString &sType);
 
     enum RECORD_NAME {
@@ -1225,7 +1227,7 @@ public:
     void scanProcess(QIODevice *pDevice, XScanEngine::SCAN_RESULT *pScanResult, XScanEngine::SCANID parentId, XScanEngine::SCAN_OPTIONS *pScanOptions, bool bInit,
                      XBinary::PDSTRUCT *pPdStruct);
 
-    QString convertPath(QIODevice *pDevice, const SCANSTRUCT &scanStruct, const QString &sString);
+    QString convertPath(QIODevice *pDevice, const XScanEngine::SCANSTRUCT &scanStruct, const QString &sString, XBinary::PDSTRUCT *pPdStruct);
     static QString getAvailablePathVariables();
 
     static QMap<quint64, QString> getScanFlags();
@@ -1243,10 +1245,7 @@ public:
     static quint64 getDatabasesFromGlobalOptions(XOptions *pGlobalOptions);
     static void setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases);
 
-    static QMap<quint64, QString> getFileTypes(const QSet<XBinary::FT> &stFileTypes); // TODO Check -> remove
     virtual QSet<XBinary::FT> getFileTypesSupported();
-
-    static QMap<quint64, QString> getTypes(const QSet<RECORD_TYPE> &stTypes); // TODO Check -> remove
     virtual QSet<RECORD_TYPE> getTypesSupported();
 
     static bool isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanStructs, XBinary::FT fileType, RECORD_TYPE type = RECORD_TYPE_UNKNOWN,
