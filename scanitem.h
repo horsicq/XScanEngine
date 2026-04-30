@@ -21,6 +21,9 @@
 #ifndef SCANITEM_H
 #define SCANITEM_H
 
+#include <QList>
+#include <QVariant>
+
 #include "xscanengine.h"
 
 class ScanItem {
@@ -28,17 +31,28 @@ public:
     ScanItem(const QString &sString, ScanItem *pItemParent = nullptr, qint32 nNumberOfColumns = 1, bool bIsParent = false);
     ~ScanItem();
 
+    Q_DISABLE_COPY(ScanItem)
+
     void appendChild(ScanItem *pItemChild);
     ScanItem *child(int nRow);
+    const ScanItem *child(int nRow) const;
     int childCount() const;
     int columnCount() const;
     QVariant data(int nColumn) const;
     void setScanStruct(const XScanEngine::SCANSTRUCT &scanStruct);
-    XScanEngine::SCANSTRUCT scanStruct() const;
+    const XScanEngine::SCANSTRUCT &scanStruct() const;
     int row() const;
+    ScanItem *parentItem();
+    const ScanItem *parentItem() const;
     ScanItem *getParentItem();
 
 private:
+    enum COLUMN {
+        COLUMN_TEXT = 0,
+        COLUMN_SCAN_STATUS,
+        COLUMN_INFO_STATUS
+    };
+
     QList<ScanItem *> m_listChildItems;
     QString m_sString;
     ScanItem *m_pParentItem;

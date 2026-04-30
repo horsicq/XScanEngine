@@ -24,6 +24,7 @@
 
 #include <QDir>
 #include <QLineEdit>
+#include <QVariant>
 
 namespace {
 QString getOptionString(XOptions *pOptions, XOptions::ID id, const QString &sDefaultValue)
@@ -50,6 +51,21 @@ bool getOptionBool(XOptions *pOptions, XOptions::ID id, bool bDefaultValue)
     }
 
     return bResult;
+}
+
+QVariant getOptionValue(XOptions *pOptions, XOptions::ID id, const QVariant &varDefaultValue)
+{
+    QVariant result = varDefaultValue;
+
+    if (pOptions && pOptions->isIDPresent(id)) {
+        QVariant varValue = pOptions->getValue(id);
+
+        if (varValue.isValid()) {
+            result = varValue;
+        }
+    }
+
+    return result;
 }
 
 void setDatabaseControlsVisible(Ui::XScanSortWidget *pUi, bool bMain, bool bExtra, bool bCustom)
@@ -101,8 +117,14 @@ XScanSortWidget::~XScanSortWidget()
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_COPY_ENABLED, ui->groupBoxCopy->isChecked());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_CATALOG_FORMAT, ui->lineEditCatalogFormat->text());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_COPY_FORMAT, ui->lineEditCopyFormat->text());
+    m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_COPY_REMOVE, ui->checkBoxCopyRemove->isChecked());
+    m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_COPY_MOVETOFIRST, ui->checkBoxCopyMoveToFirst->isChecked());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_RESULT_PATH, ui->lineEditResult->text());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_LOG, ui->checkBoxScanLog->isChecked());
+    m_sortOptions.getComboBox(ui->comboBoxReadBufferSize, XOptions::ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE);
+    m_sortOptions.getComboBox(ui->comboBoxFileBufferSize, XOptions::ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE);
+    m_sortOptions.getCheckBox(ui->checkBoxSSE2, XOptions::ID_SCAN_COLLECTION_FEATURE_SSE2);
+    m_sortOptions.getCheckBox(ui->checkBoxAVX2, XOptions::ID_SCAN_COLLECTION_FEATURE_AVX2);
 
     if (m_pScanEngine) {
         if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
@@ -171,10 +193,19 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_CATALOG_FORMAT, "{ft}.{type}.{name}.{version}.{info}.txt");
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_COPY_ENABLED, false);
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_COPY_FORMAT, "{ft}/{type}/{name}({version})[{info}]/{md5}_{original_filename}");
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_COPY_REMOVE, false);
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_COPY_MOVETOFIRST, false);
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_RESULT_PATH, "collection");
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_LOG, false);
 
     XOptions *pGlobalOptions = getGlobalOptions();
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE,
+                        getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_READBUFFERSIZE, 4 * 1024));
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE,
+                        getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_FILEBUFFERSIZE, 64 * 1024 * 1024));
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_SSE2, getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_SSE2, true));
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_AVX2, getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_AVX2, true));
+
     m_engineType = pScanEngine->getEngineType();
 
     if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
@@ -255,9 +286,24 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     ui->groupBoxCopy->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_COPY_ENABLED).toBool());
     ui->lineEditCatalogFormat->setText(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_CATALOG_FORMAT).toString());
     ui->lineEditCopyFormat->setText(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_COPY_FORMAT).toString());
+    ui->checkBoxCopyRemove->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_COPY_REMOVE).toBool());
+    ui->checkBoxCopyMoveToFirst->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_COPY_MOVETOFIRST).toBool());
 
     ui->lineEditResult->setText(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_RESULT_PATH).toString());
     ui->checkBoxScanLog->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_LOG).toBool());
+    m_sortOptions.setComboBox(ui->comboBoxReadBufferSize, XOptions::ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE);
+    m_sortOptions.setComboBox(ui->comboBoxFileBufferSize, XOptions::ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE);
+    m_sortOptions.setCheckBox(ui->checkBoxSSE2, XOptions::ID_SCAN_COLLECTION_FEATURE_SSE2);
+    m_sortOptions.setCheckBox(ui->checkBoxAVX2, XOptions::ID_SCAN_COLLECTION_FEATURE_AVX2);
+#ifdef USE_XSIMD
+    if (!xsimd_is_sse2_present()) {
+        ui->checkBoxSSE2->hide();
+    }
+
+    if (!xsimd_is_avx2_present()) {
+        ui->checkBoxAVX2->hide();
+    }
+#endif
 
     if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
         ui->groupBoxDatabases->show();
@@ -321,6 +367,8 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     m_scanOptions.bCollectionAllFileTypes = ui->checkBoxAllFileTypes->isChecked();
     m_scanOptions.bCollectionAllTypes = ui->checkBoxAllTypes->isChecked();
     m_scanOptions.bCollectionCopyFiles = ui->groupBoxCopy->isChecked();
+    m_scanOptions.bCollectionCopyRemove = ui->checkBoxCopyRemove->isChecked();
+    m_scanOptions.bCollectionCopyMoveToFirst = ui->checkBoxCopyMoveToFirst->isChecked();
     m_scanOptions.sCollectionCopyFormat = ui->lineEditCopyFormat->text();
     m_scanOptions.bCollectionCreateCatalog = ui->groupBoxCatalog->isChecked();
     m_scanOptions.sCollectionCatalogFormat = ui->lineEditCatalogFormat->text();
@@ -378,9 +426,33 @@ void XScanSortWidget::on_pushButtonScan_clicked()
 
     XDialogProcess ds(this, &scanEngineProcess);
     ds.setGlobal(getShortcuts(), getGlobalOptions());
-    scanEngineProcess.setData(sDirectory, &m_scanOptions, ds.getPdStruct());
+    XBinary::PDSTRUCT *pPdStruct = ds.getPdStruct();
+    pPdStruct->nBufferSize = ui->comboBoxReadBufferSize->currentData().toInt();
+    pPdStruct->nFileBufferSize = ui->comboBoxFileBufferSize->currentData().toInt();
+    scanEngineProcess.setData(sDirectory, &m_scanOptions, pPdStruct);
+#ifdef USE_XSIMD
+    qint32 nOldSSE2 = xsimd_is_sse2_enabled();
+    qint32 nOldAVX2 = xsimd_is_avx2_enabled();
+
+    if (xsimd_is_sse2_present()) {
+        xsimd_set_sse2(ui->checkBoxSSE2->isChecked());
+    }
+
+    if (xsimd_is_avx2_present()) {
+        xsimd_set_avx2(ui->checkBoxAVX2->isChecked());
+    }
+#endif
     ds.start();
     ds.exec();
+#ifdef USE_XSIMD
+    if (xsimd_is_sse2_present()) {
+        xsimd_set_sse2(nOldSSE2);
+    }
+
+    if (xsimd_is_avx2_present()) {
+        xsimd_set_avx2(nOldAVX2);
+    }
+#endif
 }
 
 void XScanSortWidget::on_checkBoxAllFileTypes_stateChanged(int nState)
@@ -429,4 +501,26 @@ void XScanSortWidget::on_pushButtonDatabaseExtra_clicked()
 void XScanSortWidget::on_pushButtonDatabaseCustom_clicked()
 {
     selectDatabaseDirectory(this, ui->lineEditDatabaseCustom, tr("Open directory") + QString("..."));
+}
+
+void XScanSortWidget::on_checkBoxSSE2_toggled(bool bChecked)
+{
+#ifdef USE_XSIMD
+    if (bChecked && (!xsimd_is_sse2_present())) {
+        ui->checkBoxSSE2->setChecked(false);
+    }
+#else
+    Q_UNUSED(bChecked)
+#endif
+}
+
+void XScanSortWidget::on_checkBoxAVX2_toggled(bool bChecked)
+{
+#ifdef USE_XSIMD
+    if (bChecked && (!xsimd_is_avx2_present())) {
+        ui->checkBoxAVX2->setChecked(false);
+    }
+#else
+    Q_UNUSED(bChecked)
+#endif
 }

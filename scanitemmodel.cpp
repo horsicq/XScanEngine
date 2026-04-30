@@ -130,7 +130,7 @@ QModelIndex ScanItemModel::parent(const QModelIndex &index) const
 
     if (index.isValid()) {
         ScanItem *pChildItem = static_cast<ScanItem *>(index.internalPointer());
-        ScanItem *pParentItem = pChildItem->getParentItem();
+        ScanItem *pParentItem = pChildItem->parentItem();
 
         if (pParentItem != m_pRootItem) {
             result = createIndex(pParentItem->row(), 0, pParentItem);
@@ -178,24 +178,25 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
 
     if (index.isValid()) {
         ScanItem *pItem = static_cast<ScanItem *>(index.internalPointer());
+        const XScanEngine::SCANSTRUCT &scanStruct = pItem->scanStruct();
 
         if (nRole == Qt::DisplayRole) {
             result = pItem->data(index.column());
         } else if (nRole == Qt::UserRole + UD_FILETYPE) {
-            result = pItem->scanStruct().id.fileType;
+            result = scanStruct.id.fileType;
         } else if (nRole == Qt::UserRole + UD_NAME) {
-            result = pItem->scanStruct().sName;
+            result = scanStruct.sName;
         } else if (nRole == Qt::UserRole + UD_INFO) {
-            result = pItem->scanStruct().varInfo;
+            result = scanStruct.varInfo;
         } else if (nRole == Qt::UserRole + UD_INFO2) {
-            result = pItem->scanStruct().varInfo2;
+            result = scanStruct.varInfo2;
         } else if (nRole == Qt::UserRole + UD_UUID) {
-            result = pItem->scanStruct().id.sUuid;
+            result = scanStruct.id.sUuid;
         }
 #ifdef QT_GUI_LIB
         else if (nRole == Qt::ForegroundRole) {
             if (isHighlight()) {
-                QString sColor = XScanEngine::typeToColorRecord(pItem->scanStruct().sType, m_pOptions).sColorMain;
+                QString sColor = XScanEngine::typeToColorRecord(scanStruct.sType, m_pOptions).sColorMain;
                 if (sColor == "") {
                     result = QVariant();
                 } else {
@@ -206,7 +207,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
             }
         } else if (nRole == Qt::BackgroundRole) {
             if (isHighlight()) {
-                QString sColor = XScanEngine::typeToColorRecord(pItem->scanStruct().sType, m_pOptions).sColorBackground;
+                QString sColor = XScanEngine::typeToColorRecord(scanStruct.sType, m_pOptions).sColorBackground;
                 if (sColor == "") {
                     result = QVariant();
                 } else {
@@ -329,7 +330,7 @@ ScanItem *ScanItemModel::rootItem()
 
 void ScanItemModel::_toXML(QXmlStreamWriter *pXml, ScanItem *pItem, qint32 nLevel)
 {
-    XScanEngine::SCANSTRUCT ss = pItem->scanStruct();
+    const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
 
     if (pItem->childCount()) {
         pXml->writeStartElement(pItem->data(0).toString());
@@ -362,7 +363,7 @@ void ScanItemModel::_toXML(QXmlStreamWriter *pXml, ScanItem *pItem, qint32 nLeve
 #if (QT_VERSION_MAJOR > 4)
 void ScanItemModel::_toJSON(QJsonObject *pJsonObject, ScanItem *pItem, qint32 nLevel)
 {
-    XScanEngine::SCANSTRUCT ss = pItem->scanStruct();
+    const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
 
     if (pItem->childCount()) {
         QString sArrayName = "detects";
@@ -408,7 +409,7 @@ void ScanItemModel::_toCSV(QString *pString, ScanItem *pItem, qint32 nLevel)
             _toCSV(pString, pItem->child(i), nLevel + 1);
         }
     } else {
-        XScanEngine::SCANSTRUCT ss = pItem->scanStruct();
+        const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
 
         QString sResult = QString("%1;%2;%3;%4;%5\n").arg(ss.sType, ss.sName, ss.sVersion, ss.sInfo, pItem->data(0).toString());
 
@@ -425,7 +426,7 @@ void ScanItemModel::_toTSV(QString *pString, ScanItem *pItem, qint32 nLevel)
             _toTSV(pString, pItem->child(i), nLevel + 1);
         }
     } else {
-        XScanEngine::SCANSTRUCT ss = pItem->scanStruct();
+        const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
 
         QString sResult = QString("%1\t%2\t%3\t%4\t%5\n").arg(ss.sType, ss.sName, ss.sVersion, ss.sInfo, pItem->data(0).toString());
 
@@ -477,7 +478,8 @@ void ScanItemModel::_coloredItem(ScanItem *pItem)
     Q_UNUSED(pItem)
 #else
     if (isHighlight()) {
-        XOptions::COLOR_RECORD colorRecord = XScanEngine::typeToColorRecord(pItem->scanStruct().sType, m_pOptions);
+        const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
+        XOptions::COLOR_RECORD colorRecord = XScanEngine::typeToColorRecord(ss.sType, m_pOptions);
         XOptions::printConsole(pItem->data(0).toString(), colorRecord.sColorMain, colorRecord.sColorBackground);
     } else {
         XOptions::printConsole(pItem->data(0).toString(), "", "");

@@ -21,12 +21,8 @@
 #include "scanitem.h"
 
 ScanItem::ScanItem(const QString &sString, ScanItem *pItemParent, qint32 nNumberOfColumns, bool bIsParent)
+    : m_sString(sString), m_pParentItem(pItemParent), m_nNumberOfColumns(nNumberOfColumns), m_bIsParent(bIsParent), m_scanStruct()
 {
-    m_pParentItem = pItemParent;
-    m_sString = sString;
-    m_nNumberOfColumns = nNumberOfColumns;
-    m_bIsParent = bIsParent;
-    m_scanStruct = XScanEngine::SCANSTRUCT();
 }
 
 ScanItem::~ScanItem()
@@ -36,10 +32,18 @@ ScanItem::~ScanItem()
 
 void ScanItem::appendChild(ScanItem *pItemChild)
 {
-    m_listChildItems.append(pItemChild);
+    if (pItemChild && !m_listChildItems.contains(pItemChild)) {
+        pItemChild->m_pParentItem = this;
+        m_listChildItems.append(pItemChild);
+    }
 }
 
 ScanItem *ScanItem::child(int nRow)
+{
+    return m_listChildItems.value(nRow);
+}
+
+const ScanItem *ScanItem::child(int nRow) const
 {
     return m_listChildItems.value(nRow);
 }
@@ -56,23 +60,25 @@ int ScanItem::columnCount() const
 
 QVariant ScanItem::data(int nColumn) const
 {
-    QVariant result;
-
-    if (nColumn < m_nNumberOfColumns) {
-        if (nColumn == 0) {
-            result = m_sString;
-        } else if (nColumn == 1) {
-            if (!m_bIsParent) {
-                result = "S";  // TODO icon
-            }
-        } else if (nColumn == 2) {
-            if (!m_bIsParent) {
-                result = "?";  // TODO icon
-            }
-        }
+    if ((nColumn < 0) || (nColumn >= m_nNumberOfColumns)) {
+        return QVariant();
     }
 
-    return result;
+    if (nColumn == COLUMN_TEXT) {
+        return m_sString;
+    }
+
+    if (m_bIsParent) {
+        return QVariant();
+    }
+
+    if (nColumn == COLUMN_SCAN_STATUS) {
+        return QStringLiteral("S");  // TODO icon
+    } else if (nColumn == COLUMN_INFO_STATUS) {
+        return QStringLiteral("?");  // TODO icon
+    }
+
+    return QVariant();
 }
 
 void ScanItem::setScanStruct(const XScanEngine::SCANSTRUCT &scanStruct)
@@ -80,23 +86,39 @@ void ScanItem::setScanStruct(const XScanEngine::SCANSTRUCT &scanStruct)
     this->m_scanStruct = scanStruct;
 }
 
-XScanEngine::SCANSTRUCT ScanItem::scanStruct() const
+const XScanEngine::SCANSTRUCT &ScanItem::scanStruct() const
 {
     return m_scanStruct;
 }
 
 int ScanItem::row() const
 {
-    int nResult = 0;
-
-    if (m_pParentItem) {
-        nResult = m_pParentItem->m_listChildItems.indexOf(const_cast<ScanItem *>(this));
+    if (!m_pParentItem) {
+        return 0;
     }
 
-    return nResult;
+    const int nNumberOfChildItems = m_pParentItem->m_listChildItems.count();
+
+    for (int i = 0; i < nNumberOfChildItems; i++) {
+        if (m_pParentItem->m_listChildItems.at(i) == this) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+ScanItem *ScanItem::parentItem()
+{
+    return m_pParentItem;
+}
+
+const ScanItem *ScanItem::parentItem() const
+{
+    return m_pParentItem;
 }
 
 ScanItem *ScanItem::getParentItem()
 {
-    return m_pParentItem;
+    return parentItem();
 }

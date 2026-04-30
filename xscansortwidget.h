@@ -62,6 +62,8 @@ private slots:
     void on_pushButtonDatabaseMain_clicked();
     void on_pushButtonDatabaseExtra_clicked();
     void on_pushButtonDatabaseCustom_clicked();
+    void on_checkBoxSSE2_toggled(bool bChecked);
+    void on_checkBoxAVX2_toggled(bool bChecked);
 
 private:
     Ui::XScanSortWidget *ui;

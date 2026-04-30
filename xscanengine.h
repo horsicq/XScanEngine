@@ -1127,6 +1127,8 @@ public:
         QSet<RECORD_TYPE> stCollectionTypes;
         QString sCollectionResultDirectory;
         bool bCollectionCopyFiles;
+        bool bCollectionCopyRemove;
+        bool bCollectionCopyMoveToFirst;
         bool bCollectionCreateCatalog;
         bool bCollectionLog;
         QString sCollectionCopyFormat;

@@ -145,6 +145,11 @@ void XScanEngineProcess::process()
                             _scanDevice(&file, m_pScanOptions, pPdStruct);
 
                             file.close();
+
+                            if (m_pScanOptions->bCollection && (m_pScanOptions->bCollectionCopyRemove || m_pScanOptions->bCollectionCopyMoveToFirst) &&
+                                file.property("CollectionSourceCopied").toBool()) {
+                                QFile::remove(sFileName);
+                            }
                         }
                     }
                 }

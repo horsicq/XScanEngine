@@ -116,6 +116,11 @@ static bool isCollectionRecordAllowed(const XScanEngine::SCAN_OPTIONS *pScanOpti
     return bResult;
 }
 
+static bool isCollectionCopySourceRemovalEnabled(const XScanEngine::SCAN_OPTIONS *pScanOptions)
+{
+    return pScanOptions && (pScanOptions->bCollectionCopyRemove || pScanOptions->bCollectionCopyMoveToFirst);
+}
+
 QString XScanEngine::heurTypeIdToString(qint32 nId)
 {
     // Values are defined in global DETECTTYPE enum (nfd_binary.h). We use constants to avoid include cycles.
@@ -2283,6 +2288,10 @@ XScanEngine::SCAN_RESULT XScanEngine::scanFile(const QString &sFileName, XScanEn
         if (file.open(QIODevice::ReadOnly)) {
             result = scanDevice(&file, pOptions, pPdStruct);
             file.close();
+
+            if (isCollectionCopySourceRemovalEnabled(pOptions) && file.property("CollectionSourceCopied").toBool()) {
+                QFile::remove(sFileName);
+            }
         }
     }
 
@@ -2806,11 +2815,14 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         }
 
         nNumberOfDetects = collectionScanResult.listRecords.count();
+        bool bCollectionCopyDone = false;
+        pDevice->setProperty("CollectionSourceCopied", false);
+        _pDevice->setProperty("CollectionSourceCopied", false);
 
         for (int i = 0; i < nNumberOfDetects; i++) {
             const XScanEngine::SCANSTRUCT &scanStruct = collectionScanResult.listRecords.at(i);
 
-            if (pScanOptions->bCollectionCopyFiles) {
+            if (pScanOptions->bCollectionCopyFiles && !(pScanOptions->bCollectionCopyMoveToFirst && bCollectionCopyDone)) {
                 QString sPath = sCopyDirectory + QDir::separator() + convertPath(_pDevice, scanStruct, pScanOptions->sCollectionCopyFormat, pPdStruct);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
@@ -2827,7 +2839,16 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                 }
 
                 if (bCopy) {
-                    XBinary::dumpToFile(sPath, _pDevice, pPdStruct);
+                    bCopy = XBinary::dumpToFile(sPath, _pDevice, pPdStruct);
+
+                    if (bCopy) {
+                        bCollectionCopyDone = true;
+
+                        if (isCollectionCopySourceRemovalEnabled(pScanOptions)) {
+                            pDevice->setProperty("CollectionSourceCopied", true);
+                            _pDevice->setProperty("CollectionSourceCopied", true);
+                        }
+                    }
                 }
             }
 
