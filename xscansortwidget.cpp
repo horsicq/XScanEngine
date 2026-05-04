@@ -376,35 +376,25 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     m_scanOptions.bCollectionLog = ui->checkBoxScanLog->isChecked();
     XScanEngine::setScanFlags(&m_scanOptions, ui->comboBoxFlags->getValue().toULongLong());
 
-    if (!m_scanOptions.bCollectionAllFileTypes) {
-        QString sFileTypes = ui->comboBoxFileType->getCustomFlagAsString();
-        QList<QString> listFileTypes = sFileTypes.split("|", QString::SkipEmptyParts);
+if (!m_scanOptions.bCollectionAllFileTypes) {
+    QString sFileTypes = ui->comboBoxFileType->getCustomFlagAsString();
 
-        qint32 nNumberOfFileTypes = listFileTypes.count();
-        for (qint32 nI = 0; nI < nNumberOfFileTypes; nI++) {
-            QString sFileType = listFileTypes.at(nI).trimmed();
-            XBinary::FT fileType = XBinary::ftStringToFileTypeId(sFileType);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QList<QString> listFileTypes = sFileTypes.split("|", Qt::SkipEmptyParts);
+#else
+    QList<QString> listFileTypes = sFileTypes.split("|", QString::SkipEmptyParts);
+#endif
 
-            if (fileType != XBinary::FT_UNKNOWN) {
-                m_scanOptions.stCollectionFileTypes.insert(fileType);
-            }
+    qint32 nNumberOfFileTypes = listFileTypes.count();
+    for (qint32 nI = 0; nI < nNumberOfFileTypes; nI++) {
+        QString sFileType = listFileTypes.at(nI).trimmed();
+        XBinary::FT fileType = XBinary::ftStringToFileTypeId(sFileType);
+
+        if (fileType != XBinary::FT_UNKNOWN) {
+            m_scanOptions.stCollectionFileTypes.insert(fileType);
         }
     }
-
-    if (!m_scanOptions.bCollectionAllTypes) {
-        QString sTypes = ui->comboBoxType->getCustomFlagAsString();
-        QList<QString> listTypes = sTypes.split("|", QString::SkipEmptyParts);
-
-        qint32 nNumberOfTypes = listTypes.count();
-        for (qint32 nI = 0; nI < nNumberOfTypes; nI++) {
-            QString sType = listTypes.at(nI).trimmed();
-            XScanEngine::RECORD_TYPE _type = XScanEngine::ftStringToRecordTypeId(sType);
-
-            if (_type != XScanEngine::RECORD_TYPE_UNKNOWN) {
-                m_scanOptions.stCollectionTypes.insert(_type);
-            }
-        }
-    }
+}
 
     if (m_pScanEngine && m_pScanEngine->isDatabaseUsing()) {
         if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
