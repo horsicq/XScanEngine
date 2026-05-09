@@ -20,8 +20,8 @@
  */
 #include "javaclass_script.h"
 
-JavaClass_Script::JavaClass_Script(XJavaClass *pJavaClass, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
-    : Binary_Script(pJavaClass, filePart, pOptions, pPdStruct)
+JavaClass_Script::JavaClass_Script(XJavaClass *pJavaClass, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Binary_Script(pJavaClass, filePart, scanOptions, pPdStruct)
 {
     this->m_pJavaClass = pJavaClass;
 }

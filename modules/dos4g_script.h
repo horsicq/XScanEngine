@@ -27,7 +27,7 @@ class DOS4G_Script : public DOS16M_Script {
     Q_OBJECT
 
 public:
-    explicit DOS4G_Script(XDOS16 *pXdos16, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit DOS4G_Script(XDOS16 *pXdos16, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~DOS4G_Script();
 
 private:

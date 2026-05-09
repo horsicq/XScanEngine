@@ -28,7 +28,7 @@ class MACHOFAT_Script : public Archive_Script {
     Q_OBJECT
 
 public:
-    explicit MACHOFAT_Script(XMACHOFat *pMachofat, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit MACHOFAT_Script(XMACHOFat *pMachofat, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~MACHOFAT_Script();
 
 private:

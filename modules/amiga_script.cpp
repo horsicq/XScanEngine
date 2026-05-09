@@ -20,8 +20,8 @@
  */
 #include "amiga_script.h"
 
-Amiga_Script::Amiga_Script(XAmigaHunk *pAmiga, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
-    : Binary_Script(pAmiga, filePart, pOptions, pPdStruct)
+Amiga_Script::Amiga_Script(XAmigaHunk *pAmiga, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Binary_Script(pAmiga, filePart, scanOptions, pPdStruct)
 {
     m_pAmiga = pAmiga;
 

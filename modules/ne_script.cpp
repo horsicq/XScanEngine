@@ -20,7 +20,7 @@
  */
 #include "ne_script.h"
 
-NE_Script::NE_Script(XNE *pNE, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : MSDOS_Script(pNE, filePart, pOptions, pPdStruct)
+NE_Script::NE_Script(XNE *pNE, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : MSDOS_Script(pNE, filePart, scanOptions, pPdStruct)
 {
     m_pNE = pNE;
 }

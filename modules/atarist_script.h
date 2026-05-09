@@ -28,7 +28,7 @@ class AtariST_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit AtariST_Script(XAtariST *pAtariST, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit AtariST_Script(XAtariST *pAtariST, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 private:
     XAtariST *m_pAtariST;

@@ -28,19 +28,21 @@
 #include "xfmodel_header.h"
 #include "xfmodel_table.h"
 
+#include <QStringList>
+
 class XScanEngineConsole : public QObject {
     Q_OBJECT
 
 public:
-    explicit XScanEngineConsole(QCoreApplication *pApp, XScanEngine *pScanEngine, const QString &sDescription, QObject *pParent = nullptr);
+    explicit XScanEngineConsole(QCoreApplication &app, XScanEngine &scanEngine, const QString &sDescription, QObject *pParent = nullptr);
 
 public slots:
     int process();
-    XOptions::CR handleFiles(QList<QString> *pListArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine *pScanEngine, XBinary::PDSTRUCT *pPdStruct);
+    XOptions::CR handleFiles(const QStringList &listArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine &scanEngine, XBinary::PDSTRUCT *pPdStruct);
 
 private:
-    QCoreApplication *m_pApp;
-    XScanEngine *m_pScanEngine;
+    QCoreApplication &m_app;
+    XScanEngine &m_scanEngine;
     QString m_sDescription;
 };
 

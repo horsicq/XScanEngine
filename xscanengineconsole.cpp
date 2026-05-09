@@ -20,14 +20,15 @@
  */
 #include "xscanengineconsole.h"
 #include "xconsoloutput.h"
+#include "xarchives.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QXmlStreamWriter>
 
-XScanEngineConsole::XScanEngineConsole(QCoreApplication *pApp, XScanEngine *pScanEngine, const QString &sDescription, QObject *pParent)
-    : QObject(pParent), m_pApp(pApp), m_pScanEngine(pScanEngine), m_sDescription(sDescription)
+XScanEngineConsole::XScanEngineConsole(QCoreApplication &app, XScanEngine &scanEngine, const QString &sDescription, QObject *pParent)
+    : QObject(pParent), m_app(app), m_scanEngine(scanEngine), m_sDescription(sDescription)
 {
 }
 
@@ -44,8 +45,9 @@ int XScanEngineConsole::process()
 
     parser.addPositionalArgument("target", "The file or directory to open.");
 
-    XScanEngine::SCANENGINETYPE engineType = m_pScanEngine->getEngineType();
+    XScanEngine::SCANENGINETYPE engineType = m_scanEngine.getEngineType();
     bool bHasMainDb = (engineType != XScanEngine::SCANENGINETYPE_NFD);
+    bool bIsDatabaseUsing = m_scanEngine.isDatabaseUsing();
     bool bHasExtraCustomDb = (engineType == XScanEngine::SCANENGINETYPE_DIE);
 
     QCommandLineOption clRecursiveScan = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_RECURSIVESCAN);
@@ -78,10 +80,13 @@ int XScanEngineConsole::process()
 
     QCommandLineOption clStruct = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_STRUCT);
     QCommandLineOption clShowStructs = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWSTRUCTS);
+    QCommandLineOption clListArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_LISTARCHIVE);
+    QCommandLineOption clExtractArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_EXTRACTARCHIVE);
     // QCommandLineOption clTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_TEST);
     // QCommandLineOption clAddTest = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_ADDTEST);
 
     QCommandLineOption clFileType = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FILETYPE);
+    QCommandLineOption clFirstWrapperOnly = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FIRSTWRAPPERONLY);
     QCommandLineOption clNoColor = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_NOCOLOR);
 
     parser.addOption(clRecursiveScan);
@@ -113,14 +118,29 @@ int XScanEngineConsole::process()
     parser.addOption(clResourcesScan);
     parser.addOption(clArchivesScan);
     parser.addOption(clFileType);
+    parser.addOption(clFirstWrapperOnly);
     parser.addOption(clShowStructs);
+    parser.addOption(clListArchive);
+    parser.addOption(clExtractArchive);
     parser.addOption(clNoColor);
     // parser.addOption(clTest);
     // parser.addOption(clAddTest);
 
-    parser.process(*m_pApp);
+    parser.process(m_app);
 
-    QList<QString> listArgs = parser.positionalArguments();
+    QStringList listArgs = parser.positionalArguments();
+
+    qint32 nNumberOfResultFormats = 0;
+    nNumberOfResultFormats += parser.isSet(clResultAsXml);
+    nNumberOfResultFormats += parser.isSet(clResultAsJson);
+    nNumberOfResultFormats += parser.isSet(clResultAsCSV);
+    nNumberOfResultFormats += parser.isSet(clResultAsTSV);
+    nNumberOfResultFormats += parser.isSet(clResultAsPlainText);
+
+    if (nNumberOfResultFormats > 1) {
+        printf("Error: select only one result format\n");
+        return XOptions::CR_INVALIDPARAMETER;
+    }
 
     XScanEngine::SCAN_OPTIONS scanOptions = {};
 
@@ -139,6 +159,7 @@ int XScanEngineConsole::process()
     scanOptions.bIsResourcesScan = parser.isSet(clResourcesScan);
     scanOptions.bIsArchivesScan = parser.isSet(clArchivesScan);
     scanOptions.bIsAllTypesScan = parser.isSet(clAllTypesScan);
+    scanOptions.bIsFirstWrapperScan = parser.isSet(clFirstWrapperOnly);
     scanOptions.bHideUnknown = parser.isSet(clHideUnknown);
     scanOptions.bLogProfiling = parser.isSet(clProfiling);
     scanOptions.bShowEntropy = parser.isSet(clEntropy);
@@ -192,9 +213,9 @@ int XScanEngineConsole::process()
     XConsoleOutput consoleOutput;
 
     if (parser.isSet(clMessages)) {
-        QObject::connect(m_pScanEngine, SIGNAL(errorMessage(QString)), &consoleOutput, SLOT(errorMessage(QString)));
-        QObject::connect(m_pScanEngine, SIGNAL(warningMessage(QString)), &consoleOutput, SLOT(warningMessage(QString)));
-        QObject::connect(m_pScanEngine, SIGNAL(infoMessage(QString)), &consoleOutput, SLOT(infoMessage(QString)));
+        QObject::connect(&m_scanEngine, SIGNAL(errorMessage(QString)), &consoleOutput, SLOT(errorMessage(QString)));
+        QObject::connect(&m_scanEngine, SIGNAL(warningMessage(QString)), &consoleOutput, SLOT(warningMessage(QString)));
+        QObject::connect(&m_scanEngine, SIGNAL(infoMessage(QString)), &consoleOutput, SLOT(infoMessage(QString)));
     }
 
     bool bIsDbUsed = false;
@@ -203,11 +224,11 @@ int XScanEngineConsole::process()
 
     if (bHasMainDb && parser.isSet(clShowDatabase)) {
         if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
+            bDbLoaded = m_scanEngine.loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
         }
 
-        XScanEngine::DATABASE_STATE dataBaseState = m_pScanEngine->getDatabaseState(&scanOptions);
+        XScanEngine::DATABASE_STATE dataBaseState = m_scanEngine.getDatabaseState(&scanOptions);
 
         QString sResullt;
 
@@ -224,6 +245,134 @@ int XScanEngineConsole::process()
         }
 
         printf("%s", sResullt.toUtf8().data());
+        bProcessed = true;
+    }
+
+    if (parser.isSet(clListArchive)) {
+        if (listArgs.count() > 0) {
+            bool bShowFileName = (listArgs.count() > 1);
+
+            for (qint32 i = 0; i < listArgs.count(); i++) {
+                QString sFileName = listArgs.at(i);
+
+                if (!QFileInfo::exists(sFileName)) {
+                    printf("Cannot find: %s\n", sFileName.toUtf8().data());
+                    nResult = XOptions::CR_CANNOTFINDFILE;
+                    continue;
+                }
+
+                if (bShowFileName) {
+                    printf("%s:\n", QDir().toNativeSeparators(sFileName).toUtf8().data());
+                }
+
+                QFile file;
+                file.setFileName(sFileName);
+
+                if (!file.open(QIODevice::ReadOnly)) {
+                    printf("Cannot open: %s\n", sFileName.toUtf8().data());
+                    nResult = XOptions::CR_CANNOTOPENFILE;
+                    continue;
+                }
+
+                XBinary::FT fileType = scanOptions.fileType;
+
+                if (fileType == XBinary::FT_UNKNOWN) {
+                    fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
+                }
+
+                if (!XFormats::isArchive(fileType)) {
+                    printf("Cannot open archive: %s\n", sFileName.toUtf8().data());
+                    file.close();
+                    nResult = XOptions::CR_CANNOTOPENFILE;
+                    continue;
+                }
+
+                QList<XArchive::RECORD> listRecords = XArchives::getRecords(&file, fileType, -1, &pdStruct);
+
+                file.close();
+
+                printf("Name\tSize\tPacked\tCRC32\n");
+
+                for (qint32 j = 0; j < listRecords.count(); j++) {
+                    const XArchive::RECORD record = listRecords.at(j);
+                    QString sLine = QString("%1\t%2\t%3\t%4\n")
+                                        .arg(record.spInfo.sRecordName)
+                                        .arg(record.spInfo.nUncompressedSize)
+                                        .arg(record.nDataSize)
+                                        .arg(QString("%1").arg((qulonglong)record.spInfo.nCRC32, 8, 16, QChar('0')).toUpper());
+
+                    printf("%s", sLine.toUtf8().data());
+                }
+            }
+        } else {
+            printf("Error: --showarchive requires <target>\n");
+            nResult = XOptions::CR_INVALIDPARAMETER;
+        }
+
+        bProcessed = true;
+    }
+
+    if (parser.isSet(clExtractArchive)) {
+        QString sResultDirectory = parser.value(clExtractArchive);
+
+        if ((sResultDirectory == "") || (listArgs.count() == 0)) {
+            printf("Error: --extractarchive requires <directory> <target>\n");
+            nResult = XOptions::CR_INVALIDPARAMETER;
+        } else if (!QDir().mkpath(sResultDirectory)) {
+            printf("Cannot create directory: %s\n", sResultDirectory.toUtf8().data());
+            nResult = XOptions::CR_INVALIDPARAMETER;
+        } else {
+            for (qint32 i = 0; i < listArgs.count(); i++) {
+                QString sFileName = listArgs.at(i);
+
+                if (!QFileInfo::exists(sFileName)) {
+                    printf("Cannot find: %s\n", sFileName.toUtf8().data());
+                    nResult = XOptions::CR_CANNOTFINDFILE;
+                    continue;
+                }
+
+                QFile file;
+                file.setFileName(sFileName);
+
+                if (!file.open(QIODevice::ReadOnly)) {
+                    printf("Cannot open: %s\n", sFileName.toUtf8().data());
+                    nResult = XOptions::CR_CANNOTOPENFILE;
+                    continue;
+                }
+
+                XBinary::FT fileType = scanOptions.fileType;
+
+                if (fileType == XBinary::FT_UNKNOWN) {
+                    fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
+                }
+
+                if (!XFormats::isArchive(fileType)) {
+                    printf("Cannot open archive: %s\n", sFileName.toUtf8().data());
+                    file.close();
+                    nResult = XOptions::CR_CANNOTOPENFILE;
+                    continue;
+                }
+
+                XArchive *pArchive = static_cast<XArchive *>(XFormats::getClass(fileType, &file));
+                bool bExtracted = false;
+
+                if (pArchive) {
+                    QList<XArchive::RECORD> listRecords = pArchive->getRecords(-1, &pdStruct);
+                    bExtracted = pArchive->decompressToPath(&listRecords, "", sResultDirectory, &pdStruct);
+                }
+
+                delete pArchive;
+                file.close();
+
+                if (bExtracted) {
+                    printf("Extracted: %s -> %s\n", QDir().toNativeSeparators(sFileName).toUtf8().data(), QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
+                } else {
+                    printf("Cannot extract: %s\n", sFileName.toUtf8().data());
+                    nResult = XOptions::CR_CANNOTOPENFILE;
+                }
+            }
+        }
+
         bProcessed = true;
     }
 
@@ -265,86 +414,40 @@ int XScanEngineConsole::process()
                     printf("%s", sStructs.toUtf8().data());
 
                     delete pBinary;
+                } else {
+                    printf("Cannot read structures: %s\n", listArgs.at(0).toUtf8().data());
+                    nResult = XOptions::CR_CANNOTOPENFILE;
                 }
 
                 file.close();
+            } else {
+                printf("Cannot open: %s\n", listArgs.at(0).toUtf8().data());
+                nResult = XOptions::CR_CANNOTOPENFILE;
             }
+        } else {
+            printf("Error: --showstructs requires <target>\n");
+            nResult = XOptions::CR_INVALIDPARAMETER;
         }
 
         bProcessed = true;
     }
 
-    if (scanOptions.sStruct != "" && listArgs.count() > 0) {
-        QString sFileName = listArgs.at(0);
-        QFile file;
-        file.setFileName(sFileName);
-
-        if (file.open(QIODevice::ReadOnly)) {
-            XBinary::XFHEADER xFHeader = XFormats::getXFHeaderFromStructName(&file, scanOptions.sStruct, false, -1, &pdStruct);
-
-            if (xFHeader.xfType != XBinary::XFTYPE_UNKNOWN) {
-                XBinary *pBinary = XFormats::getClass(xFHeader.fileType, &file);
-
-                if (pBinary) {
-                    QString sStructInfo;
-
-                    if (xFHeader.xfType == XBinary::XFTYPE_HEADER) {
-                        XFModel_header modelHeader(nullptr);
-                        modelHeader.setData(pBinary, xFHeader);
-
-                        if (scanOptions.bResultAsJSON) {
-                            sStructInfo = modelHeader.toJSON();
-                        } else if (scanOptions.bResultAsXML) {
-                            sStructInfo = modelHeader.toXML();
-                        } else if (scanOptions.bResultAsCSV) {
-                            sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_CSV);
-                        } else if (scanOptions.bResultAsTSV) {
-                            sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_TSV);
-                        } else {
-                            XOptions::printModel(&modelHeader);
-                        }
-	                    } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
-	                        XFModel_table modelTable;
-	                        modelTable.setData(pBinary, xFHeader);
-	                        modelTable.setShowPresentation(true);
-
-	                        if (scanOptions.bResultAsJSON) {
-	                            sStructInfo = modelTable.toJSON();
-                        } else if (scanOptions.bResultAsXML) {
-                            sStructInfo = modelTable.toXML();
-                        } else if (scanOptions.bResultAsCSV) {
-                            sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_CSV);
-                        } else if (scanOptions.bResultAsTSV) {
-                            sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_TSV);
-                        } else {
-                            XOptions::printModel(&modelTable);
-                        }
-                    }
-
-                    if (sStructInfo != "") {
-                        printf("%s", sStructInfo.toUtf8().data());
-                    }
-
-                    delete pBinary;
-                }
-            }
-
-            file.close();
-        }
-
+    if (!bProcessed && (scanOptions.sStruct != "") && (listArgs.count() == 0)) {
+        printf("Error: --struct requires <target>\n");
+        nResult = XOptions::CR_INVALIDPARAMETER;
         bProcessed = true;
     }
 
     // if (parser.isSet(clTest)) {
     //     if (!bIsDbUsed) {
-    //         bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
+    //         bDbLoaded = m_scanEngine.loadDatabase(&scanOptions, &pdStruct);
     //         bIsDbUsed = true;
     //     }
 
     //     // TODO
     // } else if (parser.isSet(clAddTest)) {
     //     if (!bIsDbUsed) {
-    //         bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
+    //         bDbLoaded = m_scanEngine.loadDatabase(&scanOptions, &pdStruct);
     //         bIsDbUsed = true;
     //     }
 
@@ -362,13 +465,13 @@ int XScanEngineConsole::process()
     // }
 
     if (!bProcessed && listArgs.count()) {
-        if (!bIsDbUsed) {
-            bDbLoaded = m_pScanEngine->loadDatabase(&scanOptions, &pdStruct);
+        if (bIsDatabaseUsing && !bIsDbUsed) {
+            bDbLoaded = m_scanEngine.loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
         }
 
-        if (bDbLoaded) {
-            nResult = handleFiles(&listArgs, &scanOptions, m_pScanEngine, &pdStruct);
+        if (!bIsDatabaseUsing || bDbLoaded) {
+            nResult = handleFiles(listArgs, &scanOptions, m_scanEngine, &pdStruct);
         }
 
         bProcessed = true;
@@ -386,14 +489,14 @@ int XScanEngineConsole::process()
     return nResult;
 }
 
-XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine *pScanEngine, XBinary::PDSTRUCT *pPdStruct)
+XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine &scanEngine, XBinary::PDSTRUCT *pPdStruct)
 {
     XOptions::CR result = XOptions::CR_SUCCESS;
 
-    QList<QString> listFileNames;
+    QStringList listFileNames;
 
-    for (qint32 i = 0; i < pListArgs->count(); i++) {
-        QString sFileName = pListArgs->at(i);
+    for (qint32 i = 0; i < listArgs.count(); i++) {
+        QString sFileName = listArgs.at(i);
 
         if (QFileInfo::exists(sFileName)) {
             XBinary::findFiles(sFileName, &listFileNames, pPdStruct);
@@ -431,6 +534,9 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
 
                 printf("%s", sResult.toUtf8().data());
                 file.close();
+            } else {
+                printf("Cannot open: %s\n", sFileName.toUtf8().data());
+                result = XOptions::CR_CANNOTOPENFILE;
             }
         } else if (pScanOptions->bShowFileInfo) {
             QFile file;
@@ -448,6 +554,9 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
 
                 printf("%s", sResult.toUtf8().data());
                 file.close();
+            } else {
+                printf("Cannot open: %s\n", sFileName.toUtf8().data());
+                result = XOptions::CR_CANNOTOPENFILE;
             }
         } else if (pScanOptions->sStruct != "") {
             QFile file;
@@ -501,17 +610,22 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
                         }
 
                         delete pBinary;
+                    } else {
+                        printf("Cannot read structure: %s\n", sFileName.toUtf8().data());
+                        result = XOptions::CR_CANNOTOPENFILE;
                     }
+                } else {
+                    printf("Cannot find struct '%s': %s\n", pScanOptions->sStruct.toUtf8().data(), sFileName.toUtf8().data());
+                    result = XOptions::CR_INVALIDPARAMETER;
                 }
 
                 file.close();
+            } else {
+                printf("Cannot open: %s\n", sFileName.toUtf8().data());
+                result = XOptions::CR_CANNOTOPENFILE;
             }
         } else {
-            XBinary::PDSTRUCT pdStruct = XBinary::createPdStruct();
-            // pdStruct.pCallback = progressCallback;
-            pdStruct.pCallbackUserData = nullptr;
-
-            XScanEngine::SCAN_RESULT scanResult = pScanEngine->scanFile(sFileName, pScanOptions, &pdStruct);
+            XScanEngine::SCAN_RESULT scanResult = scanEngine.scanFile(sFileName, pScanOptions, pPdStruct);
 
             ScanItemModel model(pScanOptions, &(scanResult.listRecords), 1, nullptr);
 
@@ -538,6 +652,7 @@ XOptions::CR XScanEngineConsole::handleFiles(QList<QString> *pListArgs, XScanEng
 
             if (scanResult.listErrors.count()) {
                 printf("%s", XScanEngine::getErrorsString(&scanResult).toUtf8().data());
+                result = XOptions::CR_CANNOTOPENFILE;
             }
             printf("\n");
         }

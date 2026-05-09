@@ -20,7 +20,7 @@
  */
 #include "pyc_script.h"
 
-PYC_Script::PYC_Script(XPYC *pPYC, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pPYC, filePart, pOptions, pPdStruct)
+PYC_Script::PYC_Script(XPYC *pPYC, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pPYC, filePart, scanOptions, pPdStruct)
 {
     this->m_pPYC = pPYC;
     this->m_codeObject = pPYC->getCodeObject(pPdStruct);

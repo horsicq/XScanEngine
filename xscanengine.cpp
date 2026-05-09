@@ -2252,11 +2252,46 @@ bool XScanEngine::isProtection(const QString &sType)
     return bResult;
 }
 
+bool XScanEngine::isBundle(const QString &sType)
+{
+    bool bResult = false;
+
+    QString _sType = sType;
+    _sType = _sType.toLower();
+
+    if ((_sType == "installer") || (_sType == "sfx")) {
+        bResult = true;
+    }
+
+    return bResult;
+}
+
 bool XScanEngine::isScanable(const QSet<XBinary::FT> &stFT)
 {
     return (stFT.contains(XBinary::FT_MSDOS) || stFT.contains(XBinary::FT_NE) || stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX) ||
             stFT.contains(XBinary::FT_PE) || stFT.contains(XBinary::FT_ELF) || stFT.contains(XBinary::FT_MACHO) || stFT.contains(XBinary::FT_DEX) ||
             stFT.contains(XBinary::FT_PDF) || stFT.contains(XBinary::FT_ARCHIVE));
+}
+
+Binary_Script::OPTIONS XScanEngine::createScriptOptions(const SCAN_OPTIONS *pScanOptions)
+{
+    Binary_Script::OPTIONS options = {};
+
+    if (pScanOptions != nullptr) {
+        options.bIsDeepScan = pScanOptions->bIsDeepScan;
+        options.bIsHeuristicScan = pScanOptions->bIsHeuristicScan;
+        options.bIsFirstWrapperScan = pScanOptions->bIsFirstWrapperScan;
+        options.bIsAggressiveScan = pScanOptions->bIsAggressiveScan;
+        options.bIsRecursiveScan = pScanOptions->bIsRecursiveScan;
+        options.bIsResourcesScan = pScanOptions->bIsResourcesScan;
+        options.bIsArchivesScan = pScanOptions->bIsArchivesScan;
+        options.bIsOverlayScan = pScanOptions->bIsOverlayScan;
+        options.bIsVerbose = pScanOptions->bIsVerbose;
+        options.bIsProfiling = pScanOptions->bLogProfiling;
+        options.sScanID = pScanOptions->sScanID;
+    }
+
+    return options;
 }
 
 XScanEngine::SCAN_RESULT XScanEngine::scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
@@ -2977,6 +3012,7 @@ QMap<quint64, QString> XScanEngine::getScanFlags()
     mapResult.insert(SF_OVERLAYSCAN, tr("Overlay scan"));
     mapResult.insert(SF_RESOURCESSCAN, tr("Resource scan"));
     mapResult.insert(SF_ARCHIVESSCAN, tr("Archive scan"));
+    mapResult.insert(SF_FIRSTWRAPPERONLY, tr("First Wrapper Only"));
     mapResult.insert(SF_OVERLAYSCAN, tr("Overlay scan"));
     mapResult.insert(SF_DEEPSCAN, tr("Deep scan"));
     mapResult.insert(SF_HEURISTICSCAN, tr("Heuristic scan"));
@@ -3015,6 +3051,10 @@ quint64 XScanEngine::getScanFlags(SCAN_OPTIONS *pScanOptions)
 
     if (pScanOptions->bIsHeuristicScan) {
         nResult |= SF_HEURISTICSCAN;
+    }
+
+    if (pScanOptions->bIsFirstWrapperScan) {
+        nResult |= SF_FIRSTWRAPPERONLY;
     }
 
     if (pScanOptions->bIsAggressiveScan) {
@@ -3068,6 +3108,7 @@ void XScanEngine::setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags)
     pScanOptions->bIsArchivesScan = nFlags & SF_ARCHIVESSCAN;
     pScanOptions->bIsDeepScan = nFlags & SF_DEEPSCAN;
     pScanOptions->bIsHeuristicScan = nFlags & SF_HEURISTICSCAN;
+    pScanOptions->bIsFirstWrapperScan = nFlags & SF_FIRSTWRAPPERONLY;
     pScanOptions->bIsAggressiveScan = nFlags & SF_AGGRESSIVESCAN;
     pScanOptions->bIsVerbose = nFlags & SF_VERBOSE;
     pScanOptions->bIsAllTypesScan = nFlags & SF_ALLTYPESSCAN;
@@ -3166,6 +3207,7 @@ QString XScanEngine::getJsonFromFlags(quint64 nFlags)
     jsonObject["archivesScan"] = (bool)(nFlags & SF_ARCHIVESSCAN);
     jsonObject["deepScan"] = (bool)(nFlags & SF_DEEPSCAN);
     jsonObject["heuristicScan"] = (bool)(nFlags & SF_HEURISTICSCAN);
+    jsonObject["firstWrapperOnly"] = (bool)(nFlags & SF_FIRSTWRAPPERONLY);
     jsonObject["aggressiveScan"] = (bool)(nFlags & SF_AGGRESSIVESCAN);
     jsonObject["verbose"] = (bool)(nFlags & SF_VERBOSE);
     jsonObject["allTypesScan"] = (bool)(nFlags & SF_ALLTYPESSCAN);
@@ -3214,6 +3256,10 @@ quint64 XScanEngine::getFlagsFromJson(const QString &sJson)
 
         if (jsonObject.value("heuristicScan").toBool()) {
             nResult |= SF_HEURISTICSCAN;
+        }
+
+        if (jsonObject.value("firstWrapperOnly").toBool()) {
+            nResult |= SF_FIRSTWRAPPERONLY;
         }
 
         if (jsonObject.value("aggressiveScan").toBool()) {

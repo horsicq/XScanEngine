@@ -20,7 +20,7 @@
  */
 #include "jpeg_script.h"
 
-Jpeg_Script::Jpeg_Script(XJpeg *pJpeg, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Image_Script(pJpeg, filePart, pOptions, pPdStruct)
+Jpeg_Script::Jpeg_Script(XJpeg *pJpeg, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Image_Script(pJpeg, filePart, scanOptions, pPdStruct)
 {
     m_pJpeg = pJpeg;
 

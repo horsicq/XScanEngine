@@ -20,8 +20,8 @@
  */
 #include "atarist_script.h"
 
-AtariST_Script::AtariST_Script(XAtariST *pAtariST, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
-    : Binary_Script(pAtariST, filePart, pOptions, pPdStruct)
+AtariST_Script::AtariST_Script(XAtariST *pAtariST, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Binary_Script(pAtariST, filePart, scanOptions, pPdStruct)
 {
     m_pAtariST = pAtariST;
 }

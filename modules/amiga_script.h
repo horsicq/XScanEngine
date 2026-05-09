@@ -28,7 +28,7 @@ class Amiga_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit Amiga_Script(XAmigaHunk *pAmiga, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit Amiga_Script(XAmigaHunk *pAmiga, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
     qint32 getNumberOfHunks();

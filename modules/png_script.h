@@ -26,7 +26,7 @@
 class PNG_Script : public Image_Script {
     Q_OBJECT
 public:
-    explicit PNG_Script(XPNG *pPNG, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit PNG_Script(XPNG *pPNG, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
     quint32 getWidth();

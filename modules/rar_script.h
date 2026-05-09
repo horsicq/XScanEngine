@@ -27,7 +27,7 @@ class RAR_Script : public Archive_Script {
     Q_OBJECT
 
 public:
-    explicit RAR_Script(XRar *pRar, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit RAR_Script(XRar *pRar, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~RAR_Script();
 
 private:

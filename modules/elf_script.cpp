@@ -20,9 +20,9 @@
  */
 #include "elf_script.h"
 
-ELF_Script::ELF_Script(XELF *pELF, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pELF, filePart, pOptions, pPdStruct)
+ELF_Script::ELF_Script(XELF *pELF, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pELF, filePart, scanOptions, pPdStruct)
 {
-    this->m_pELF = pELF;
+    m_pELF = pELF;
 
     bool bIs64 = pELF->is64(getMemoryMap());
 
@@ -35,7 +35,7 @@ ELF_Script::ELF_Script(XELF *pELF, XBinary::FILEPART filePart, OPTIONS *pOptions
 
     m_listNotes = pELF->getNotes(&m_listProgramHeaders);
 
-    if (m_listNotes.count() == 0) {
+    if (m_listNotes.isEmpty()) {
         m_listNotes = pELF->getNotes(&m_listSectionHeaders);
     }
 
@@ -49,10 +49,6 @@ ELF_Script::ELF_Script(XELF *pELF, XBinary::FILEPART filePart, OPTIONS *pOptions
                             .arg(XELF::getTypesS().value(m_elfHeader.e_type))
                             .arg(XELF::getMachinesS().value(m_elfHeader.e_machine))
                             .arg(bIs64 ? ("64") : ("32"));  // TODO Check
-}
-
-ELF_Script::~ELF_Script()
-{
 }
 
 bool ELF_Script::isSectionNamePresent(const QString &sSectionName)
@@ -167,15 +163,8 @@ quint64 ELF_Script::getSectionFileSize(quint32 nNumber)
 
 bool ELF_Script::isStringInTablePresent(const QString &sSectionName, const QString &sString)
 {
-    bool bResult = false;
-
     qint32 nSection = m_pELF->getSectionNumber(sSectionName, &m_listSectionRecords);
-
-    if (nSection != -1) {
-        bResult = (m_pELF->getStringsFromSection(nSection).key(sString, -1) != (quint32)-1);
-    }
-
-    return bResult;
+    return nSection != -1 && m_pELF->getStringsFromSection(nSection).key(sString, -1) != (quint32)-1;
 }
 
 bool ELF_Script::isNotePresent(const QString &sNote)

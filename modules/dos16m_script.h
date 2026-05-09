@@ -28,7 +28,7 @@ class DOS16M_Script : public Archive_Script {
     Q_OBJECT
 
 public:
-    explicit DOS16M_Script(XDOS16 *pXdos16, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit DOS16M_Script(XDOS16 *pXdos16, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~DOS16M_Script();
 
 private:

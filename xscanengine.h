@@ -1020,6 +1020,7 @@ public:
         // QString sResult;   // TODO Check
         qint32 nPrio;
         bool bIsProtection;
+        bool bIsBundle;
     };
 
     struct ERROR_RECORD {
@@ -1054,6 +1055,7 @@ public:
         SF_OVERLAYSCAN = 0x00000040,
         SF_RESOURCESSCAN = 0x00000080,
         SF_ARCHIVESSCAN = 0x00000100,
+        SF_FIRSTWRAPPERONLY = 0x00000200,
         SF_VERBOSE = 0x00000010,
         SF_AGGRESSIVESCAN = 0x00000020,
         SF_RESULTASXML = 0x00010000,
@@ -1076,6 +1078,7 @@ public:
         //        bool bEmulate; // TODO Check
         bool bIsDeepScan;
         bool bIsHeuristicScan;
+        bool bIsFirstWrapperScan;
         bool bIsVerbose;
         bool bIsRecursiveScan;
         bool bIsResourcesScan;
@@ -1219,7 +1222,10 @@ public:
     static void sortRecords(QList<SCANSTRUCT> *pListRecords);
     static QString getProtection(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
     static bool isProtection(const QString &sType);
+    static bool isBundle(const QString &sType);
     static bool isScanable(const QSet<XBinary::FT> &stFT);
+
+    static Binary_Script::OPTIONS createScriptOptions(const XScanEngine::SCAN_OPTIONS *pScanOptions);
 
     XScanEngine::SCAN_RESULT scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
     XScanEngine::SCAN_RESULT scanFile(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);

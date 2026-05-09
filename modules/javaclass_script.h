@@ -28,7 +28,7 @@ class JavaClass_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit JavaClass_Script(XJavaClass *pJavaClass, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit JavaClass_Script(XJavaClass *pJavaClass, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~JavaClass_Script();
 
 private:

@@ -28,7 +28,7 @@ class MACH_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    MACH_Script(XMACH *pMACH, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    MACH_Script(XMACH *pMACH, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~MACH_Script();
 
 public slots:

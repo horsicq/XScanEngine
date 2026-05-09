@@ -28,7 +28,7 @@ class PDF_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit PDF_Script(XPDF *pPDF, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit PDF_Script(XPDF *pPDF, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~PDF_Script();
 
 public slots:

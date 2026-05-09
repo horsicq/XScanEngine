@@ -20,7 +20,7 @@
  */
 #include "png_script.h"
 
-PNG_Script::PNG_Script(XPNG *pPNG, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Image_Script(pPNG, filePart, pOptions, pPdStruct)
+PNG_Script::PNG_Script(XPNG *pPNG, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Image_Script(pPNG, filePart, scanOptions, pPdStruct)
 {
     m_pPNG = pPNG;
     m_ihdr = m_pPNG->getIHDR();

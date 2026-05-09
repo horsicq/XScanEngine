@@ -28,8 +28,7 @@ class ELF_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit ELF_Script(XELF *pELF, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
-    ~ELF_Script();
+    explicit ELF_Script(XELF *pELF, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
     bool isSectionNamePresent(const QString &sSectionName);

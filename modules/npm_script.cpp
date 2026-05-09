@@ -20,7 +20,7 @@
  */
 #include "npm_script.h"
 
-NPM_Script::NPM_Script(XNPM *pNpm, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Archive_Script(pNpm, filePart, pOptions, pPdStruct)
+NPM_Script::NPM_Script(XNPM *pNpm, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Archive_Script(pNpm, filePart, scanOptions, pPdStruct)
 {
     this->m_pNpm = pNpm;
 

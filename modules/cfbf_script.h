@@ -28,7 +28,7 @@ class CFBF_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit CFBF_Script(XCFBF *pCFBF, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit CFBF_Script(XCFBF *pCFBF, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~CFBF_Script();
 
 private:

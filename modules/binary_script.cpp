@@ -20,12 +20,12 @@
  */
 #include "binary_script.h"
 
-Binary_Script::Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
+Binary_Script::Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
 {
     this->m_pBinary = pBinary;
     this->m_filePart = filePart;
     this->m_pPdStruct = pPdStruct;
-    this->m_pOptions = pOptions;
+    this->m_scanOptions = scanOptions;
 
     connect(pBinary, SIGNAL(errorMessage(QString)), this, SIGNAL(errorMessage(QString)));
     connect(pBinary, SIGNAL(infoMessage(QString)), this, SIGNAL(infoMessage(QString)));
@@ -528,42 +528,47 @@ bool Binary_Script::is64()
 
 bool Binary_Script::isDeepScan()
 {
-    return m_pOptions->bIsDeepScan;
+    return m_scanOptions.bIsDeepScan;
 }
 
 bool Binary_Script::isHeuristicScan()
 {
-    return m_pOptions->bIsHeuristicScan;
+    return m_scanOptions.bIsHeuristicScan;
+}
+
+bool Binary_Script::isFirstWrapperScan()
+{
+    return m_scanOptions.bIsFirstWrapperScan;
 }
 
 bool Binary_Script::isAggressiveScan()
 {
-    return m_pOptions->bIsAggressiveScan;
+    return m_scanOptions.bIsAggressiveScan;
 }
 
 bool Binary_Script::isRecursiveScan()
 {
-    return m_pOptions->bIsRecursiveScan;
+    return m_scanOptions.bIsRecursiveScan;
 }
 
 bool Binary_Script::isOverlayScan()
 {
-    return m_pOptions->bIsOverlayScan;
+    return m_scanOptions.bIsOverlayScan;
 }
 
 bool Binary_Script::isVerbose()
 {
-    return m_pOptions->bIsVerbose;
+    return m_scanOptions.bIsVerbose;
 }
 
 bool Binary_Script::isProfiling()
 {
-    return m_pOptions->bIsProfiling;
+    return m_scanOptions.bIsProfiling;
 }
 
 QString Binary_Script::getScanID()
 {
-    return m_pOptions->sScanID;
+    return m_scanOptions.sScanID;
 }
 
 qint64 Binary_Script::getStartOffset()
@@ -911,7 +916,7 @@ QElapsedTimer *Binary_Script::_startProfiling()
 {
     QElapsedTimer *pResult = nullptr;
 
-    if (m_pOptions->bIsProfiling) {
+    if (m_scanOptions.bIsProfiling) {
         pResult = new QElapsedTimer;
         pResult->start();
     }
@@ -921,7 +926,7 @@ QElapsedTimer *Binary_Script::_startProfiling()
 
 void Binary_Script::_finishProfiling(QElapsedTimer *pElapsedTimer, const QString &sInfo)
 {
-    if (m_pOptions->bIsProfiling) {
+    if (m_scanOptions.bIsProfiling) {
         qint64 nElapsed = pElapsedTimer->elapsed();
         delete pElapsedTimer;
 

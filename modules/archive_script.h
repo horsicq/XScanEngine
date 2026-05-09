@@ -28,7 +28,7 @@ class Archive_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit Archive_Script(XArchive *pArchive, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit Archive_Script(XArchive *pArchive, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
     bool isArchiveRecordPresent(const QString &sArchiveRecord);

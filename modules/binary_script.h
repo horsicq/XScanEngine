@@ -32,6 +32,7 @@ public:
     struct OPTIONS {
         bool bIsDeepScan;
         bool bIsHeuristicScan;
+        bool bIsFirstWrapperScan;
         bool bIsAggressiveScan;
         bool bIsRecursiveScan;
         bool bIsOverlayScan;
@@ -42,7 +43,7 @@ public:
         QString sScanID;
     };
 
-    explicit Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~Binary_Script();
 
 public slots:
@@ -107,6 +108,7 @@ public slots:
 
     bool isDeepScan();
     bool isHeuristicScan();
+    bool isFirstWrapperScan();
     bool isAggressiveScan();
     bool isRecursiveScan();
     bool isOverlayScan();
@@ -272,7 +274,7 @@ signals:
 private:
     XBinary *m_pBinary;
     XBinary::FILEPART m_filePart;
-    OPTIONS *m_pOptions;
+    OPTIONS m_scanOptions;
     XBinary::PDSTRUCT *m_pPdStruct;
     XBinary::_MEMORY_MAP m_memoryMap;
     XADDR m_nBaseAddress;

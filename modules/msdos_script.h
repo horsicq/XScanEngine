@@ -28,7 +28,7 @@ class MSDOS_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit MSDOS_Script(XMSDOS *pMSDOS, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit MSDOS_Script(XMSDOS *pMSDOS, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~MSDOS_Script();
 
 public slots:

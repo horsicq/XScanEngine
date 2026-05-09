@@ -26,7 +26,7 @@
 class Image_Script : public Binary_Script {
     Q_OBJECT
 public:
-    explicit Image_Script(XBinary *pImage, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit Image_Script(XBinary *pImage, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 private:
     XBinary *m_pImage;

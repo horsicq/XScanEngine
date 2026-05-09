@@ -28,7 +28,7 @@ class PYC_Script : public Binary_Script {
     Q_OBJECT
 
 public:
-    explicit PYC_Script(XPYC *pPYC, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit PYC_Script(XPYC *pPYC, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~PYC_Script();
 
 public slots:

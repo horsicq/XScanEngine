@@ -20,7 +20,7 @@
  */
 #include "ipa_script.h"
 
-IPA_Script::IPA_Script(XIPA *pIPA, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : JAR_Script(pIPA, filePart, pOptions, pPdStruct)
+IPA_Script::IPA_Script(XIPA *pIPA, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : JAR_Script(pIPA, filePart, scanOptions, pPdStruct)
 {
     this->m_pIPA = pIPA;
 }

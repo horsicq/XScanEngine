@@ -20,8 +20,8 @@
  */
 #include "machofat_script.h"
 
-MACHOFAT_Script::MACHOFAT_Script(XMACHOFat *pMachofat, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
-    : Archive_Script(pMachofat, filePart, pOptions, pPdStruct)
+MACHOFAT_Script::MACHOFAT_Script(XMACHOFat *pMachofat, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Archive_Script(pMachofat, filePart, scanOptions, pPdStruct)
 {
     this->m_pMachofat = pMachofat;
 }

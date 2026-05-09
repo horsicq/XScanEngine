@@ -27,8 +27,7 @@ class ISO9660_Script : public Archive_Script {
     Q_OBJECT
 
 public:
-    explicit ISO9660_Script(XISO9660 *pISO, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
-    ~ISO9660_Script();
+    explicit ISO9660_Script(XISO9660 *pISO, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
     QString getSystemIdentifier();

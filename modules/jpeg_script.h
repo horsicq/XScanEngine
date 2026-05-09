@@ -26,7 +26,7 @@
 class Jpeg_Script : public Image_Script {
     Q_OBJECT
 public:
-    explicit Jpeg_Script(XJpeg *pJpeg, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct);
+    explicit Jpeg_Script(XJpeg *pJpeg, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
     QString getComment();

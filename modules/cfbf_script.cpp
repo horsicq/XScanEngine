@@ -20,7 +20,7 @@
  */
 #include "cfbf_script.h"
 
-CFBF_Script::CFBF_Script(XCFBF *pCFBF, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pCFBF, filePart, pOptions, pPdStruct)
+CFBF_Script::CFBF_Script(XCFBF *pCFBF, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pCFBF, filePart, scanOptions, pPdStruct)
 {
     this->m_pCFBF = pCFBF;
 }

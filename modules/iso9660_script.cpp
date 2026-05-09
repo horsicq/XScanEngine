@@ -20,10 +20,10 @@
  */
 #include "iso9660_script.h"
 
-ISO9660_Script::ISO9660_Script(XISO9660 *pISO, XBinary::FILEPART filePart, OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)
-    : Archive_Script(pISO, filePart, pOptions, pPdStruct)
+ISO9660_Script::ISO9660_Script(XISO9660 *pISO, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Archive_Script(pISO, filePart, scanOptions, pPdStruct)
 {
-    this->m_pISO = pISO;
+    m_pISO = pISO;
 
     g_sSystemIdentifier = m_pISO->getSystemIdentifier();
     g_sVolumeIdentifier = m_pISO->getVolumeIdentifier();
@@ -34,10 +34,6 @@ ISO9660_Script::ISO9660_Script(XISO9660 *pISO, XBinary::FILEPART filePart, OPTIO
     g_sCopyrightFileIdentifier = m_pISO->getCopyrightFileIdentifier();
     g_sAbstractFileIdentifier = m_pISO->getAbstractFileIdentifier();
     g_sBibliographicFileIdentifier = m_pISO->getBibliographicFileIdentifier();
-}
-
-ISO9660_Script::~ISO9660_Script()
-{
 }
 
 QString ISO9660_Script::getSystemIdentifier()
