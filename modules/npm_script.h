@@ -32,7 +32,6 @@ class NPM_Script : public Archive_Script {
 
 public:
     explicit NPM_Script(XNPM *pNpm, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
-    ~NPM_Script();
 
 public slots:
     QString getPackageJson();

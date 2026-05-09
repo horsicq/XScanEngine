@@ -45,8 +45,8 @@ public:
     explicit XScanSortWidget(QWidget *pParent = nullptr);
     ~XScanSortWidget();
 
-    virtual void adjustView();
-    virtual void setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions);
+    void adjustView() override;
+    void setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions) override;
 
     void setEngine(XScanEngine *pScanEngine);
 

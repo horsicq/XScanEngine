@@ -42,7 +42,7 @@ QString Jpeg_Script::getDqtMD5()
 
 bool Jpeg_Script::isChunkPresent(qint32 nID)
 {
-    return m_pJpeg->isChunkPresent(&m_listChunks, (qint8)nID);
+    return m_pJpeg->isChunkPresent(&m_listChunks, static_cast<qint8>(nID));
 }
 
 bool Jpeg_Script::isExifPresent()

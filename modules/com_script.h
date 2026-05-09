@@ -29,10 +29,6 @@ class COM_Script : public Binary_Script {
 
 public:
     explicit COM_Script(XCOM *pCOM, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
-    ~COM_Script();
-
-private:
-    XCOM *m_pCOM;
 };
 
 #endif  // COM_SCRIPT_H

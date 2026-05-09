@@ -147,7 +147,6 @@ XScanSortWidget::~XScanSortWidget()
 
 void XScanSortWidget::adjustView()
 {
-
 }
 
 void XScanSortWidget::setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions)
@@ -376,25 +375,25 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     m_scanOptions.bCollectionLog = ui->checkBoxScanLog->isChecked();
     XScanEngine::setScanFlags(&m_scanOptions, ui->comboBoxFlags->getValue().toULongLong());
 
-if (!m_scanOptions.bCollectionAllFileTypes) {
-    QString sFileTypes = ui->comboBoxFileType->getCustomFlagAsString();
+    if (!m_scanOptions.bCollectionAllFileTypes) {
+        QString sFileTypes = ui->comboBoxFileType->getCustomFlagAsString();
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    QList<QString> listFileTypes = sFileTypes.split("|", Qt::SkipEmptyParts);
+        QList<QString> listFileTypes = sFileTypes.split("|", Qt::SkipEmptyParts);
 #else
-    QList<QString> listFileTypes = sFileTypes.split("|", QString::SkipEmptyParts);
+        QList<QString> listFileTypes = sFileTypes.split("|", QString::SkipEmptyParts);
 #endif
 
-    qint32 nNumberOfFileTypes = listFileTypes.count();
-    for (qint32 nI = 0; nI < nNumberOfFileTypes; nI++) {
-        QString sFileType = listFileTypes.at(nI).trimmed();
-        XBinary::FT fileType = XBinary::ftStringToFileTypeId(sFileType);
+        qint32 nNumberOfFileTypes = listFileTypes.count();
+        for (qint32 nI = 0; nI < nNumberOfFileTypes; nI++) {
+            QString sFileType = listFileTypes.at(nI).trimmed();
+            XBinary::FT fileType = XBinary::ftStringToFileTypeId(sFileType);
 
-        if (fileType != XBinary::FT_UNKNOWN) {
-            m_scanOptions.stCollectionFileTypes.insert(fileType);
+            if (fileType != XBinary::FT_UNKNOWN) {
+                m_scanOptions.stCollectionFileTypes.insert(fileType);
+            }
         }
     }
-}
 
     if (m_pScanEngine && m_pScanEngine->isDatabaseUsing()) {
         if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
@@ -480,17 +479,17 @@ void XScanSortWidget::on_pushButtonResult_clicked()
 
 void XScanSortWidget::on_pushButtonDatabaseMain_clicked()
 {
-    selectDatabaseDirectory(this, ui->lineEditDatabaseMain, tr("Open directory") + QString("..."));
+    selectDatabaseDirectory(this, ui->lineEditDatabaseMain, tr("Open directory") + "...");
 }
 
 void XScanSortWidget::on_pushButtonDatabaseExtra_clicked()
 {
-    selectDatabaseDirectory(this, ui->lineEditDatabaseExtra, tr("Open directory") + QString("..."));
+    selectDatabaseDirectory(this, ui->lineEditDatabaseExtra, tr("Open directory") + "...");
 }
 
 void XScanSortWidget::on_pushButtonDatabaseCustom_clicked()
 {
-    selectDatabaseDirectory(this, ui->lineEditDatabaseCustom, tr("Open directory") + QString("..."));
+    selectDatabaseDirectory(this, ui->lineEditDatabaseCustom, tr("Open directory") + "...");
 }
 
 void XScanSortWidget::on_checkBoxSSE2_toggled(bool bChecked)

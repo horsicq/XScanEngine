@@ -28,8 +28,6 @@ class Image_Script : public Binary_Script {
 public:
     explicit Image_Script(XBinary *pImage, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
-private:
-    XBinary *m_pImage;
 };
 
 #endif  // IMAGE_SCRIPT_H
