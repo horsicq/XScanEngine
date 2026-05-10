@@ -26,6 +26,7 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     ui->setupUi(this);
 
     m_pScanEngine = nullptr;
+    m_pModel = nullptr;
     m_fileType = XBinary::FT_UNKNOWN;
 
     ui->comboBoxType->setToolTip(tr("Type"));
@@ -43,7 +44,6 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     ui->pushButtonExtraInformation->setToolTip(tr("Extra information"));
     ui->toolButtonElapsedTime->setToolTip(tr("Elapsed time"));
 
-    // m_pModel = nullptr;
     // m_bProcess = false;
 
     // connect(&m_watcher, SIGNAL(finished()), this, SLOT(onScanFinished()));
@@ -81,6 +81,7 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
 
 XScanEngineWidget::~XScanEngineWidget()
 {
+    clear();
     delete ui;
 }
 
@@ -166,6 +167,11 @@ void XScanEngineWidget::clear()
     m_scanResult = {};
 
     ui->treeViewResult->setModel(0);
+
+    if (m_pModel) {
+        delete m_pModel;
+        m_pModel = nullptr;
+    }
 }
 
 void XScanEngineWidget::process()
@@ -213,6 +219,12 @@ void XScanEngineWidget::process()
                 if (!m_bInitDatabase) {
                     m_bInitDatabase = m_pScanEngine->loadDatabase(&m_scanOptions, nullptr);
                 }
+
+                if (!m_bInitDatabase) {
+                    m_listErrorsAndWarnings.append(tr("Cannot load database"));
+                    emit scanFinished();
+                    return;
+                }
             }
 
             XScanEngineProcess scanEngineProcess(m_pScanEngine);
@@ -242,7 +254,7 @@ void XScanEngineWidget::onScanFinished(qint64 nMsec)
     QString sLogButtonText;
 
     if (nNumberOfErrors) {
-        sLogButtonText = QString("%1(%2)").arg(tr("Log"), QString::number(nNumberOfErrors));
+        sLogButtonText = QString("%1(%2)").arg(tr("Log")).arg(QString::number(nNumberOfErrors));
     } else {
         sLogButtonText = tr("Log");
     }
@@ -251,6 +263,12 @@ void XScanEngineWidget::onScanFinished(qint64 nMsec)
     ui->pushButtonLog->setEnabled(nNumberOfErrors);
 
     ui->toolButtonElapsedTime->setText(QString("%1 %2").arg(nMsec).arg(tr("msec")));
+
+    if (m_pModel) {
+        ui->treeViewResult->setModel(0);
+        delete m_pModel;
+        m_pModel = nullptr;
+    }
 
     m_pModel = new ScanItemModel(&m_scanOptions, &(m_scanResult.listRecords), 3, getGlobalOptions());
     ui->treeViewResult->setModel(m_pModel);

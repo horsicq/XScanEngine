@@ -194,44 +194,44 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
     pOptions->addID(XOptions::ID_SCAN_SUBDIRECTORIES, true);
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    pOptions->addID(XOptions::ID_SCAN_COLOR_INSTALLER, QString("%1|%2").arg(QColor(Qt::darkGreen).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_SFX, QString("%1|%2").arg(QColor(Qt::darkGreen).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_ARCHIVE, QString("%1|%2").arg(QColor(Qt::darkGreen).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_INSTALLER, QString("%1|%2").arg(QColor(Qt::darkGreen).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_SFX, QString("%1|%2").arg(QColor(Qt::darkGreen).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_ARCHIVE, QString("%1|%2").arg(QColor(Qt::darkGreen).name()).arg(""));
 #else
-    pOptions->addID(XOptions::ID_SCAN_COLOR_INSTALLER, QString("%1|%2").arg(QColor(Qt::cyan).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_SFX, QString("%1|%2").arg(QColor(Qt::cyan).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_ARCHIVE, QString("%1|%2").arg(QColor(Qt::cyan).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_INSTALLER, QString("%1|%2").arg(QColor(Qt::cyan).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_SFX, QString("%1|%2").arg(QColor(Qt::cyan).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_ARCHIVE, QString("%1|%2").arg(QColor(Qt::cyan).name()).arg(""));
 #endif
-    pOptions->addID(XOptions::ID_SCAN_COLOR_PROTECTION, QString("%1|%2").arg(QColor(Qt::red).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_PETOOL, QString("%1|%2").arg(QColor(Qt::green).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_APKTOOL, QString("%1|%2").arg(QColor(Qt::green).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_OS, QString("%1|%2").arg(QColor(Qt::darkYellow).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_VM, QString("%1|%2").arg(QColor(Qt::darkYellow).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_PLATFORM, QString("%1|%2").arg(QColor(Qt::darkYellow).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_DOSEXTENDER, QString("%1|%2").arg(QColor(Qt::darkYellow).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_PROTECTION, QString("%1|%2").arg(QColor(Qt::red).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_PETOOL, QString("%1|%2").arg(QColor(Qt::green).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_APKTOOL, QString("%1|%2").arg(QColor(Qt::green).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_OS, QString("%1|%2").arg(QColor(Qt::darkYellow).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_VM, QString("%1|%2").arg(QColor(Qt::darkYellow).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_PLATFORM, QString("%1|%2").arg(QColor(Qt::darkYellow).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_DOSEXTENDER, QString("%1|%2").arg(QColor(Qt::darkYellow).name()).arg(""));
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    pOptions->addID(XOptions::ID_SCAN_COLOR_FORMAT, QString("%1|%2").arg(QColor(Qt::darkGreen).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_FORMAT, QString("%1|%2").arg(QColor(Qt::darkGreen).name()).arg(""));
 #else
-    pOptions->addID(XOptions::ID_SCAN_COLOR_FORMAT, QString("%1|%2").arg(QColor(Qt::green).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_FORMAT, QString("%1|%2").arg(QColor(Qt::green).name()).arg(""));
 #endif
-    pOptions->addID(XOptions::ID_SCAN_COLOR_SIGNTOOL, QString("%1|%2").arg(QColor(Qt::gray).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_CERTIFICATE, QString("%1|%2").arg(QColor(Qt::gray).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_LICENSING, QString("%1|%2").arg(QColor(Qt::gray).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_LANGUAGE, QString("%1|%2").arg(QColor(Qt::darkCyan).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_CORRUPTEDDATA, QString("%1|%2").arg(QColor(Qt::darkRed).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_PERSONALDATA, QString("%1|%2").arg(QColor(Qt::darkRed).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_AUTHOR, QString("%1|%2").arg(QColor(Qt::darkRed).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_VIRUS, QString("%1|%2").arg(QColor(Qt::white).name(), QColor(Qt::darkRed).name()));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_TROJAN, QString("%1|%2").arg(QColor(Qt::white).name(), QColor(Qt::darkRed).name()));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_MALWARE, QString("%1|%2").arg(QColor(Qt::white).name(), QColor(Qt::darkRed).name()));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_SIGNTOOL, QString("%1|%2").arg(QColor(Qt::gray).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_CERTIFICATE, QString("%1|%2").arg(QColor(Qt::gray).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_LICENSING, QString("%1|%2").arg(QColor(Qt::gray).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_LANGUAGE, QString("%1|%2").arg(QColor(Qt::darkCyan).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_CORRUPTEDDATA, QString("%1|%2").arg(QColor(Qt::darkRed).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_PERSONALDATA, QString("%1|%2").arg(QColor(Qt::darkRed).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_AUTHOR, QString("%1|%2").arg(QColor(Qt::darkRed).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_VIRUS, QString("%1|%2").arg(QColor(Qt::white).name()).arg(QColor(Qt::darkRed).name()));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_TROJAN, QString("%1|%2").arg(QColor(Qt::white).name()).arg(QColor(Qt::darkRed).name()));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_MALWARE, QString("%1|%2").arg(QColor(Qt::white).name()).arg(QColor(Qt::darkRed).name()));
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUG, QString("%1|%2").arg(QColor(Qt::darkBlue).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUGDATA, QString("%1|%2").arg(QColor(Qt::darkBlue).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUG, QString("%1|%2").arg(QColor(Qt::darkBlue).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUGDATA, QString("%1|%2").arg(QColor(Qt::darkBlue).name()).arg(""));
 #else
-    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUG, QString("%1|%2").arg(QColor(Qt::yellow).name(), ""));
-    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUGDATA, QString("%1|%2").arg(QColor(Qt::yellow).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUG, QString("%1|%2").arg(QColor(Qt::yellow).name()).arg(""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_DEBUGDATA, QString("%1|%2").arg(QColor(Qt::yellow).name()).arg(""));
 #endif
-    pOptions->addID(XOptions::ID_SCAN_COLOR_GAMEENGINE, QString("%1|%2").arg(QColor(Qt::darkGreen).name(), ""));
+    pOptions->addID(XOptions::ID_SCAN_COLOR_GAMEENGINE, QString("%1|%2").arg(QColor(Qt::darkGreen).name()).arg(""));
     pOptions->addID(XOptions::ID_SCAN_COLOR_COMPILER, QString("|"));
     pOptions->addID(XOptions::ID_SCAN_COLOR_COMPRESSOR, QString("|"));
     pOptions->addID(XOptions::ID_SCAN_COLOR_CONVERTER, QString("|"));

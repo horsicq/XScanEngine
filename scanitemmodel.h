@@ -39,7 +39,7 @@ class ScanItemModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
-    enum UD {
+    enum UD : qint32 {
         UD_FILETYPE = 0,
         UD_NAME,
         UD_INFO,

@@ -750,7 +750,7 @@ QString Binary_Script::getOperationSystemVersion()
 
 QString Binary_Script::getOperationSystemOptions()
 {
-    QString sResult = QString("%1, %2, %3").arg(m_fileFormatInfo.sArch, XBinary::modeIdToString(m_fileFormatInfo.mode), m_fileFormatInfo.sType);
+    QString sResult = QString("%1, %2, %3").arg(m_fileFormatInfo.sArch).arg(XBinary::modeIdToString(m_fileFormatInfo.mode)).arg(m_fileFormatInfo.sType);
 
     if (m_fileFormatInfo.endian == XBinary::ENDIAN_BIG) {
         if (sResult != "") {
@@ -930,7 +930,7 @@ void Binary_Script::_finishProfiling(QElapsedTimer *pElapsedTimer, const QString
         qint64 nElapsed = pElapsedTimer->elapsed();
         delete pElapsedTimer;
 
-        emit warningMessage(QString("%1 [%2 ms]").arg(sInfo, QString::number(nElapsed)));
+        emit warningMessage(QString("%1 [%2 ms]").arg(sInfo).arg(QString::number(nElapsed)));
     }
 }
 
@@ -974,7 +974,7 @@ qint64 Binary_Script::endTiming(qint64 nHandle, const QString &sInfo)
 
         m_mapProfiling.remove(nHandle);
     } else {
-        emit errorMessage(QString("%1: %2").arg(tr("Invalid handle"), QString::number(nHandle)));
+        emit errorMessage(QString("%1: %2").arg(tr("Invalid handle")).arg(QString::number(nHandle)));
     }
 
     return nResult;
@@ -1069,7 +1069,7 @@ QList<QVariant> Binary_Script::decompressBytes(qint64 nOffset, qint64 nSize, QSt
             listResult.append(nRecord);
         }
     } else {
-        emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method"), sCompressionMethod));
+        emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method")).arg(sCompressionMethod));
     }
 
     return listResult;
@@ -1084,7 +1084,7 @@ qint64 Binary_Script::getCompressedDataSize(qint64 nOffset, qint64 nSize, QStrin
     if (compressionMethod != XBinary::HANDLE_METHOD_UNKNOWN) {
         nResult = XDecompress().getCompressedDataSize(m_pBinary->getDevice(), nOffset, nSize, compressionMethod, m_pPdStruct);
     } else {
-        emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method"), sCompressionMethod));
+        emit errorMessage(QString("%1: %2").arg(tr("Unknown compression method")).arg(sCompressionMethod));
     }
 
     return nResult;

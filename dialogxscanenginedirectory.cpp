@@ -115,7 +115,8 @@ void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
         }
 
         XScanEngineProcess scanEngineProcess(m_pScanEngine);
-        connect(&scanEngineProcess, SIGNAL(scanResult(const XScanEngine::SCAN_RESULT &)), this, SLOT(scanResult(const XScanEngine::SCAN_RESULT &)), Qt::DirectConnection);
+        qRegisterMetaType<XScanEngine::SCAN_RESULT>("XScanEngine::SCAN_RESULT");
+        connect(&scanEngineProcess, SIGNAL(scanResult(const XScanEngine::SCAN_RESULT &)), this, SLOT(scanResult(const XScanEngine::SCAN_RESULT &)), Qt::QueuedConnection);
 
         XDialogProcess ds(this, &scanEngineProcess);
         ds.setGlobal(getShortcuts(), getGlobalOptions());
@@ -127,7 +128,7 @@ void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
 
 void DialogXScanEngineDirectory::scanResult(const XScanEngine::SCAN_RESULT &scanResult)
 {
-    QString sResult = QString("%1 %2 %3").arg(QDir().toNativeSeparators(scanResult.sFileName), QString::number(scanResult.nScanTime), tr("msec"));
+    QString sResult = QString("%1 %2 %3").arg(QDir().toNativeSeparators(scanResult.sFileName)).arg(QString::number(scanResult.nScanTime)).arg(tr("msec"));
     sResult += "\r\n";
 
     ScanItemModel model(&m_scanOptions, &(scanResult.listRecords), 1, getGlobalOptions());

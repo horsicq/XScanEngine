@@ -29,9 +29,9 @@ MACH_Script::MACH_Script(XMACH *pMACH, XBinary::FILEPART filePart, const OPTIONS
     m_listCommandRecords = pMACH->getCommandRecords();
     m_listSectionNameStrings = pMACH->getSectionNames(&m_listSectionRecords);
 
-    m_nNumberOfSections = m_listSectionRecords.count();
-    m_nNumberOfSegments = m_listSegmentRecords.count();
-    m_nNumberOfCommands = m_listCommandRecords.count();
+    m_nNumberOfSections = m_listSectionRecords.size();
+    m_nNumberOfSegments = m_listSegmentRecords.size();
+    m_nNumberOfCommands = m_listCommandRecords.size();
 
     bool bIs64 = pMACH->is64(getMemoryMap());
 

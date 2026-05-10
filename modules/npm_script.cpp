@@ -22,23 +22,21 @@
 
 NPM_Script::NPM_Script(XNPM *pNpm, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Archive_Script(pNpm, filePart, scanOptions, pPdStruct)
 {
-    m_pNpm = pNpm;
+    QByteArray baJson = pNpm->decompress(getArchiveRecords(), "package/package.json", pPdStruct);
+    m_sPackageJson = QString::fromUtf8(baJson);
 
-    m_sPackageJson = pNpm->decompress(getArchiveRecords(), "package/package.json", pPdStruct);
+    QJsonDocument jsDoc = QJsonDocument::fromJson(baJson);
+    if (!jsDoc.isNull() && jsDoc.isObject()) {
+        m_jsonObject = jsDoc.object();
+    }
 }
 
-QString NPM_Script::getPackageJson()
+QString NPM_Script::getPackageJson() const
 {
     return m_sPackageJson;
 }
 
-QString NPM_Script::getPackageJsonRecord(const QString &sRecord)
+QString NPM_Script::getPackageJsonRecord(const QString &sRecord) const
 {
-    QJsonDocument jsDoc = QJsonDocument::fromJson(m_sPackageJson.toUtf8());
-
-    if (jsDoc.isObject()) {
-        return jsDoc.object().value(sRecord).toString();
-    }
-
-    return {};
+    return m_jsonObject.value(sRecord).toString();
 }

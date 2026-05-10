@@ -35,14 +35,14 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
     qint32 nNumberOfDetects = 0;
 
     if (pListScanStructs) {
-        nNumberOfDetects = pListScanStructs->count();
+        nNumberOfDetects = pListScanStructs->size();
     }
 
     for (qint32 i = 0; i < nNumberOfDetects; i++) {
         if (!mapParents.contains(pListScanStructs->at(i).id.sUuid)) {
             ScanItem *_pItemParent = nullptr;
 
-            if (pListScanStructs->at(i).parentId.sUuid == "") {
+            if (pListScanStructs->at(i).parentId.sUuid.isEmpty()) {
                 _pItemParent = m_pRootItem;
             } else {
                 _pItemParent = mapParents.value(pListScanStructs->at(i).parentId.sUuid);
@@ -66,7 +66,7 @@ ScanItemModel::ScanItemModel(XScanEngine::SCAN_OPTIONS *pScanOptions, const QLis
             mapParents.insert(pListScanStructs->at(i).id.sUuid, pItemMain);
         }
 
-        if (pListScanStructs->at(i).sName != "") {
+        if (!pListScanStructs->at(i).sName.isEmpty()) {
             bool bAdd = true;
 
             if (pListScanStructs->at(i).bIsUnknown && pScanOptions->bHideUnknown) {
@@ -197,7 +197,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
         else if (nRole == Qt::ForegroundRole) {
             if (isHighlight()) {
                 QString sColor = XScanEngine::typeToColorRecord(scanStruct.sType, m_pOptions).sColorMain;
-                if (sColor == "") {
+                if (sColor.isEmpty()) {
                     result = QVariant();
                 } else {
                     result = QVariant(QColor(sColor));
@@ -208,7 +208,7 @@ QVariant ScanItemModel::data(const QModelIndex &index, int nRole) const
         } else if (nRole == Qt::BackgroundRole) {
             if (isHighlight()) {
                 QString sColor = XScanEngine::typeToColorRecord(scanStruct.sType, m_pOptions).sColorBackground;
-                if (sColor == "") {
+                if (sColor.isEmpty()) {
                     result = QVariant();
                 } else {
                     result = QVariant(QColor(sColor));
@@ -411,7 +411,7 @@ void ScanItemModel::_toCSV(QString *pString, ScanItem *pItem, qint32 nLevel)
     } else {
         const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
 
-        QString sResult = QString("%1;%2;%3;%4;%5\n").arg(ss.sType, ss.sName, ss.sVersion, ss.sInfo, pItem->data(0).toString());
+        QString sResult = QString("%1;%2;%3;%4;%5\n").arg(ss.sType).arg(ss.sName).arg(ss.sVersion).arg(ss.sInfo).arg(pItem->data(0).toString());
 
         pString->append(sResult);
     }
@@ -428,7 +428,7 @@ void ScanItemModel::_toTSV(QString *pString, ScanItem *pItem, qint32 nLevel)
     } else {
         const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
 
-        QString sResult = QString("%1\t%2\t%3\t%4\t%5\n").arg(ss.sType, ss.sName, ss.sVersion, ss.sInfo, pItem->data(0).toString());
+        QString sResult = QString("%1\t%2\t%3\t%4\t%5\n").arg(ss.sType).arg(ss.sName).arg(ss.sVersion).arg(ss.sInfo).arg(pItem->data(0).toString());
 
         pString->append(sResult);
     }

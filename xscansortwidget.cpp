@@ -381,7 +381,7 @@ void XScanSortWidget::on_pushButtonScan_clicked()
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         QList<QString> listFileTypes = sFileTypes.split("|", Qt::SkipEmptyParts);
 #else
-        QList<QString> listFileTypes = sFileTypes.split("|", QString::SkipEmptyParts);
+        QList<QString> listFileTypes = sFileTypes.split("|", Qt::SkipEmptyParts);
 #endif
 
         qint32 nNumberOfFileTypes = listFileTypes.count();
@@ -408,7 +408,9 @@ void XScanSortWidget::on_pushButtonScan_clicked()
             m_scanOptions.sMainDatabasePath = ui->lineEditDatabaseMain->text();
         }
 
-        m_pScanEngine->loadDatabase(&m_scanOptions, nullptr);
+        if (!m_pScanEngine->loadDatabase(&m_scanOptions, nullptr)) {
+            return;
+        }
     }
 
     XScanEngineProcess scanEngineProcess(m_pScanEngine);

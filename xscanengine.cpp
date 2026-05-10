@@ -1416,7 +1416,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
             }
         } else {
             if (databaseType == DT_MAIN) {
-                QString sErrorString = QString("%1: %2").arg(tr("Cannot load database"), _sDatabasePath);
+                QString sErrorString = QString("%1: %2").arg(tr("Cannot load database")).arg(_sDatabasePath);
 
                 emit errorMessage(sErrorString);
             }
@@ -1836,10 +1836,10 @@ QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *
 
         if (pOptions->bFormatResult) {
             sResult += QString(" [%1 = 0x%2, %3 = 0x%4]")
-                           .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+                           .arg(tr("Offset")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nOffset)).arg(tr("Size")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nSize));
         } else {
             sResult += QString("[%1=0x%2,%3=0x%4]")
-                           .arg(tr("Offset"), XBinary::valueToHexEx(pScanStruct->parentId.nOffset), tr("Size"), XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+                           .arg(tr("Offset")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nOffset)).arg(tr("Size")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nSize));
         }
     }
 
@@ -1911,7 +1911,7 @@ QString XScanEngine::createShortResultString(XScanEngine::SCAN_OPTIONS *pOptions
 
         if (scanStruct.id.fileType != XBinary::FT_BINARY) {
             // sResult = createFullResultString2(&scanStruct);
-            sResult = QString("%1: %2").arg(XBinary::fileTypeIdToString(scanStruct.id.fileType), createResultStringEx(pOptions, &scanStruct));
+            sResult = QString("%1: %2").arg(XBinary::fileTypeIdToString(scanStruct.id.fileType)).arg(createResultStringEx(pOptions, &scanStruct));
             break;
         } else if (!scanStruct.bIsUnknown) {
             sResult = createResultStringEx(pOptions, &scanStruct);
@@ -1932,7 +1932,7 @@ QString XScanEngine::createResultString(SCAN_OPTIONS *pOptions, const SCAN_RESUL
         SCANSTRUCT scanStruct = scanResult.listRecords.at(i);
 
         if (scanStruct.id.fileType != XBinary::FT_BINARY) {
-            sResult += QString("%1: %2").arg(XBinary::fileTypeIdToString(scanStruct.id.fileType), createResultStringEx(pOptions, &scanStruct)) + "\r\n";
+            sResult += QString("%1: %2").arg(XBinary::fileTypeIdToString(scanStruct.id.fileType)).arg(createResultStringEx(pOptions, &scanStruct)) + "\r\n";
         } else if (!scanStruct.bIsUnknown) {
             sResult += createResultStringEx(pOptions, &scanStruct) + "\r\n";
         }
@@ -1948,7 +1948,7 @@ QString XScanEngine::getErrorsString(XScanEngine::SCAN_RESULT *pScanResult)
     qint32 nNumberOfErrors = pScanResult->listErrors.count();
 
     for (qint32 i = 0; i < nNumberOfErrors; i++) {
-        sResult += QString("%1: %2\n").arg(pScanResult->listErrors.at(i).sScript, pScanResult->listErrors.at(i).sErrorString);
+        sResult += QString("%1: %2\n").arg(pScanResult->listErrors.at(i).sScript).arg(pScanResult->listErrors.at(i).sErrorString);
     }
 
     return sResult;
@@ -1961,7 +1961,7 @@ QList<QString> XScanEngine::getErrorsAndWarningsStringList(XScanEngine::SCAN_RES
     qint32 nNumberOfErrors = pScanResult->listErrors.count();
 
     for (qint32 i = 0; i < nNumberOfErrors; i++) {
-        listResult.append(QString("%1: %2").arg(pScanResult->listErrors.at(i).sScript, pScanResult->listErrors.at(i).sErrorString));
+        listResult.append(QString("%1: %2").arg(pScanResult->listErrors.at(i).sScript).arg(pScanResult->listErrors.at(i).sErrorString));
     }
 
     return listResult;
@@ -3704,7 +3704,7 @@ bool XScanEngine::compareJson(const QString &sJson1, const QString &sJson2)
                 QJsonObject errorObj = errorsArray1.at(i).toObject();
                 QString sScript = errorObj.value("script").toString();
                 QString sErrorString = errorObj.value("errorString").toString();
-                emit errorMessage(QString("JSON1 Error in %1: %2").arg(sScript, sErrorString));
+                emit errorMessage(QString("JSON1 Error in %1: %2").arg(sScript).arg(sErrorString));
             }
             bResult = false;
         }
@@ -3718,7 +3718,7 @@ bool XScanEngine::compareJson(const QString &sJson1, const QString &sJson2)
                 QJsonObject errorObj = errorsArray2.at(i).toObject();
                 QString sScript = errorObj.value("script").toString();
                 QString sErrorString = errorObj.value("errorString").toString();
-                emit errorMessage(QString("JSON2 Error in %1: %2").arg(sScript, sErrorString));
+                emit errorMessage(QString("JSON2 Error in %1: %2").arg(sScript).arg(sErrorString));
             }
             bResult = false;
         }
@@ -3754,42 +3754,42 @@ bool XScanEngine::compareJson(const QString &sJson1, const QString &sJson2)
         QString sFileType1 = record1.value("fileType").toString();
         QString sFileType2 = record2.value("fileType").toString();
         if (sFileType1 != sFileType2) {
-            emit errorMessage(QString("Record %1 fileType mismatch: '%2' vs '%3'").arg(i).arg(sFileType1, sFileType2));
+            emit errorMessage(QString("Record %1 fileType mismatch: '%2' vs '%3'").arg(i).arg(sFileType1).arg(sFileType2));
             bResult = false;
         }
 
         QString sFilePart1 = record1.value("filePart").toString();
         QString sFilePart2 = record2.value("filePart").toString();
         if (sFilePart1 != sFilePart2) {
-            emit errorMessage(QString("Record %1 filePart mismatch: '%2' vs '%3'").arg(i).arg(sFilePart1, sFilePart2));
+            emit errorMessage(QString("Record %1 filePart mismatch: '%2' vs '%3'").arg(i).arg(sFilePart1).arg(sFilePart2));
             bResult = false;
         }
 
         QString sType1 = record1.value("type").toString();
         QString sType2 = record2.value("type").toString();
         if (sType1 != sType2) {
-            emit errorMessage(QString("Record %1 type mismatch: '%2' vs '%3'").arg(i).arg(sType1, sType2));
+            emit errorMessage(QString("Record %1 type mismatch: '%2' vs '%3'").arg(i).arg(sType1).arg(sType2));
             bResult = false;
         }
 
         QString sName1 = record1.value("name").toString();
         QString sName2 = record2.value("name").toString();
         if (sName1 != sName2) {
-            emit errorMessage(QString("Record %1 name mismatch: '%2' vs '%3'").arg(i).arg(sName1, sName2));
+            emit errorMessage(QString("Record %1 name mismatch: '%2' vs '%3'").arg(i).arg(sName1).arg(sName2));
             bResult = false;
         }
 
         QString sVersion1 = record1.value("version").toString();
         QString sVersion2 = record2.value("version").toString();
         if (sVersion1 != sVersion2) {
-            emit errorMessage(QString("Record %1 version mismatch: '%2' vs '%3'").arg(i).arg(sVersion1, sVersion2));
+            emit errorMessage(QString("Record %1 version mismatch: '%2' vs '%3'").arg(i).arg(sVersion1).arg(sVersion2));
             bResult = false;
         }
 
         QString sInfo1 = record1.value("info").toString();
         QString sInfo2 = record2.value("info").toString();
         if (sInfo1 != sInfo2) {
-            emit errorMessage(QString("Record %1 info mismatch: '%2' vs '%3'").arg(i).arg(sInfo1, sInfo2));
+            emit errorMessage(QString("Record %1 info mismatch: '%2' vs '%3'").arg(i).arg(sInfo1).arg(sInfo2));
             bResult = false;
         }
     }
@@ -3882,7 +3882,16 @@ XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
 
         QByteArray baFileData;
         QBuffer buffer(&baFileData);
-        buffer.open(QIODevice::WriteOnly);
+
+        if (!buffer.open(QIODevice::WriteOnly)) {
+            TEST_FAILED_RECORD failedRecord = {};
+            failedRecord.sZipPath = sZipPath;
+            failedRecord.sExpectedDetect = sExpectedDetect;
+            failedRecord.sErrorMessage = "Cannot create unpack buffer";
+            result.listFailed.append(failedRecord);
+            result.nErrors++;
+            continue;
+        }
 
         XBinary::UNPACK_STATE state = {};
         QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;
@@ -3936,7 +3945,7 @@ XScanEngine::TEST_RESULT XScanEngine::test(const QString &sDirectoryName)
             TEST_FAILED_RECORD failedRecord = {};
             failedRecord.sZipPath = sZipPath;
             failedRecord.sExpectedDetect = sExpectedDetect;
-            failedRecord.sErrorMessage = QString("Expected: '%1', Got: '%2'").arg(sExpectedDetect, sDetectResult);
+            failedRecord.sErrorMessage = QString("Expected: '%1', Got: '%2'").arg(sExpectedDetect).arg(sDetectResult);
             result.listFailed.append(failedRecord);
             result.nErrors++;
         }
@@ -4064,10 +4073,14 @@ bool XScanEngine::addTestCase(const QString &sJsonPath, const QString &sFilePath
         QByteArray baJsonData = jsonFile.readAll();
         jsonFile.close();
 
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(baJsonData);
-        if (!jsonDoc.isNull() && jsonDoc.isObject()) {
-            jsonObject = jsonDoc.object();
+        QJsonParseError parseError = {};
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(baJsonData, &parseError);
+        if ((parseError.error != QJsonParseError::NoError) || !jsonDoc.isObject()) {
+            QFile::remove(sZipFileName);
+            return false;
         }
+
+        jsonObject = jsonDoc.object();
     }
 
     // Ensure testCases array exists
@@ -4095,10 +4108,11 @@ bool XScanEngine::addTestCase(const QString &sJsonPath, const QString &sFilePath
     }
 
     QJsonDocument jsonDocOut(jsonObject);
-    jsonFile.write(jsonDocOut.toJson(QJsonDocument::Indented));
+    QByteArray baJson = jsonDocOut.toJson(QJsonDocument::Indented);
+    bool bWriteOk = (jsonFile.write(baJson.constData(), baJson.size()) == baJson.size());
     jsonFile.close();
 
-    return true;
+    return bWriteOk;
 }
 
 bool XScanEngine::createTest(const QString &sFilePath, const QString sResultName, SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct)

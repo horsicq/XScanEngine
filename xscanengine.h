@@ -1307,4 +1307,6 @@ private:
 bool sort_signature_prio(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEngine::SIGNATURE_RECORD &sr2);
 bool sort_signature_name(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEngine::SIGNATURE_RECORD &sr2);
 
+Q_DECLARE_METATYPE(XScanEngine::SCAN_RESULT)
+
 #endif  // XSCANENGINE_H

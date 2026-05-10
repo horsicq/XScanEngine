@@ -69,8 +69,8 @@ PE_Script::PE_Script(XPE *pPE, XBinary::FILEPART filePart, const OPTIONS &scanOp
     m_nSizeOfCode = m_pPE->getOptionalHeader_SizeOfCode();
     m_nSizeOfUninitializedData = m_pPE->getOptionalHeader_SizeOfUninitializedData();
 
-    m_sCompilerVersion = QString("%1.%2").arg(QString::number(m_nMajorLinkerVersion), QString::number(m_nMinorLinkerVersion));
-    m_sGeneralOptions = QString("%1%2").arg(m_pPE->getTypeAsString(), m_bIs64 ? ("64") : ("32"));
+    m_sCompilerVersion = QString("%1.%2").arg(QString::number(m_nMajorLinkerVersion)).arg(QString::number(m_nMinorLinkerVersion));
+    m_sGeneralOptions = QString("%1%2").arg(m_pPE->getTypeAsString()).arg(m_bIs64 ? ("64") : ("32"));
 
     m_sFileVersion = m_pPE->getFileVersion(&m_resourcesVersion);
     m_sFileVersionMS = m_pPE->getFileVersionMS(&m_resourcesVersion);

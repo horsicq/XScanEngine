@@ -34,7 +34,7 @@ private:
     XAtariST *m_pAtariST;
 
 protected:
-    XAtariST *getAtariST() const
+    const XAtariST *getAtariST() const
     {
         return m_pAtariST;
     }

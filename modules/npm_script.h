@@ -29,17 +29,18 @@
 
 class NPM_Script : public Archive_Script {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(NPM_Script)
 
 public:
     explicit NPM_Script(XNPM *pNpm, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
 
 public slots:
-    QString getPackageJson();
-    QString getPackageJsonRecord(const QString &sRecord);
+    QString getPackageJson() const;
+    QString getPackageJsonRecord(const QString &sRecord) const;
 
 private:
-    XNPM *m_pNpm;
     QString m_sPackageJson;
+    QJsonObject m_jsonObject;
 };
 
 #endif  // NPM_SCRIPT_H

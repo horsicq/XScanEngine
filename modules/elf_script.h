@@ -24,6 +24,8 @@
 #include "binary_script.h"
 #include "xelf.h"
 
+#include <QStringList>
+
 class ELF_Script : public Binary_Script {
     Q_OBJECT
 
@@ -68,8 +70,7 @@ private:
     QList<XELF::NOTE> m_listNotes;
     QList<XELF::SECTION_RECORD> m_listSectionRecords;
     QString m_sGeneralOptions;
-    QList<QString> m_listLibraryNames;
-    QList<XELF::TAG_STRUCT> m_listTagStruct;
+    QStringList m_listLibraryNames;
     QString m_sRunPath;
 };
 

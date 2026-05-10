@@ -42,15 +42,15 @@ public slots:
 
 private:
     XISO9660 *m_pISO;
-    QString g_sSystemIdentifier;
-    QString g_sVolumeIdentifier;
-    QString g_sVolumeSetIdentifier;
-    QString g_sPublisherIdentifier;
-    QString g_sDataPreparerIdentifier;
-    QString g_sApplicationIdentifier;
-    QString g_sCopyrightFileIdentifier;
-    QString g_sAbstractFileIdentifier;
-    QString g_sBibliographicFileIdentifier;
+    QString m_sSystemIdentifier;
+    QString m_sVolumeIdentifier;
+    QString m_sVolumeSetIdentifier;
+    QString m_sPublisherIdentifier;
+    QString m_sDataPreparerIdentifier;
+    QString m_sApplicationIdentifier;
+    QString m_sCopyrightFileIdentifier;
+    QString m_sAbstractFileIdentifier;
+    QString m_sBibliographicFileIdentifier;
 };
 
 #endif  // ISO9660_SCRIPT_H

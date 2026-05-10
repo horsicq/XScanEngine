@@ -40,10 +40,10 @@ ELF_Script::ELF_Script(XELF *pELF, XBinary::FILEPART filePart, const OPTIONS &sc
     }
 
     m_listSectionRecords = pELF->getSectionRecords(&m_listSectionHeaders, bIs64, &m_baStringTable);
-    m_listTagStruct = pELF->getTagStructs(&m_listProgramHeaders, getMemoryMap());
-    m_listLibraryNames = pELF->getLibraries(getMemoryMap(), &m_listTagStruct);
+    QList<XELF::TAG_STRUCT> listTagStruct = pELF->getTagStructs(&m_listProgramHeaders, getMemoryMap());
+    m_listLibraryNames = pELF->getLibraries(getMemoryMap(), &listTagStruct);
 
-    m_sRunPath = pELF->getRunPath(getMemoryMap(), &m_listTagStruct).sString;
+    m_sRunPath = pELF->getRunPath(getMemoryMap(), &listTagStruct).sString;
 
     m_sGeneralOptions = QString("%1 %2-%3")
                             .arg(XELF::getTypesS().value(m_elfHeader.e_type))
