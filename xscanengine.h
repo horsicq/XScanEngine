@@ -1286,7 +1286,7 @@ private:
 
 protected:
     virtual void _processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions,
-                                bool bAddUnknown, XBinary::PDSTRUCT *pPdStruct) = 0;
+                                bool bAddUnknown, XBinary::PDSTRUCT *pPdStruct);
     void _errorMessage(SCAN_OPTIONS *pOptions, const QString &sErrorMessage);
     void _warningMessage(SCAN_OPTIONS *pOptions, const QString &sWarningMessage);
     void _infoMessage(SCAN_OPTIONS *pOptions, const QString &sInfoMessage);

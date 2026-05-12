@@ -1793,6 +1793,11 @@ void XScanEngine::_saveDatabaseCache(const QString &sCachePath, const QList<SIGN
 #endif
 }
 
+void XScanEngine::_processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions, bool bAddUnknown, XBinary::PDSTRUCT *pPdStruct)
+{
+
+}
+
 QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct)
 {
     QString sResult;

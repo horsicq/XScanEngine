@@ -301,6 +301,7 @@ private:
     QString m_sFileCompleteSuffix;
     QString m_sFileSuffix;
     XBinary::FILEFORMATINFO m_fileFormatInfo;
+    QString m_sOperationSystemInfoString;
     QString m_sFileFormatInfoString;
     bool m_bIsFmtChecking;
     bool m_bIsFmtCheckingDeep;

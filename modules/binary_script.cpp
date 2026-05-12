@@ -72,6 +72,7 @@ Binary_Script::Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, const
 
     m_bIsSigned = pBinary->isSigned();
     m_fileFormatInfo = pBinary->getFileFormatInfo(pPdStruct);
+    m_sOperationSystemInfoString = XBinary::getOperationSystemInfoString(&m_fileFormatInfo);
     m_sFileFormatInfoString = XBinary::getFileFormatInfoString(&m_fileFormatInfo);
 
     m_bIsFmtChecking = false;
@@ -750,16 +751,7 @@ QString Binary_Script::getOperationSystemVersion()
 
 QString Binary_Script::getOperationSystemOptions()
 {
-    QString sResult = QString("%1, %2, %3").arg(m_fileFormatInfo.sArch).arg(XBinary::modeIdToString(m_fileFormatInfo.mode)).arg(m_fileFormatInfo.sType);
-
-    if (m_fileFormatInfo.endian == XBinary::ENDIAN_BIG) {
-        if (sResult != "") {
-            sResult.append(", ");
-        }
-        sResult.append(XBinary::endianToString(XBinary::ENDIAN_BIG));
-    }
-
-    return sResult;
+    return m_sOperationSystemInfoString;
 }
 
 QString Binary_Script::getFileFormatName()
