@@ -45,6 +45,11 @@ FORMS += \
     include($$PWD/../Controls/xcomboboxex.pri)
 }
 
+!contains(XCONFIG, xshortcuts) {
+    XCONFIG += xshortcuts
+    include($$PWD/../XShortcuts/xshortcuts.pri)
+}
+
 !contains(XCONFIG, dialogtextinfo) {
     XCONFIG += dialogtextinfo
     include($$PWD/../FormatDialogs/dialogtextinfo.pri)
