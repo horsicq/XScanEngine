@@ -2232,10 +2232,57 @@ QString XScanEngine::getProtection(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT>
     qint32 nNumberOfRecords = pListRecords->count();
 
     for (qint32 i = 0; i < nNumberOfRecords; i++) {
-        if (pListRecords->at(i).bIsProtection) {
+        if (isProtection(pListRecords->at(i).sType)) {
             SCANSTRUCT scanStruct = pListRecords->at(i);
-            sResult = createResultStringEx(pScanOptions, &scanStruct);
-            break;
+            sResult = XBinary::appendText(sResult, createResultStringEx(pScanOptions, &scanStruct), "; ");
+        }
+    }
+
+    return sResult;
+}
+
+QString XScanEngine::getLinker(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords)
+{
+    QString sResult;
+
+    qint32 nNumberOfRecords = pListRecords->count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        if (isLinker(pListRecords->at(i).sType)) {
+            SCANSTRUCT scanStruct = pListRecords->at(i);
+            sResult = XBinary::appendText(sResult, createResultStringEx(pScanOptions, &scanStruct), "; ");
+        }
+    }
+
+    return sResult;
+}
+
+QString XScanEngine::getCompiler(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords)
+{
+    QString sResult;
+
+    qint32 nNumberOfRecords = pListRecords->count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        if (isCompiler(pListRecords->at(i).sType)) {
+            SCANSTRUCT scanStruct = pListRecords->at(i);
+            sResult = XBinary::appendText(sResult, createResultStringEx(pScanOptions, &scanStruct), "; ");
+        }
+    }
+
+    return sResult;
+}
+
+QString XScanEngine::getWrapper(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords)
+{
+    QString sResult;
+
+    qint32 nNumberOfRecords = pListRecords->count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        if (isWrapper(pListRecords->at(i).sType)) {
+            SCANSTRUCT scanStruct = pListRecords->at(i);
+            sResult = XBinary::appendText(sResult, createResultStringEx(pScanOptions, &scanStruct), "; ");
         }
     }
 
@@ -2269,6 +2316,39 @@ bool XScanEngine::isBundle(const QString &sType)
     }
 
     return bResult;
+}
+
+bool XScanEngine::isLinker(const QString &sType)
+{
+    bool bResult = false;
+
+    QString _sType = sType;
+    _sType = _sType.toLower();
+
+    if (_sType == "linker") {
+        bResult = true;
+    }
+
+    return bResult;
+}
+
+bool XScanEngine::isCompiler(const QString &sType)
+{
+    bool bResult = false;
+
+    QString _sType = sType;
+    _sType = _sType.toLower();
+
+    if (_sType == "compiler") {
+        bResult = true;
+    }
+
+    return bResult;
+}
+
+bool XScanEngine::isWrapper(const QString &sType)
+{
+    return isProtection(sType) || isBundle(sType);
 }
 
 bool XScanEngine::isScanable(const QSet<XBinary::FT> &stFT)

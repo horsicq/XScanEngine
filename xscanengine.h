@@ -1019,8 +1019,8 @@ public:
         QString varInfo2;  // Signature File in die scripts
         // QString sResult;   // TODO Check
         qint32 nPrio;
-        bool bIsProtection;
-        bool bIsBundle;
+        // bool bIsProtection;
+        // bool bIsBundle;
     };
 
     struct ERROR_RECORD {
@@ -1221,8 +1221,15 @@ public:
     static QString _translateType(const QString &sString);
     static void sortRecords(QList<SCANSTRUCT> *pListRecords);
     static QString getProtection(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
+    static QString getLinker(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
+    static QString getCompiler(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
+    static QString getWrapper(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
+
     static bool isProtection(const QString &sType);
     static bool isBundle(const QString &sType);
+    static bool isLinker(const QString &sType);
+    static bool isCompiler(const QString &sType);
+    static bool isWrapper(const QString &sType);
     static bool isScanable(const QSet<XBinary::FT> &stFT);
 
     static Binary_Script::OPTIONS createScriptOptions(const XScanEngine::SCAN_OPTIONS *pScanOptions);
