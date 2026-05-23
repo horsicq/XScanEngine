@@ -20,6 +20,7 @@
  */
 #include "com_script.h"
 
-COM_Script::COM_Script(XCOM *pCOM, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pCOM, filePart, scanOptions, pPdStruct)
+COM_Script::COM_Script(XCOM *pCOM, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Binary_Script(pCOM, filePart, scanOptions, pPdStruct)
 {
 }

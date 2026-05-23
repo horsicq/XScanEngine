@@ -245,7 +245,6 @@ int XScanEngineConsole::process()
             bool bShowFileName = (listArgs.count() > 1);
 
             for (const QString &sFileName : listArgs) {
-
                 if (!QFileInfo::exists(sFileName)) {
                     printf("Cannot find: %s\n", sFileName.toUtf8().data());
                     nResult = XOptions::CR_CANNOTFINDFILE;
@@ -547,13 +546,13 @@ XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanE
                             } else {
                                 XOptions::printModel(&modelHeader);
                             }
-	                        } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
-	                            XFModel_table modelTable;
-	                            modelTable.setData(pBinary, xFHeader);
-	                            modelTable.setShowPresentation(true);
+                        } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
+                            XFModel_table modelTable;
+                            modelTable.setData(pBinary, xFHeader);
+                            modelTable.setShowPresentation(true);
 
-	                            if (pScanOptions->bResultAsJSON) {
-	                                sStructInfo = modelTable.toJSON();
+                            if (pScanOptions->bResultAsJSON) {
+                                sStructInfo = modelTable.toJSON();
                             } else if (pScanOptions->bResultAsXML) {
                                 sStructInfo = modelTable.toXML();
                             } else if (pScanOptions->bResultAsCSV) {

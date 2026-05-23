@@ -142,7 +142,7 @@ void XScanEngineWidget::reloadData(bool bSaveSelection)
 
 void XScanEngineWidget::_setFileType(XBinary::FT fileType)
 {
-    if (m_fileType !=fileType) {
+    if (m_fileType != fileType) {
         m_fileType = fileType;
 
         QFile file;
@@ -193,7 +193,7 @@ void XScanEngineWidget::process()
     XScanEngine::setScanFlags(&m_scanOptions, nFlags);
     XScanEngine::setScanFlagsToGlobalOptions(getGlobalOptions(), nFlags);
 
-    if(type == XScanEngine::SCANENGINETYPE_DIE) {
+    if (type == XScanEngine::SCANENGINETYPE_DIE) {
         quint64 nDatabases = ui->comboBoxDatabases->getValue().toULongLong();
         XScanEngine::setDatabases(&m_scanOptions, nDatabases);
         XScanEngine::setDatabasesToGlobalOptions(getGlobalOptions(), nDatabases);
@@ -206,13 +206,13 @@ void XScanEngineWidget::process()
             emit scanStarted();
 
             if (m_pScanEngine->isDatabaseUsing()) {
-                if(type == XScanEngine::SCANENGINETYPE_DIE) {
+                if (type == XScanEngine::SCANENGINETYPE_DIE) {
                     m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
                     m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
                     m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
                 } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
                     m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
-                }else if (type == XScanEngine::SCANENGINETYPE_YARA) {
+                } else if (type == XScanEngine::SCANENGINETYPE_YARA) {
                     m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
                 }
 
@@ -360,11 +360,8 @@ void XScanEngineWidget::_on_pushButtonExtraInformation_clicked()
 
 void XScanEngineWidget::_on_toolButtonElapsedTime_clicked()
 {
-
 }
 
 void XScanEngineWidget::on_treeViewResult_clicked(const QModelIndex &index)
 {
-
 }
-

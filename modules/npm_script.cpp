@@ -20,7 +20,8 @@
  */
 #include "npm_script.h"
 
-NPM_Script::NPM_Script(XNPM *pNpm, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Archive_Script(pNpm, filePart, scanOptions, pPdStruct)
+NPM_Script::NPM_Script(XNPM *pNpm, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Archive_Script(pNpm, filePart, scanOptions, pPdStruct)
 {
     QByteArray baJson = pNpm->decompress(getArchiveRecords(), "package/package.json", pPdStruct);
     m_sPackageJson = QString::fromUtf8(baJson);

@@ -20,7 +20,8 @@
  */
 #include "mach_script.h"
 
-MACH_Script::MACH_Script(XMACH *pMACH, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : Binary_Script(pMACH, filePart, scanOptions, pPdStruct)
+MACH_Script::MACH_Script(XMACH *pMACH, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : Binary_Script(pMACH, filePart, scanOptions, pPdStruct)
 {
     this->m_pMACH = pMACH;
 

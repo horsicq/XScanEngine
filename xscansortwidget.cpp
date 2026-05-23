@@ -94,8 +94,7 @@ void selectDatabaseDirectory(QWidget *pParent, QLineEdit *pLineEdit, const QStri
 }
 }  // namespace
 
-XScanSortWidget::XScanSortWidget(QWidget *pParent)
-    : XShortcutsWidget(pParent), ui(new Ui::XScanSortWidget)
+XScanSortWidget::XScanSortWidget(QWidget *pParent) : XShortcutsWidget(pParent), ui(new Ui::XScanSortWidget)
 {
     ui->setupUi(this);
 
@@ -198,10 +197,8 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_LOG, false);
 
     XOptions *pGlobalOptions = getGlobalOptions();
-    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE,
-                        getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_READBUFFERSIZE, 4 * 1024));
-    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE,
-                        getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_FILEBUFFERSIZE, 64 * 1024 * 1024));
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE, getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_READBUFFERSIZE, 4 * 1024));
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE, getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_FILEBUFFERSIZE, 64 * 1024 * 1024));
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_SSE2, getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_SSE2, true));
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FEATURE_AVX2, getOptionValue(pGlobalOptions, XOptions::ID_FEATURE_AVX2, true));
 

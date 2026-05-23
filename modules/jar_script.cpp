@@ -20,7 +20,8 @@
  */
 #include "jar_script.h"
 
-JAR_Script::JAR_Script(XZip *pZip, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : ZIP_Script(pZip, filePart, scanOptions, pPdStruct)
+JAR_Script::JAR_Script(XZip *pZip, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
+    : ZIP_Script(pZip, filePart, scanOptions, pPdStruct)
 {
     this->m_pZip = pZip;
 

@@ -1793,9 +1793,9 @@ void XScanEngine::_saveDatabaseCache(const QString &sCachePath, const QList<SIGN
 #endif
 }
 
-void XScanEngine::_processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions, bool bAddUnknown, XBinary::PDSTRUCT *pPdStruct)
+void XScanEngine::_processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions,
+                                 bool bAddUnknown, XBinary::PDSTRUCT *pPdStruct)
 {
-
 }
 
 QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct)
@@ -1841,10 +1841,16 @@ QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *
 
         if (pOptions->bFormatResult) {
             sResult += QString(" [%1 = 0x%2, %3 = 0x%4]")
-                           .arg(tr("Offset")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nOffset)).arg(tr("Size")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+                           .arg(tr("Offset"))
+                           .arg(XBinary::valueToHexEx(pScanStruct->parentId.nOffset))
+                           .arg(tr("Size"))
+                           .arg(XBinary::valueToHexEx(pScanStruct->parentId.nSize));
         } else {
             sResult += QString("[%1=0x%2,%3=0x%4]")
-                           .arg(tr("Offset")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nOffset)).arg(tr("Size")).arg(XBinary::valueToHexEx(pScanStruct->parentId.nSize));
+                           .arg(tr("Offset"))
+                           .arg(XBinary::valueToHexEx(pScanStruct->parentId.nOffset))
+                           .arg(tr("Size"))
+                           .arg(XBinary::valueToHexEx(pScanStruct->parentId.nSize));
         }
     }
 
