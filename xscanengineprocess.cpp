@@ -141,16 +141,16 @@ void XScanEngineProcess::process()
                         QFile file;
                         file.setFileName(sFileName);
 
+                        XScanEngine::SCAN_RESULT scanResult = {};
+
                         if (file.open(QIODevice::ReadOnly)) {
-                            _scanDevice(&file, m_pScanOptions, pPdStruct);
+                            scanResult = _scanDevice(&file, m_pScanOptions, pPdStruct);
 
                             file.close();
-
-                            if (m_pScanOptions->bCollection && (m_pScanOptions->bCollectionCopyRemove || m_pScanOptions->bCollectionCopyMoveToFirst) &&
-                                file.property("CollectionSourceCopied").toBool()) {
-                                QFile::remove(sFileName);
-                            }
                         }
+
+                        XHandler xhandler;
+                        xhandler.processRecords(&scanResult.listHandlers, pPdStruct);
                     }
                 }
             }
@@ -162,10 +162,18 @@ void XScanEngineProcess::process()
     emit scanFinished(elapsedTimer.elapsed());
 }
 
-void XScanEngineProcess::_scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+XScanEngine::SCAN_RESULT XScanEngineProcess::_scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
 {
     XScanEngine::SCAN_RESULT _scanResult = m_pScanEngine->scanDevice(pDevice, m_pScanOptions, pPdStruct);
     emit scanResult(_scanResult);
+
+    if (!(pDevice->property("IsArchiveRecord").toBool())) {
+        if (pScanOptions->bCollectionCopyRemove) {
+            if (_scanResult.listHandlers.count()) {
+                XHandler::addRecord_Remove(&_scanResult.listHandlers, XBinary::getDeviceFileName(pDevice));
+            }
+        }
+    }
 
     if (m_pScanOptions->bCollection) {
         QSet<XBinary::FT> stFT = XFormats::getFileTypes(pDevice, true, pPdStruct);
@@ -206,6 +214,7 @@ void XScanEngineProcess::_scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIO
 
                                     XBinary::setPdStructStatus(pPdStruct, nFreeIndex, sOriginalName);
 
+                                    pArchiveRecord->setProperty("IsArchiveRecord", true);
                                     pArchiveRecord->setProperty("FileName", XBinary::getDeviceDirectory(pDevice) + QDir::separator() +
                                                                                 XBinary::getDeviceFileBaseName(pDevice) + "_ARCHIVE_RECORD_" + sOriginalName);
 
@@ -246,4 +255,6 @@ void XScanEngineProcess::_scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIO
             }
         }
     }
+
+    return _scanResult;
 }

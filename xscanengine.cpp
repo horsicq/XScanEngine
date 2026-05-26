@@ -111,14 +111,11 @@ static bool isCollectionRecordAllowed(const XScanEngine::SCAN_OPTIONS *pScanOpti
 
     if (bResult && !(pScanOptions->bCollectionAllTypes) && !(pScanOptions->stCollectionTypes.isEmpty())) {
         bResult = pScanOptions->stCollectionTypes.contains(scanStruct.type);
+    } else if (pScanOptions->bCollectionUnknown) {
+        bResult = scanStruct.bIsUnknown;
     }
 
     return bResult;
-}
-
-static bool isCollectionCopySourceRemovalEnabled(const XScanEngine::SCAN_OPTIONS *pScanOptions)
-{
-    return pScanOptions && (pScanOptions->bCollectionCopyRemove || pScanOptions->bCollectionCopyMoveToFirst);
 }
 
 QString XScanEngine::heurTypeIdToString(qint32 nId)
@@ -1796,6 +1793,32 @@ void XScanEngine::_saveDatabaseCache(const QString &sCachePath, const QList<SIGN
 void XScanEngine::_processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType, SCAN_OPTIONS *pOptions,
                                  bool bAddUnknown, XBinary::PDSTRUCT *pPdStruct)
 {
+    QList<SCANSTRUCT> listRecords;
+    const XScanEngine::SCANID resultId = createResultId(pDevice, parentId, fileType);
+
+    if (bAddUnknown && listRecords.isEmpty()) {
+        XScanEngine::SCANSTRUCT scanStruct = {};
+
+        scanStruct.id = resultId;
+        scanStruct.parentId = parentId;
+        scanStruct.sType = tr("Unknown");
+        scanStruct.sName = tr("Unknown");
+        scanStruct.bIsUnknown = true;
+
+        listRecords.append(scanStruct);
+    }
+
+    // QList<XScanEngine::SCANSTRUCT> listScanStruct = convert(&listRecords);
+
+    if (pOptions->bIsSort) {
+        sortRecords(&listRecords);
+    }
+
+    pScanResult->listRecords.append(listRecords);
+
+    if (pScanID) {
+        *pScanID = resultId;
+    }
 }
 
 QString XScanEngine::createTypeString(SCAN_OPTIONS *pOptions, const SCANSTRUCT *pScanStruct)
@@ -2364,6 +2387,19 @@ bool XScanEngine::isScanable(const QSet<XBinary::FT> &stFT)
             stFT.contains(XBinary::FT_PDF) || stFT.contains(XBinary::FT_ARCHIVE));
 }
 
+XScanEngine::SCANID XScanEngine::createResultId(QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType)
+{
+    SCANID resultId = {};
+
+    resultId.fileType = fileType;
+    resultId.sUuid = XBinary::generateUUID();
+    resultId.nOffset = XIODevice::getInitLocation(pDevice);
+    resultId.nSize = pDevice->size();
+    resultId.filePart = parentId.filePart;
+
+    return resultId;
+}
+
 Binary_Script::OPTIONS XScanEngine::createScriptOptions(const SCAN_OPTIONS *pScanOptions)
 {
     Binary_Script::OPTIONS options = {};
@@ -2414,10 +2450,6 @@ XScanEngine::SCAN_RESULT XScanEngine::scanFile(const QString &sFileName, XScanEn
         if (file.open(QIODevice::ReadOnly)) {
             result = scanDevice(&file, pOptions, pPdStruct);
             file.close();
-
-            if (isCollectionCopySourceRemovalEnabled(pOptions) && file.property("CollectionSourceCopied").toBool()) {
-                QFile::remove(sFileName);
-            }
         }
     }
 
@@ -2809,6 +2841,8 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
                 if (XBinary::isOffsetAndSizeValid(_pDevice, filePart.nFileOffset, filePart.nFileSize)) {
                     SubDevice subDevice(_pDevice, filePart.nFileOffset, filePart.nFileSize);
+                    subDevice.setProperty("IsFilePartRecord", true);
+
                     if (subDevice.open(QIODevice::ReadOnly)) {
                         bool bScan = (filePart.filePart == XBinary::FILEPART_OVERLAY);
 
@@ -2941,14 +2975,20 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         }
 
         nNumberOfDetects = collectionScanResult.listRecords.count();
-        bool bCollectionCopyDone = false;
-        pDevice->setProperty("CollectionSourceCopied", false);
-        _pDevice->setProperty("CollectionSourceCopied", false);
+
+        if (nNumberOfDetects == 0 && pScanOptions->bCollectionUnknown) {
+            SCANSTRUCT unknownStruct = {};
+            unknownStruct.id = XScanEngine::createResultId(_pDevice, parentId, pScanResult->ftInit);
+            collectionScanResult.listRecords.append(unknownStruct);
+            nNumberOfDetects = 1;
+        }
+
+        bool bFirstCopied = false;
 
         for (int i = 0; i < nNumberOfDetects; i++) {
             const XScanEngine::SCANSTRUCT &scanStruct = collectionScanResult.listRecords.at(i);
 
-            if (pScanOptions->bCollectionCopyFiles && !(pScanOptions->bCollectionCopyMoveToFirst && bCollectionCopyDone)) {
+            if (pScanOptions->bCollectionCopyFiles && !(pScanOptions->bCollectionCopyMoveToFirst && bFirstCopied)) {
                 QString sPath = sCopyDirectory + QDir::separator() + convertPath(_pDevice, scanStruct, pScanOptions->sCollectionCopyFormat, pPdStruct);
                 QString sDirPath = QFileInfo(sPath).absolutePath();
 
@@ -2964,18 +3004,17 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                     bCopy = !(XBinary::isFileExists(sPath));
                 }
 
-                if (bCopy) {
+                if (_pDevice->property("IsFilePartRecord").toBool() || _pDevice->property("IsArchiveRecord").toBool()) {
                     bCopy = XBinary::dumpToFile(sPath, _pDevice, pPdStruct);
-
-                    if (bCopy) {
-                        bCollectionCopyDone = true;
-
-                        if (isCollectionCopySourceRemovalEnabled(pScanOptions)) {
-                            pDevice->setProperty("CollectionSourceCopied", true);
-                            _pDevice->setProperty("CollectionSourceCopied", true);
-                        }
+                } else {
+                    if (pScanOptions->bCollectionCopyMoveToFirst) {
+                        XHandler::addRecord_Move(&(pScanResult->listHandlers), XBinary::getDeviceFileName(_pDevice), sPath);
+                    } else {
+                        XHandler::addRecord_Copy(&(pScanResult->listHandlers), XBinary::getDeviceFileName(_pDevice), sPath);
                     }
                 }
+
+                bFirstCopied = true;
             }
 
             if (pScanOptions->bCollectionCreateCatalog) {

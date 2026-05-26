@@ -110,6 +110,7 @@ XScanSortWidget::~XScanSortWidget()
     m_sortOptions.setValue(XOptions::ID_SCAN_SUBDIRECTORIES, ui->checkBoxScanSubdirectories->isChecked());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_ALLTYPES, ui->checkBoxAllTypes->isChecked());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_ALLFILETYPES, ui->checkBoxAllFileTypes->isChecked());
+    m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_UNKNOWN, ui->checkBoxUnknown->isChecked());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_FILETYPES, ui->comboBoxFileType->getCustomFlagAsString());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_TYPES, ui->comboBoxType->getCustomFlagAsString());
     m_sortOptions.setValue(XOptions::ID_SCAN_COLLECTION_CATALOG_ENABLED, ui->groupBoxCatalog->isChecked());
@@ -185,6 +186,7 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     m_sortOptions.addID(XOptions::ID_SCAN_SUBDIRECTORIES, true);
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_ALLFILETYPES, true);
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_ALLTYPES, true);
+    m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_UNKNOWN, false);
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_FILETYPES, "");
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_TYPES, "");
     m_sortOptions.addID(XOptions::ID_SCAN_COLLECTION_CATALOG_ENABLED, false);
@@ -275,6 +277,7 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
 
     ui->checkBoxAllFileTypes->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_ALLFILETYPES).toBool());
     ui->checkBoxAllTypes->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_ALLTYPES).toBool());
+    ui->checkBoxUnknown->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_UNKNOWN).toBool());
     ui->comboBoxFileType->setValue(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_FILETYPES));
     ui->comboBoxType->setValue(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_TYPES));
 
@@ -362,6 +365,7 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     m_scanOptions.bCollection = true;
     m_scanOptions.bCollectionAllFileTypes = ui->checkBoxAllFileTypes->isChecked();
     m_scanOptions.bCollectionAllTypes = ui->checkBoxAllTypes->isChecked();
+    m_scanOptions.bCollectionUnknown = ui->checkBoxUnknown->isChecked();
     m_scanOptions.bCollectionCopyFiles = ui->groupBoxCopy->isChecked();
     m_scanOptions.bCollectionCopyRemove = ui->checkBoxCopyRemove->isChecked();
     m_scanOptions.bCollectionCopyMoveToFirst = ui->checkBoxCopyMoveToFirst->isChecked();
@@ -374,13 +378,7 @@ void XScanSortWidget::on_pushButtonScan_clicked()
 
     if (!m_scanOptions.bCollectionAllFileTypes) {
         QString sFileTypes = ui->comboBoxFileType->getCustomFlagAsString();
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         QList<QString> listFileTypes = sFileTypes.split("|", Qt::SkipEmptyParts);
-#else
-        QList<QString> listFileTypes = sFileTypes.split("|", Qt::SkipEmptyParts);
-#endif
-
         qint32 nNumberOfFileTypes = listFileTypes.count();
         for (qint32 nI = 0; nI < nNumberOfFileTypes; nI++) {
             QString sFileType = listFileTypes.at(nI).trimmed();
@@ -388,6 +386,20 @@ void XScanSortWidget::on_pushButtonScan_clicked()
 
             if (fileType != XBinary::FT_UNKNOWN) {
                 m_scanOptions.stCollectionFileTypes.insert(fileType);
+            }
+        }
+    }
+
+    if (!m_scanOptions.bCollectionAllTypes) {
+        QString sTypes = ui->comboBoxType->getCustomFlagAsString();
+        QList<QString> listTypes = sTypes.split("|", Qt::SkipEmptyParts);
+        qint32 nNumberOfTypes = listTypes.count();
+        for (qint32 nI = 0; nI < nNumberOfTypes; nI++) {
+            QString sType = listTypes.at(nI).trimmed();
+            XScanEngine::RECORD_TYPE recordType = XScanEngine::recordTypeStringToId(sType);
+
+            if (recordType != XScanEngine::RECORD_TYPE_UNKNOWN) {
+                m_scanOptions.stCollectionTypes.insert(recordType);
             }
         }
     }
@@ -455,6 +467,7 @@ void XScanSortWidget::on_checkBoxAllTypes_stateChanged(int nState)
     Q_UNUSED(nState)
 
     ui->comboBoxType->setEnabled(ui->checkBoxAllTypes->checkState() != Qt::Checked);
+    ui->checkBoxUnknown->setEnabled(ui->checkBoxAllTypes->checkState() != Qt::Checked);
 }
 
 void XScanSortWidget::on_toolButtonCatalogInfo_clicked()

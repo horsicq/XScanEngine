@@ -62,6 +62,7 @@
 #include "jpeg_script.h"
 #include "png_script.h"
 
+#include "xhandler.h"
 #include "xformats.h"
 #include "xoptions.h"
 #include "xzip.h"
@@ -1045,6 +1046,7 @@ public:
         QList<SCANSTRUCT> listRecords;
         QList<ERROR_RECORD> listErrors;
         QList<DEBUG_RECORD> listDebugRecords;
+        QList<XHandler::RECORD> listHandlers;
     };
 
     enum SF {
@@ -1128,6 +1130,7 @@ public:
         QSet<XBinary::FT> stCollectionFileTypes;
         bool bCollectionAllTypes;
         QSet<RECORD_TYPE> stCollectionTypes;
+        bool bCollectionUnknown;
         QString sCollectionResultDirectory;
         bool bCollectionCopyFiles;
         bool bCollectionCopyRemove;
@@ -1232,6 +1235,7 @@ public:
     static bool isWrapper(const QString &sType);
     static bool isScanable(const QSet<XBinary::FT> &stFT);
 
+    static SCANID createResultId(QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType);
     static Binary_Script::OPTIONS createScriptOptions(const XScanEngine::SCAN_OPTIONS *pScanOptions);
 
     XScanEngine::SCAN_RESULT scanDevice(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pOptions, XBinary::PDSTRUCT *pPdStruct = nullptr);
