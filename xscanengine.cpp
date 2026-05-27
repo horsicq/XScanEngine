@@ -118,6 +118,22 @@ static bool isCollectionRecordAllowed(const XScanEngine::SCAN_OPTIONS *pScanOpti
     return bResult;
 }
 
+static bool hasNonGenericCOMRecords(const QList<XScanEngine::SCANSTRUCT> &listRecords)
+{
+    bool bResult = false;
+
+    for (qint32 i = 0; i < listRecords.count(); i++) {
+        XScanEngine::RECORD_TYPE type = listRecords.at(i).type;
+
+        if ((type != XScanEngine::RECORD_TYPE_OPERATIONSYSTEM) && (type != XScanEngine::RECORD_TYPE_FORMAT)) {
+            bResult = true;
+            break;
+        }
+    }
+
+    return bResult;
+}
+
 QString XScanEngine::heurTypeIdToString(qint32 nId)
 {
     // Values are defined in global DETECTTYPE enum (nfd_binary.h). We use constants to avoid include cycles.
@@ -1796,6 +1812,43 @@ void XScanEngine::_processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIOD
     QList<SCANSTRUCT> listRecords;
     const XScanEngine::SCANID resultId = createResultId(pDevice, parentId, fileType);
 
+    XBinary *pBinary = XFormats::getClass(fileType, pDevice, false, -1);
+    XBinary::FILEFORMATINFO ffi = pBinary->getFileFormatInfo(pPdStruct);
+
+    if (ffi.fileType != XBinary::FT_BINARY) {
+        XScanEngine::SCANSTRUCT scanStruct = {};
+
+        scanStruct.id = resultId;
+        scanStruct.parentId = parentId;
+        scanStruct.sType = "format";
+        scanStruct.sName = XBinary::fileTypeIdToString(ffi.fileType);
+        scanStruct.sVersion = ffi.sVersion;
+        scanStruct.sInfo = XBinary::getFileFormatInfoString(&ffi);
+        scanStruct.nPrio = XScanEngine::typeToPrio(scanStruct.sType);
+        scanStruct.type = XScanEngine::recordTypeStringToId(scanStruct.sType);
+        scanStruct.name = (ffi.fileType == XBinary::FT_COM) ? XScanEngine::RECORD_NAME_UNKNOWN : XScanEngine::recordNameStringToId(scanStruct.sName);
+
+        listRecords.append(scanStruct);
+    }
+
+    if (pOptions->bIsVerbose) {
+        if (ffi.osName != XBinary::OSNAME_UNKNOWN) {
+            XScanEngine::SCANSTRUCT scanStruct = {};
+
+            scanStruct.id = resultId;
+            scanStruct.parentId = parentId;
+            scanStruct.sType = "operation system";
+            scanStruct.sName = XBinary::osNameIdToString(ffi.osName);
+            scanStruct.sVersion = ffi.sOsVersion;
+            scanStruct.sInfo = XBinary::getOperationSystemInfoString(&ffi);
+            scanStruct.nPrio = XScanEngine::typeToPrio(scanStruct.sType);
+            scanStruct.type = XScanEngine::recordTypeStringToId(scanStruct.sType);
+            scanStruct.name = XScanEngine::recordNameStringToId(scanStruct.sName);
+
+            listRecords.append(scanStruct);
+        }
+    }
+
     if (bAddUnknown && listRecords.isEmpty()) {
         XScanEngine::SCANSTRUCT scanStruct = {};
 
@@ -2701,7 +2754,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             }
         }
 
-        bool bIsCOM = _scanResultCOM.listRecords.count();
+        bool bIsCOM = hasNonGenericCOMRecords(_scanResultCOM.listRecords);
 
         _processDetect(&scanIdMain, &_scanResultBinary, _pDevice, parentId, XBinary::FT_BINARY, pScanOptions, !bIsCOM, pPdStruct);
 
@@ -2709,9 +2762,11 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         pScanResult->listErrors.append(_scanResultBinary.listErrors);
         pScanResult->listDebugRecords.append(_scanResultBinary.listDebugRecords);
 
-        pScanResult->listRecords.append(_scanResultCOM.listRecords);
-        pScanResult->listErrors.append(_scanResultCOM.listErrors);
-        pScanResult->listDebugRecords.append(_scanResultCOM.listDebugRecords);
+        if (bIsCOM) {
+            pScanResult->listRecords.append(_scanResultCOM.listRecords);
+            pScanResult->listErrors.append(_scanResultCOM.listErrors);
+            pScanResult->listDebugRecords.append(_scanResultCOM.listDebugRecords);
+        }
 
         pScanResult->ftInit = XBinary::FT_BINARY;
     }

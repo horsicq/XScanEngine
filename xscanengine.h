@@ -336,6 +336,7 @@ public:
         RECORD_NAME_CODEVIEWDEBUGINFO,
         RECORD_NAME_CODEWALL,
         RECORD_NAME_COFF,
+        RECORD_NAME_COM,
         RECORD_NAME_COMEXSIGNAPK,
         RECORD_NAME_COMICBOOKARCHIVE,
         RECORD_NAME_COMPOUNDFILEBINARYFORMAT,
@@ -1139,6 +1140,7 @@ public:
         bool bCollectionLog;
         QString sCollectionCopyFormat;
         QString sCollectionCatalogFormat;
+        QString sCollectionStartFile;  // Optional
         QString sScanID;  // Optional
     };
 

@@ -20,6 +20,104 @@
  */
 #include "xscanengineprocess.h"
 
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QSettings>
+
+namespace {
+const char *g_pszCollectionProgressFileName = "scan.ini";
+const char *g_pszCollectionProgressCurrentFile = "CurrentFile";
+
+QString getNormalizedPath(const QString &sFileName)
+{
+    QString sResult;
+
+    if (!sFileName.isEmpty()) {
+        sResult = QDir::cleanPath(QFileInfo(sFileName).absoluteFilePath());
+    }
+
+    return sResult;
+}
+
+bool isSameFileName(const QString &sFileName1, const QString &sFileName2)
+{
+    bool bResult = false;
+
+    if (!sFileName1.isEmpty() && !sFileName2.isEmpty()) {
+#ifdef Q_OS_WIN
+        bResult = (QString::compare(getNormalizedPath(sFileName1), getNormalizedPath(sFileName2), Qt::CaseInsensitive) == 0);
+#else
+        bResult = (getNormalizedPath(sFileName1) == getNormalizedPath(sFileName2));
+#endif
+    }
+
+    return bResult;
+}
+
+QString getCollectionProgressFileNameByDirectory(const QString &sCollectionDirectory)
+{
+    QString sResult = sCollectionDirectory;
+
+    if (QString::compare(QFileInfo(sResult).fileName(), g_pszCollectionProgressFileName, Qt::CaseInsensitive) != 0) {
+        if (sResult.isEmpty()) {
+            sResult = "collection";
+        }
+
+        sResult = sResult + QDir::separator() + g_pszCollectionProgressFileName;
+    }
+
+    return sResult;
+}
+
+QString getCollectionProgressFileName(const XScanEngine::SCAN_OPTIONS *pScanOptions)
+{
+    QString sResult;
+
+    if (pScanOptions && pScanOptions->bCollection) {
+        QString sCollectionDirectory = pScanOptions->sCollectionResultDirectory;
+
+        if (sCollectionDirectory.isEmpty()) {
+            sCollectionDirectory = "collection";
+        }
+
+        if (!XBinary::isDirectoryExists(sCollectionDirectory)) {
+            XBinary::createDirectory(sCollectionDirectory);
+        }
+
+        sResult = getCollectionProgressFileNameByDirectory(sCollectionDirectory);
+    }
+
+    return sResult;
+}
+
+QString getProgressPath(const QString &sFileName)
+{
+    QString sResult;
+
+    if (!sFileName.isEmpty()) {
+        sResult = QDir::toNativeSeparators(getNormalizedPath(sFileName));
+    }
+
+    return sResult;
+}
+
+void writeCollectionProgress(const QString &sProgressFileName, const QString &sCurrentFolder, const QString &sCurrentFile, bool bReset)
+{
+    if (!sProgressFileName.isEmpty()) {
+        QSettings settings(sProgressFileName, QSettings::IniFormat);
+
+        if (bReset) {
+            settings.clear();
+        }
+
+        settings.setValue("CurrentFolder", getProgressPath(sCurrentFolder));
+        settings.setValue(g_pszCollectionProgressCurrentFile, getProgressPath(sCurrentFile));
+        settings.sync();
+    }
+}
+}  // namespace
+
 XScanEngineProcess::XScanEngineProcess(XScanEngine *pScanEngine, QObject *pParent) : XThreadObject(pParent)
 {
     m_pScanEngine = pScanEngine;
@@ -36,6 +134,23 @@ XScanEngineProcess::XScanEngineProcess(XScanEngine *pScanEngine, QObject *pParen
         connect(m_pScanEngine, SIGNAL(warningMessage(QString)), this, SIGNAL(warningMessage(QString)));
         connect(m_pScanEngine, SIGNAL(infoMessage(QString)), this, SIGNAL(infoMessage(QString)));
     }
+}
+
+QString XScanEngineProcess::getCollectionCurrentFile(const QString &sCollectionDirectory)
+{
+    QString sResult;
+    QString sProgressFileName = getCollectionProgressFileNameByDirectory(sCollectionDirectory);
+
+    if (QFile::exists(sProgressFileName)) {
+        QSettings settings(sProgressFileName, QSettings::IniFormat);
+        sResult = settings.value(g_pszCollectionProgressCurrentFile).toString();
+
+        if (isSameFileName(sResult, sProgressFileName)) {
+            sResult.clear();
+        }
+    }
+
+    return sResult;
 }
 
 void XScanEngineProcess::setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct)
@@ -121,19 +236,34 @@ void XScanEngineProcess::process()
         } else if (m_scanType == SCAN_TYPE_DIRECTORY) {
             if ((m_sDirectoryName != "") && (m_pScanOptions)) {
                 XBinary::setPdStructStatus(pPdStruct, nFreeIndex, tr("Directory scan"));
+                QString sCollectionProgressFileName = getCollectionProgressFileName(m_pScanOptions);
+                writeCollectionProgress(sCollectionProgressFileName, m_sDirectoryName, QString(), true);
+
                 QList<QString> listFileNames;
 
                 XBinary::findFiles(m_sDirectoryName, &listFileNames, m_pScanOptions->bSubdirectories, 0, pPdStruct);
 
+                qint32 nStartIndex = 0;
                 qint32 nTotal = listFileNames.count();
+
+                if (!m_pScanOptions->sCollectionStartFile.isEmpty()) {
+                    for (qint32 i = 0; i < nTotal; i++) {
+                        if (isSameFileName(listFileNames.at(i), m_pScanOptions->sCollectionStartFile)) {
+                            break;
+                        }
+                        nStartIndex++;
+                    }
+                }                
 
                 XBinary::setPdStructTotal(pPdStruct, nFreeIndex, nTotal);
 
-                for (qint32 i = 0; (i < nTotal) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+                for (qint32 i = nStartIndex; (i < nTotal) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
                     QString sFileName = listFileNames.at(i);
 
                     XBinary::setPdStructCurrent(pPdStruct, nFreeIndex, i);
                     XBinary::setPdStructStatus(pPdStruct, nFreeIndex, sFileName);
+
+                    writeCollectionProgress(sCollectionProgressFileName, m_sDirectoryName, sFileName, false);
 
                     emit scanFileStarted(sFileName);
 
@@ -152,6 +282,10 @@ void XScanEngineProcess::process()
                         XHandler xhandler;
                         xhandler.processRecords(&scanResult.listHandlers, pPdStruct);
                     }
+                }
+
+                if (!sCollectionProgressFileName.isEmpty() && XBinary::isPdStructNotCanceled(pPdStruct)) {
+                    QFile::remove(sCollectionProgressFileName);
                 }
             }
         }

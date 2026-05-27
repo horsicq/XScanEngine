@@ -23,6 +23,7 @@
 #include "ui_xscansortwidget.h"
 
 #include <QDir>
+#include <QFileInfo>
 #include <QLineEdit>
 #include <QVariant>
 
@@ -92,6 +93,47 @@ void selectDatabaseDirectory(QWidget *pParent, QLineEdit *pLineEdit, const QStri
         pLineEdit->setText(QDir().toNativeSeparators(sDirectoryName));
     }
 }
+
+QString getNormalizedPath(const QString &sFileName)
+{
+    QString sResult;
+
+    if (!sFileName.isEmpty()) {
+        sResult = QDir::cleanPath(QFileInfo(sFileName).absoluteFilePath());
+    }
+
+    return sResult;
+}
+
+bool isSamePath(const QString &sFileName1, const QString &sFileName2)
+{
+#ifdef Q_OS_WIN
+    return (QString::compare(getNormalizedPath(sFileName1), getNormalizedPath(sFileName2), Qt::CaseInsensitive) == 0);
+#else
+    return (getNormalizedPath(sFileName1) == getNormalizedPath(sFileName2));
+#endif
+}
+
+bool isFileInDirectory(const QString &sFileName, const QString &sDirectoryName, bool bSubdirectories)
+{
+    bool bResult = false;
+    QFileInfo fileInfo(sFileName);
+    QFileInfo directoryInfo(sDirectoryName);
+
+    if (fileInfo.isFile() && directoryInfo.isDir()) {
+        if (bSubdirectories) {
+            QDir directory(directoryInfo.absoluteFilePath());
+            QString sRelativePath = directory.relativeFilePath(fileInfo.absoluteFilePath());
+            bResult =
+                !(sRelativePath.isEmpty() || (sRelativePath == "..") || sRelativePath.startsWith("../") || sRelativePath.startsWith("..\\") ||
+                  QFileInfo(sRelativePath).isAbsolute());
+        } else {
+            bResult = isSamePath(fileInfo.absolutePath(), directoryInfo.absoluteFilePath());
+        }
+    }
+
+    return bResult;
+}
 }  // namespace
 
 XScanSortWidget::XScanSortWidget(QWidget *pParent) : XShortcutsWidget(pParent), ui(new Ui::XScanSortWidget)
@@ -104,6 +146,13 @@ XScanSortWidget::XScanSortWidget(QWidget *pParent) : XShortcutsWidget(pParent), 
 }
 
 XScanSortWidget::~XScanSortWidget()
+{
+    saveOptions();
+
+    delete ui;
+}
+
+void XScanSortWidget::saveOptions()
 {
     XScanEngine::setScanFlagsToGlobalOptions(&m_sortOptions, ui->comboBoxFlags->getValue().toULongLong());
     m_sortOptions.setValue(XOptions::ID_SCAN_DIRECTORY_PATH, ui->lineEditDirectoryName->text());
@@ -141,8 +190,6 @@ XScanSortWidget::~XScanSortWidget()
     }
 
     m_sortOptions.save();
-
-    delete ui;
 }
 
 void XScanSortWidget::adjustView()
@@ -357,6 +404,8 @@ void XScanSortWidget::on_pushButtonScan_clicked()
         return;
     }
 
+    saveOptions();
+
     m_scanOptions = {};
     m_scanOptions.bShowType = true;
     m_scanOptions.bShowVersion = true;
@@ -375,6 +424,16 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     m_scanOptions.sCollectionResultDirectory = ui->lineEditResult->text();
     m_scanOptions.bCollectionLog = ui->checkBoxScanLog->isChecked();
     XScanEngine::setScanFlags(&m_scanOptions, ui->comboBoxFlags->getValue().toULongLong());
+
+    QString sCurrentFileName = XScanEngineProcess::getCollectionCurrentFile(m_scanOptions.sCollectionResultDirectory);
+
+    if (!sCurrentFileName.isEmpty() && isFileInDirectory(sCurrentFileName, sDirectory, m_scanOptions.bSubdirectories)) {
+        if (QMessageBox::question(this, tr("Resume scan"),
+                                  QString("%1\n\n%2").arg(tr("Continue from this file?"), QDir::toNativeSeparators(sCurrentFileName)),
+                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
+            m_scanOptions.sCollectionStartFile = sCurrentFileName;
+        }
+    }
 
     if (!m_scanOptions.bCollectionAllFileTypes) {
         QString sFileTypes = ui->comboBoxFileType->getCustomFlagAsString();

@@ -38,6 +38,8 @@ class XScanEngineProcess : public XThreadObject {
 public:
     explicit XScanEngineProcess(XScanEngine *pScanEngine, QObject *pParent = nullptr);
 
+    static QString getCollectionCurrentFile(const QString &sCollectionDirectory);
+
     void setData(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(QIODevice *pDevice, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);
     void setData(char *pData, qint32 nDataSize, XScanEngine::SCAN_OPTIONS *pScanOptions, XScanEngine::SCAN_RESULT *pScanResult, XBinary::PDSTRUCT *pPdStruct);

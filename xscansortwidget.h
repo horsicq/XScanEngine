@@ -66,6 +66,8 @@ private slots:
     void on_checkBoxAVX2_toggled(bool bChecked);
 
 private:
+    void saveOptions();
+
     Ui::XScanSortWidget *ui;
     XScanEngine *m_pScanEngine;
     XScanEngine::SCANENGINETYPE m_engineType;
