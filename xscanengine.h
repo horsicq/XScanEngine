@@ -1226,12 +1226,16 @@ public:
     static QString _translateType(const QString &sString);
     static void sortRecords(QList<SCANSTRUCT> *pListRecords);
     static QString getProtection(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
+    static QString getFileFormat(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
+    static QString getOperationSystem(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
     static QString getLinker(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
     static QString getCompiler(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
     static QString getWrapper(XScanEngine::SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords);
 
     static bool isProtection(const QString &sType);
     static bool isBundle(const QString &sType);
+    static bool isFileFormat(const QString &sType);
+    static bool isOperationSystem(const QString &sType);
     static bool isLinker(const QString &sType);
     static bool isCompiler(const QString &sType);
     static bool isWrapper(const QString &sType);

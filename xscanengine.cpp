@@ -2323,6 +2323,38 @@ QString XScanEngine::getProtection(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT>
     return sResult;
 }
 
+QString XScanEngine::getFileFormat(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords)
+{
+    QString sResult;
+
+    qint32 nNumberOfRecords = pListRecords->count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        if ((pListRecords->at(i).type == RECORD_TYPE_FORMAT) || isFileFormat(pListRecords->at(i).sType)) {
+            SCANSTRUCT scanStruct = pListRecords->at(i);
+            sResult = XBinary::appendText(sResult, createResultStringEx(pScanOptions, &scanStruct), "; ");
+        }
+    }
+
+    return sResult;
+}
+
+QString XScanEngine::getOperationSystem(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords)
+{
+    QString sResult;
+
+    qint32 nNumberOfRecords = pListRecords->count();
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        if ((pListRecords->at(i).type == RECORD_TYPE_OPERATIONSYSTEM) || isOperationSystem(pListRecords->at(i).sType)) {
+            SCANSTRUCT scanStruct = pListRecords->at(i);
+            sResult = XBinary::appendText(sResult, createResultStringEx(pScanOptions, &scanStruct), "; ");
+        }
+    }
+
+    return sResult;
+}
+
 QString XScanEngine::getLinker(SCAN_OPTIONS *pScanOptions, QList<SCANSTRUCT> *pListRecords)
 {
     QString sResult;
@@ -2394,6 +2426,34 @@ bool XScanEngine::isBundle(const QString &sType)
     _sType = _sType.toLower();
 
     if ((_sType == "installer") || (_sType == "sfx")) {
+        bResult = true;
+    }
+
+    return bResult;
+}
+
+bool XScanEngine::isFileFormat(const QString &sType)
+{
+    bool bResult = false;
+
+    QString _sType = sType;
+    _sType = _sType.toLower();
+
+    if (_sType == "format") {
+        bResult = true;
+    }
+
+    return bResult;
+}
+
+bool XScanEngine::isOperationSystem(const QString &sType)
+{
+    bool bResult = false;
+
+    QString _sType = sType;
+    _sType = _sType.toLower();
+
+    if (_sType == "operation system") {
         bResult = true;
     }
 
