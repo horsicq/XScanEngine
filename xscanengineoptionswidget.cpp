@@ -347,203 +347,56 @@ void XScanEngineOptionsWidget::on_toolButtonPeidDatabase_clicked()
 
 QList<DialogViewColors::RECORD> XScanEngineOptionsWidget::getRecords()
 {
-    QList<DialogViewColors::RECORD> listResult;
-
-    // TODO Create a table with color IDs and names
-    {
-        DialogViewColors::RECORD record = {"", tr("APK tool"), XOptions::ID_SCAN_COLOR_APKTOOL};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Archive"), XOptions::ID_SCAN_COLOR_ARCHIVE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Author"), XOptions::ID_SCAN_COLOR_AUTHOR};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Certificate"), XOptions::ID_SCAN_COLOR_CERTIFICATE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Compiler"), XOptions::ID_SCAN_COLOR_COMPILER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Compressor"), XOptions::ID_SCAN_COLOR_COMPRESSOR};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Converter"), XOptions::ID_SCAN_COLOR_CONVERTER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Corrupted data"), XOptions::ID_SCAN_COLOR_CORRUPTEDDATA};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Creator"), XOptions::ID_SCAN_COLOR_CREATOR};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Data"), XOptions::ID_SCAN_COLOR_DATA};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Database"), XOptions::ID_SCAN_COLOR_DATABASE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Debug"), XOptions::ID_SCAN_COLOR_DEBUG};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Debug data"), XOptions::ID_SCAN_COLOR_DEBUGDATA};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Document"), XOptions::ID_SCAN_COLOR_DOCUMENT};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("DOS extender"), XOptions::ID_SCAN_COLOR_DOSEXTENDER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Format"), XOptions::ID_SCAN_COLOR_FORMAT};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Game engine"), XOptions::ID_SCAN_COLOR_GAMEENGINE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Generic"), XOptions::ID_SCAN_COLOR_GENERIC};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Image"), XOptions::ID_SCAN_COLOR_IMAGE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Installer"), XOptions::ID_SCAN_COLOR_INSTALLER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Installer data"), XOptions::ID_SCAN_COLOR_INSTALLERDATA};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Language"), XOptions::ID_SCAN_COLOR_LANGUAGE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Library"), XOptions::ID_SCAN_COLOR_LIBRARY};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Licensing"), XOptions::ID_SCAN_COLOR_LICENSING};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Linker"), XOptions::ID_SCAN_COLOR_LINKER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Loader"), XOptions::ID_SCAN_COLOR_LOADER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Malware"), XOptions::ID_SCAN_COLOR_MALWARE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Obfuscator"), XOptions::ID_SCAN_COLOR_OBFUSCATOR};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Operation system"), XOptions::ID_SCAN_COLOR_OS};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Overlay"), XOptions::ID_SCAN_COLOR_OVERLAY};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Package"), XOptions::ID_SCAN_COLOR_PACKAGE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("PE tool"), XOptions::ID_SCAN_COLOR_PETOOL};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Personal data"), XOptions::ID_SCAN_COLOR_PERSONALDATA};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Platform"), XOptions::ID_SCAN_COLOR_PLATFORM};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Player"), XOptions::ID_SCAN_COLOR_PLAYER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Producer"), XOptions::ID_SCAN_COLOR_PRODUCER};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Protector data"), XOptions::ID_SCAN_COLOR_PROTECTORDATA};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Protection"), XOptions::ID_SCAN_COLOR_PROTECTION};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("ROM"), XOptions::ID_SCAN_COLOR_ROM};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", QString("SFX"), XOptions::ID_SCAN_COLOR_SFX};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("SFX data"), XOptions::ID_SCAN_COLOR_SFXDATA};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Sign tool"), XOptions::ID_SCAN_COLOR_SIGNTOOL};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Source code"), XOptions::ID_SCAN_COLOR_SOURCECODE};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Stub"), XOptions::ID_SCAN_COLOR_STUB};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Tool"), XOptions::ID_SCAN_COLOR_TOOL};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Trojan"), XOptions::ID_SCAN_COLOR_TROJAN};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Virtual machine"), XOptions::ID_SCAN_COLOR_VM};
-        listResult.append(record);
-    }
-    {
-        DialogViewColors::RECORD record = {"", tr("Virus"), XOptions::ID_SCAN_COLOR_VIRUS};
-        listResult.append(record);
-    }
-
-    return listResult;
+    return QList<DialogViewColors::RECORD>{
+        {"", tr("APK tool"), XOptions::ID_SCAN_COLOR_APKTOOL},
+        {"", tr("Archive"), XOptions::ID_SCAN_COLOR_ARCHIVE},
+        {"", tr("Author"), XOptions::ID_SCAN_COLOR_AUTHOR},
+        {"", tr("Certificate"), XOptions::ID_SCAN_COLOR_CERTIFICATE},
+        {"", tr("Compiler"), XOptions::ID_SCAN_COLOR_COMPILER},
+        {"", tr("Compressor"), XOptions::ID_SCAN_COLOR_COMPRESSOR},
+        {"", tr("Converter"), XOptions::ID_SCAN_COLOR_CONVERTER},
+        {"", tr("Corrupted data"), XOptions::ID_SCAN_COLOR_CORRUPTEDDATA},
+        {"", tr("Creator"), XOptions::ID_SCAN_COLOR_CREATOR},
+        {"", tr("Data"), XOptions::ID_SCAN_COLOR_DATA},
+        {"", tr("Database"), XOptions::ID_SCAN_COLOR_DATABASE},
+        {"", tr("Debug"), XOptions::ID_SCAN_COLOR_DEBUG},
+        {"", tr("Debug data"), XOptions::ID_SCAN_COLOR_DEBUGDATA},
+        {"", tr("Document"), XOptions::ID_SCAN_COLOR_DOCUMENT},
+        {"", tr("DOS extender"), XOptions::ID_SCAN_COLOR_DOSEXTENDER},
+        {"", tr("Format"), XOptions::ID_SCAN_COLOR_FORMAT},
+        {"", tr("Game engine"), XOptions::ID_SCAN_COLOR_GAMEENGINE},
+        {"", tr("Generic"), XOptions::ID_SCAN_COLOR_GENERIC},
+        {"", tr("Image"), XOptions::ID_SCAN_COLOR_IMAGE},
+        {"", tr("Installer"), XOptions::ID_SCAN_COLOR_INSTALLER},
+        {"", tr("Installer data"), XOptions::ID_SCAN_COLOR_INSTALLERDATA},
+        {"", tr("Language"), XOptions::ID_SCAN_COLOR_LANGUAGE},
+        {"", tr("Library"), XOptions::ID_SCAN_COLOR_LIBRARY},
+        {"", tr("Licensing"), XOptions::ID_SCAN_COLOR_LICENSING},
+        {"", tr("Linker"), XOptions::ID_SCAN_COLOR_LINKER},
+        {"", tr("Loader"), XOptions::ID_SCAN_COLOR_LOADER},
+        {"", tr("Malware"), XOptions::ID_SCAN_COLOR_MALWARE},
+        {"", tr("Obfuscator"), XOptions::ID_SCAN_COLOR_OBFUSCATOR},
+        {"", tr("Operation system"), XOptions::ID_SCAN_COLOR_OS},
+        {"", tr("Overlay"), XOptions::ID_SCAN_COLOR_OVERLAY},
+        {"", tr("Package"), XOptions::ID_SCAN_COLOR_PACKAGE},
+        {"", tr("PE tool"), XOptions::ID_SCAN_COLOR_PETOOL},
+        {"", tr("Personal data"), XOptions::ID_SCAN_COLOR_PERSONALDATA},
+        {"", tr("Platform"), XOptions::ID_SCAN_COLOR_PLATFORM},
+        {"", tr("Player"), XOptions::ID_SCAN_COLOR_PLAYER},
+        {"", tr("Producer"), XOptions::ID_SCAN_COLOR_PRODUCER},
+        {"", tr("Protector data"), XOptions::ID_SCAN_COLOR_PROTECTORDATA},
+        {"", tr("Protection"), XOptions::ID_SCAN_COLOR_PROTECTION},
+        {"", tr("ROM"), XOptions::ID_SCAN_COLOR_ROM},
+        {"", QString("SFX"), XOptions::ID_SCAN_COLOR_SFX},
+        {"", tr("SFX data"), XOptions::ID_SCAN_COLOR_SFXDATA},
+        {"", tr("Sign tool"), XOptions::ID_SCAN_COLOR_SIGNTOOL},
+        {"", tr("Source code"), XOptions::ID_SCAN_COLOR_SOURCECODE},
+        {"", tr("Stub"), XOptions::ID_SCAN_COLOR_STUB},
+        {"", tr("Tool"), XOptions::ID_SCAN_COLOR_TOOL},
+        {"", tr("Trojan"), XOptions::ID_SCAN_COLOR_TROJAN},
+        {"", tr("Virtual machine"), XOptions::ID_SCAN_COLOR_VM},
+        {"", tr("Virus"), XOptions::ID_SCAN_COLOR_VIRUS}
+    };
 }
 
 void XScanEngineOptionsWidget::on_pushButtonUpdateDIEDatabase_clicked()
