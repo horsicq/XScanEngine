@@ -994,7 +994,6 @@ public:
     static RECORD_NAME recordNameStringToId(const QString &sName);
 
     struct SCANID {
-        bool bVirtual;  // TODO remove
         QString sUuid;
         XBinary::FT fileType;
         XBinary::FILEPART filePart;
