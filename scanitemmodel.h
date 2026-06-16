@@ -22,11 +22,6 @@
 #define SCANITEMMODEL_H
 
 #include <QAbstractItemModel>
-#if (QT_VERSION_MAJOR > 4)
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#endif
 #include <QXmlStreamWriter>
 #ifdef QT_GUI_LIB
 #include <QApplication>
