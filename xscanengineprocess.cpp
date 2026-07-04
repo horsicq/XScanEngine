@@ -323,7 +323,7 @@ XScanEngine::SCAN_RESULT XScanEngineProcess::_scanDevice(QIODevice *pDevice, XSc
             if (bScanableArchive) {
                 XBinary::FT _fileType = XBinary::_getPrefFileType(&stFT);
 
-                XBinary *pArchive = XFormats::getClass(_fileType, pDevice, false, -1);
+            XBinary *pArchive = XFormats::createClass(_fileType, pDevice, false, -1);
 
                 XBinary::UNPACK_STATE state = {};
                 QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;

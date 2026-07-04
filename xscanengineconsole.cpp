@@ -340,7 +340,7 @@ int XScanEngineConsole::process()
                     continue;
                 }
 
-                XArchive *pArchive = static_cast<XArchive *>(XFormats::getClass(fileType, &file));
+                XArchive *pArchive = static_cast<XArchive *>(XFormats::createClass(fileType, &file));
                 bool bExtracted = false;
 
                 if (pArchive) {
@@ -376,7 +376,7 @@ int XScanEngineConsole::process()
                     fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
                 }
 
-                XBinary *pBinary = XFormats::getClass(fileType, &file);
+                XBinary *pBinary = XFormats::createClass(fileType, &file);
 
                 if (pBinary) {
                     QList<XBinary::XFHEADER> listHeaders = pBinary->_getXFHeaders(&pdStruct);
@@ -526,7 +526,7 @@ XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanE
                 XBinary::XFHEADER xFHeader = XFormats::getXFHeaderFromStructName(&file, pScanOptions->sStruct, false, -1, pPdStruct);
 
                 if (xFHeader.xfType != XBinary::XFTYPE_UNKNOWN) {
-                    XBinary *pBinary = XFormats::getClass(xFHeader.fileType, &file);
+                    XBinary *pBinary = XFormats::createClass(xFHeader.fileType, &file);
 
                     if (pBinary) {
                         QString sStructInfo;

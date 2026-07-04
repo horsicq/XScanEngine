@@ -1812,7 +1812,7 @@ void XScanEngine::_processDetect(SCANID *pScanID, SCAN_RESULT *pScanResult, QIOD
     QList<SCANSTRUCT> listRecords;
     const XScanEngine::SCANID resultId = createResultId(pDevice, parentId, fileType);
 
-    XBinary *pBinary = XFormats::getClass(fileType, pDevice, false, -1);
+            XBinary *pBinary = XFormats::createClass(fileType, pDevice, false, -1);
     XBinary::FILEFORMATINFO ffi = pBinary->getFileFormatInfo(pPdStruct);
 
     if (ffi.fileType != XBinary::FT_BINARY) {
@@ -2849,7 +2849,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             if (bScanableArchive) {
                 XBinary::FT _fileType = XBinary::_getPrefFileType(&stFT);
 
-                XBinary *pArchive = XFormats::getClass(_fileType, _pDevice, false, -1);
+            XBinary *pArchive = XFormats::createClass(_fileType, _pDevice, false, -1);
 
                 XBinary::UNPACK_STATE state = {};
                 QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;
