@@ -380,9 +380,10 @@ int XScanEngineConsole::process()
 
                 if (pBinary) {
                     QList<XBinary::XFHEADER> listHeaders = pBinary->_getXFHeaders(&pdStruct);
+                    XBinary::INDATA inData = XFormats::createINDATA(fileType, &file);
 
                     XFTreeModel treeModel(nullptr);
-                    treeModel.setData(pBinary, listHeaders);
+                    treeModel.setData(inData, listHeaders);
 
                     QString sStructs;
 
@@ -530,10 +531,11 @@ XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanE
 
                     if (pBinary) {
                         QString sStructInfo;
+                        XBinary::INDATA inData = XFormats::createINDATA(xFHeader.fileType, &file);
 
                         if (xFHeader.xfType == XBinary::XFTYPE_HEADER) {
                             XFModel_header modelHeader(nullptr);
-                            modelHeader.setData(pBinary, xFHeader);
+                            modelHeader.setData(inData, xFHeader);
 
                             if (pScanOptions->bResultAsJSON) {
                                 sStructInfo = modelHeader.toJSON();
@@ -548,7 +550,7 @@ XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanE
                             }
                         } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
                             XFModel_table modelTable;
-                            modelTable.setData(pBinary, xFHeader);
+                            modelTable.setData(inData, xFHeader);
                             modelTable.setShowPresentation(true);
 
                             if (pScanOptions->bResultAsJSON) {

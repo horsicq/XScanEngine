@@ -248,11 +248,20 @@ QString ScanItemModel::toXML()
 
 QString ScanItemModel::toJSON()
 {
+    QString sResult;
+#if (QT_VERSION_MAJOR > 4)
     QJsonObject jsonResult;
+
     _toJSON(&jsonResult, m_pRootItem, 0);
 
     QJsonDocument saveFormat(jsonResult);
-    return QString::fromUtf8(saveFormat.toJson(QJsonDocument::Indented));
+
+    QByteArray baData = saveFormat.toJson(QJsonDocument::Indented);
+
+    sResult = baData.data();
+#endif
+
+    return sResult;
 }
 
 QString ScanItemModel::toCSV()
