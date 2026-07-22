@@ -44,6 +44,7 @@ public slots:
     bool _isSectionNamePresentExp(const QString &sSectionName);
     bool isNET();
     bool isNet();
+    bool isPE32();
     bool isPEPlus();
     virtual QString getGeneralOptions();
     quint32 getResourceIdByNumber(quint32 nNumber);
@@ -140,6 +141,7 @@ private:
     qint32 m_nNumberOfExportFunctions;
     XPE::RESOURCES_VERSION m_resourcesVersion;
     bool m_bIsNETPresent;
+    bool m_bIs32;
     bool m_bIs64;
     bool m_bIsDll;
     bool m_bIsDriver;

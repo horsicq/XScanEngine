@@ -47,6 +47,7 @@ PE_Script::PE_Script(XPE *pPE, XBinary::FILEPART filePart, const OPTIONS &scanOp
     m_nNumberOfImports = m_listImportHeaders.count();
 
     m_bIsNETPresent = (m_pPE->isNETPresent()) && (m_cliInfo.bValid);
+    m_bIs32 = m_pPE->is32(getMemoryMap());
     m_bIs64 = m_pPE->is64(getMemoryMap());
     m_bIsDll = m_pPE->isDll();
     m_bIsDriver = m_pPE->isDriver();
@@ -161,6 +162,11 @@ bool PE_Script::isNET()
 bool PE_Script::isNet()
 {
     return m_bIsNETPresent;
+}
+
+bool PE_Script::isPE32()
+{
+    return is32();
 }
 
 bool PE_Script::isPEPlus()
