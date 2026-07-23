@@ -102,6 +102,7 @@ public slots:
     qint32 getDisasmLength(qint64 nAddress);
     QString getDisasmString(qint64 nAddress);
     qint64 getDisasmNextAddress(qint64 nAddress);
+    bool is8();
     bool is16();
     bool is32();
     bool is64();

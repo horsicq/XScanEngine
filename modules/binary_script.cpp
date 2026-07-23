@@ -512,6 +512,11 @@ qint64 Binary_Script::getDisasmNextAddress(qint64 nAddress)
     return m_disasmCore.disAsm(m_pBinary->getDevice(), XBinary::addressToOffset(&m_memoryMap, nAddress), nAddress, m_disasmOptions).nNextAddress;
 }
 
+bool Binary_Script::is8()
+{
+    return XBinary::is8(&m_memoryMap);
+}
+
 bool Binary_Script::is16()
 {
     return XBinary::is16(&m_memoryMap);
