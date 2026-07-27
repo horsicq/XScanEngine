@@ -421,6 +421,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_CONFUSER, QString("Confuser")},
     {XScanEngine::RECORD_NAME_CONFUSEREX, QString("ConfuserEx")},
     {XScanEngine::RECORD_NAME_COPYMINDER, QString("CopyMinder")},
+    {XScanEngine::RECORD_NAME_CPM, QString("CP/M")},
     {XScanEngine::RECORD_NAME_CPP, QString("C++")},
     {XScanEngine::RECORD_NAME_CREATEINSTALL, QString("CreateInstall")},
     {XScanEngine::RECORD_NAME_CRINKLER, QString("Crinkler")},
