@@ -68,6 +68,8 @@ set(XSCANENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/modules/ne_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/pe_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/pe_script.h
+    ${CMAKE_CURRENT_LIST_DIR}/modules/dotnet_script.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/modules/dotnet_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/zip_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/zip_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/jar_script.cpp

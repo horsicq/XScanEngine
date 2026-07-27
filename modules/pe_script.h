@@ -23,6 +23,7 @@
 
 #include "msdos_script.h"
 #include "xpe.h"
+#include "xcliassembly.h"
 
 class PE_Script : public MSDOS_Script {
     Q_OBJECT
@@ -52,18 +53,6 @@ public slots:
     qint64 getResourceOffsetByNumber(quint32 nNumber);
     qint64 getResourceSizeByNumber(quint32 nNumber);
     quint32 getResourceTypeByNumber(quint32 nNumber);
-    bool isNETStringPresent(const QString &sString);
-    bool isNetObjectPresent(const QString &sString);
-    bool isNETUnicodeStringPresent(const QString &sString);
-    bool isNetUStringPresent(const QString &sString);
-    qint64 findSignatureInBlob_NET(const QString &sSignature);
-    bool isSignatureInBlobPresent_NET(const QString &sSignature);
-    bool isNetGlobalCctorPresent();
-    bool isNetTypePresent(const QString &sTypeNamespace, const QString &sTypeName);
-    bool isNetMethodPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sMethodName);
-    bool isNetFieldPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sFieldName);
-    QString getNetModuleName();
-    QString getNetAssemblyName();
     qint32 getNumberOfImports();
     QString getImportLibraryName(quint32 nNumber);
     bool isLibraryPresent(const QString &sLibraryName, bool bCheckCase = false);
@@ -93,8 +82,6 @@ public slots:
     qint32 getSectionNumberExp(const QString &sSectionName);
     bool isDll();
     bool isDriver();
-    QString getNETVersion();
-    bool compareEP_NET(const QString &sSignature, qint64 nOffset = 0);
     quint32 getSizeOfCode();
     quint32 getSizeOfUninitializedData();
     QString getPEFileVersion(const QString &sFileName);
@@ -123,13 +110,34 @@ public slots:
     qint64 getDebugDataOffset(quint32 nNumber);
     qint64 getDebugDataSize(quint32 nNumber);
 
+    // Obsolete: .NET/CLI analysis has moved to the DOTNET class (XCLIAssembly).
+    // These functions are kept for backward compatibility with existing signatures.
+    bool isNETStringPresent(const QString &sString);
+    bool isNetObjectPresent(const QString &sString);
+    bool isNETUnicodeStringPresent(const QString &sString);
+    bool isNetUStringPresent(const QString &sString);
+    qint64 findSignatureInBlob_NET(const QString &sSignature);
+    bool isSignatureInBlobPresent_NET(const QString &sSignature);
+    bool isNetGlobalCctorPresent();
+    bool isNetTypePresent(const QString &sTypeNamespace, const QString &sTypeName);
+    bool isNetMethodPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sMethodName);
+    bool isNetFieldPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sFieldName);
+    QString getNetModuleName();
+    QString getNetAssemblyName();
+    QString getNETVersion();
+    bool compareEP_NET(const QString &sSignature, qint64 nOffset = 0);
+
 private:
     XPE *m_pPE;
-    qint32 m_nNumberOfSections;
-    XPE::CLI_INFO m_cliInfo;
+    // Obsolete: backing for the compatibility .NET functions
+    XCLIAssembly *m_pCliAssembly;
+    XCLIAssembly::CLI_INFO m_cliInfo;
     bool m_bNetGlobalCctorPresent;
     QList<QString> m_listNetAnsiStrings;
     QList<QString> m_listNetUnicodeStrings;
+    QString m_sNetModuleName;
+    QString m_sNetAssemblyName;
+    qint32 m_nNumberOfSections;
     QList<XPE::RESOURCE_RECORD> m_listResourceRecords;
     qint32 m_nNumberOfResources;
     QList<XPE_DEF::IMAGE_SECTION_HEADER> m_listSectionHeaders;
@@ -174,8 +182,6 @@ private:
     XPE_DEF::IMAGE_FILE_HEADER m_imageFileHeader;
     XPE_DEF::IMAGE_OPTIONAL_HEADER32 m_imageOptionalHeader32;
     XPE_DEF::IMAGE_OPTIONAL_HEADER64 m_imageOptionalHeader64;
-    QString m_sNetModuleName;
-    QString m_sNetAssemblyName;
     QList<XPE_DEF::S_IMAGE_DEBUG_DIRECTORY> m_listDebugRecords;
 };
 

@@ -26,6 +26,7 @@ HEADERS += \
     $$PWD/modules/msdos_script.h \
     $$PWD/modules/ne_script.h \
     $$PWD/modules/pe_script.h \
+    $$PWD/modules/dotnet_script.h \
     $$PWD/modules/zip_script.h \
     $$PWD/modules/jar_script.h \
     $$PWD/modules/apk_script.h \
@@ -62,6 +63,7 @@ SOURCES += \
     $$PWD/modules/msdos_script.cpp \
     $$PWD/modules/ne_script.cpp \
     $$PWD/modules/pe_script.cpp \
+    $$PWD/modules/dotnet_script.cpp \
     $$PWD/modules/zip_script.cpp \
     $$PWD/modules/jar_script.cpp \
     $$PWD/modules/apk_script.cpp \

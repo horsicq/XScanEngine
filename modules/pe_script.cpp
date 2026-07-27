@@ -28,14 +28,23 @@ PE_Script::PE_Script(XPE *pPE, XBinary::FILEPART filePart, const OPTIONS &scanOp
     m_listSectionHeaders = m_pPE->getSectionHeaders(getPdStruct());
     m_listSectionRecords = m_pPE->getSectionRecords(&m_listSectionHeaders, getPdStruct());
     m_listSectionNameStrings = m_pPE->getSectionNames(&m_listSectionRecords, getPdStruct());
-    m_cliInfo = m_pPE->getCliInfo(true, getMemoryMap(), getPdStruct());
-    m_bNetGlobalCctorPresent = m_pPE->isNetGlobalCctorPresent(&m_cliInfo, getPdStruct());
 
-    if (m_cliInfo.bValid) {
-        m_listNetAnsiStrings = m_pPE->getAnsiStrings(&m_cliInfo, getPdStruct());
-        m_listNetUnicodeStrings = m_pPE->getUnicodeStrings(&m_cliInfo, getPdStruct());
-        m_sNetModuleName = m_pPE->getMetadataModuleName(&m_cliInfo, 0);
-        m_sNetAssemblyName = m_pPE->getMetadataAssemblyName(&m_cliInfo, 0);
+    // Obsolete: .NET/CLI analysis has moved to the DOTNET class (XCLIAssembly).
+    // Kept for backward compatibility with existing signatures.
+    m_pCliAssembly = m_pPE->getCliAssembly(getPdStruct());
+    m_cliInfo = {};
+    m_bNetGlobalCctorPresent = false;
+
+    if (m_pCliAssembly) {
+        m_cliInfo = m_pCliAssembly->getCliInfo(true, getPdStruct());
+        m_bNetGlobalCctorPresent = m_pCliAssembly->isNetGlobalCctorPresent(&m_cliInfo, getPdStruct());
+
+        if (m_cliInfo.bValid) {
+            m_listNetAnsiStrings = m_pCliAssembly->getAnsiStrings(&m_cliInfo, getPdStruct());
+            m_listNetUnicodeStrings = m_pCliAssembly->getUnicodeStrings(&m_cliInfo, getPdStruct());
+            m_sNetModuleName = m_pCliAssembly->getMetadataModuleName(&m_cliInfo, 0);
+            m_sNetAssemblyName = m_pCliAssembly->getMetadataAssemblyName(&m_cliInfo, 0);
+        }
     }
 
     m_listResourceRecords = m_pPE->getResources(getMemoryMap(), 10000, getPdStruct());
@@ -102,6 +111,79 @@ PE_Script::PE_Script(XPE *pPE, XBinary::FILEPART filePart, const OPTIONS &scanOp
 
 PE_Script::~PE_Script()
 {
+    delete m_pCliAssembly;
+}
+
+// Obsolete: .NET/CLI analysis has moved to the DOTNET class (XCLIAssembly).
+// The functions below are kept for backward compatibility with existing signatures.
+bool PE_Script::isNETStringPresent(const QString &sString)
+{
+    return XBinary::isStringInListPresent(&m_listNetAnsiStrings, sString, getPdStruct());
+}
+
+bool PE_Script::isNetObjectPresent(const QString &sString)
+{
+    return XBinary::isStringInListPresent(&m_listNetAnsiStrings, sString, getPdStruct());
+}
+
+bool PE_Script::isNETUnicodeStringPresent(const QString &sString)
+{
+    return XBinary::isStringInListPresent(&m_listNetUnicodeStrings, sString, getPdStruct());
+}
+
+bool PE_Script::isNetUStringPresent(const QString &sString)
+{
+    return XBinary::isStringInListPresent(&m_listNetUnicodeStrings, sString, getPdStruct());
+}
+
+qint64 PE_Script::findSignatureInBlob_NET(const QString &sSignature)
+{
+    return m_pCliAssembly->findSignatureInBlob_NET(sSignature, getPdStruct());
+}
+
+bool PE_Script::isSignatureInBlobPresent_NET(const QString &sSignature)
+{
+    return m_pCliAssembly->isSignatureInBlobPresent_NET(sSignature, getPdStruct());
+}
+
+bool PE_Script::isNetGlobalCctorPresent()
+{
+    return m_bNetGlobalCctorPresent;
+}
+
+bool PE_Script::isNetTypePresent(const QString &sTypeNamespace, const QString &sTypeName)
+{
+    return m_pCliAssembly->isNetTypePresent(&m_cliInfo, sTypeNamespace, sTypeName, getPdStruct());
+}
+
+bool PE_Script::isNetMethodPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sMethodName)
+{
+    return m_pCliAssembly->isNetMethodPresent(&m_cliInfo, sTypeNamespace, sTypeName, sMethodName, getPdStruct());
+}
+
+bool PE_Script::isNetFieldPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sFieldName)
+{
+    return m_pCliAssembly->isNetFieldPresent(&m_cliInfo, sTypeNamespace, sTypeName, sFieldName, getPdStruct());
+}
+
+QString PE_Script::getNetModuleName()
+{
+    return m_sNetModuleName;
+}
+
+QString PE_Script::getNetAssemblyName()
+{
+    return m_sNetAssemblyName;
+}
+
+QString PE_Script::getNETVersion()
+{
+    return m_cliInfo.metaData.header.sVersion;
+}
+
+bool PE_Script::compareEP_NET(const QString &sSignature, qint64 nOffset)
+{
+    return m_pPE->compareSignatureOnAddress(getMemoryMap(), sSignature, getBaseAddress() + m_cliInfo.metaData.nEntryPoint + nOffset);
 }
 
 quint16 PE_Script::getNumberOfSections()
@@ -202,66 +284,6 @@ qint64 PE_Script::getResourceSizeByNumber(quint32 nNumber)
 quint32 PE_Script::getResourceTypeByNumber(quint32 nNumber)
 {
     return m_pPE->getResourceTypeByNumber(nNumber, &m_listResourceRecords);
-}
-
-bool PE_Script::isNETStringPresent(const QString &sString)
-{
-    return m_pPE->isStringInListPresent(&m_listNetAnsiStrings, sString, getPdStruct());
-}
-
-bool PE_Script::isNetObjectPresent(const QString &sString)
-{
-    return m_pPE->isStringInListPresent(&m_listNetAnsiStrings, sString, getPdStruct());
-}
-
-bool PE_Script::isNETUnicodeStringPresent(const QString &sString)
-{
-    return m_pPE->isStringInListPresent(&m_listNetUnicodeStrings, sString, getPdStruct());
-}
-
-bool PE_Script::isNetUStringPresent(const QString &sString)
-{
-    return m_pPE->isStringInListPresent(&m_listNetUnicodeStrings, sString, getPdStruct());
-}
-
-qint64 PE_Script::findSignatureInBlob_NET(const QString &sSignature)
-{
-    return m_pPE->findSignatureInBlob_NET(sSignature, getMemoryMap(), getPdStruct());
-}
-
-bool PE_Script::isSignatureInBlobPresent_NET(const QString &sSignature)
-{
-    return m_pPE->isSignatureInBlobPresent_NET(sSignature, getMemoryMap(), getPdStruct());
-}
-
-bool PE_Script::isNetGlobalCctorPresent()
-{
-    return m_bNetGlobalCctorPresent;
-}
-
-bool PE_Script::isNetTypePresent(const QString &sTypeNamespace, const QString &sTypeName)
-{
-    return m_pPE->isNetTypePresent(&m_cliInfo, sTypeNamespace, sTypeName, getPdStruct());
-}
-
-bool PE_Script::isNetMethodPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sMethodName)
-{
-    return m_pPE->isNetMethodPresent(&m_cliInfo, sTypeNamespace, sTypeName, sMethodName, getPdStruct());
-}
-
-bool PE_Script::isNetFieldPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sFieldName)
-{
-    return m_pPE->isNetFieldPresent(&m_cliInfo, sTypeNamespace, sTypeName, sFieldName, getPdStruct());
-}
-
-QString PE_Script::getNetModuleName()
-{
-    return m_sNetModuleName;
-}
-
-QString PE_Script::getNetAssemblyName()
-{
-    return m_sNetAssemblyName;
 }
 
 qint32 PE_Script::getNumberOfImports()
@@ -415,16 +437,6 @@ bool PE_Script::isDll()
 bool PE_Script::isDriver()
 {
     return m_bIsDriver;
-}
-
-QString PE_Script::getNETVersion()
-{
-    return m_cliInfo.metaData.header.sVersion;
-}
-
-bool PE_Script::compareEP_NET(const QString &sSignature, qint64 nOffset)
-{
-    return m_pPE->compareSignatureOnAddress(getMemoryMap(), sSignature, getBaseAddress() + m_cliInfo.metaData.nEntryPoint + nOffset);
 }
 
 quint32 PE_Script::getSizeOfCode()

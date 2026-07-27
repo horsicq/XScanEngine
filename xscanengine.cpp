@@ -256,6 +256,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_12311134, QString("12311134")},
     {XScanEngine::RECORD_NAME_1337EXECRYPTER, QString("1337 Exe Crypter")},
     {XScanEngine::RECORD_NAME_32LITE, QString("32Lite")},
+    {XScanEngine::RECORD_NAME_624, QString("624")},
     {XScanEngine::RECORD_NAME_7Z, QString("7-Zip")},
     {XScanEngine::RECORD_NAME_AASE, QString("Aase")},
     {XScanEngine::RECORD_NAME_ABCCRYPTOR, QString("ABC Cryptor")},
@@ -300,6 +301,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_ANSKYAPOLYMORPHICPACKER, QString("Anskya Polymorphic Packer")},
     {XScanEngine::RECORD_NAME_ANSLYMPACKER, QString("AnslymPacker")},
     {XScanEngine::RECORD_NAME_ANTIDOTE, QString("AntiDote")},
+    {XScanEngine::RECORD_NAME_ANTILAME, QString("Anti-LAME")},
     {XScanEngine::RECORD_NAME_ANTILVL, QString("AntiLVL")},
     {XScanEngine::RECORD_NAME_APACHEANT, QString("Apache Ant")},
     {XScanEngine::RECORD_NAME_APACK, QString("aPACK")},
@@ -332,6 +334,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_ARMTHUMBCCPP, QString("ARM/Thumb C/C++")},
     {XScanEngine::RECORD_NAME_ARMTHUMBMACROASSEMBLER, QString("ARM/Thumb Macro Assembler")},
     {XScanEngine::RECORD_NAME_AROS, QString("AROS")},
+    {XScanEngine::RECORD_NAME_ARTEKADA, QString("Artek Ada")},
     {XScanEngine::RECORD_NAME_ARXAN, QString("Arxan")},
     {XScanEngine::RECORD_NAME_ASDPACK, QString("ASDPack")},
     {XScanEngine::RECORD_NAME_ASMGUARD, QString("ASM Guard")},
@@ -347,7 +350,9 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_AVERCRYPTOR, QString("AverCryptor")},
     {XScanEngine::RECORD_NAME_AVI, QString("AVI")},
     {XScanEngine::RECORD_NAME_AVPACK, QString("AVPACK")},
+    {XScanEngine::RECORD_NAME_AXE, QString("AXE")},
     {XScanEngine::RECORD_NAME_AZPROTECT, QString("AZProtect")},
+    {XScanEngine::RECORD_NAME_AZTECC86, QString("Aztec C86")},
     {XScanEngine::RECORD_NAME_BABELNET, QString("Babel .NET")},
     {XScanEngine::RECORD_NAME_BACKDOORPECOMPRESSPROTECTOR, QString("Backdoor PE Compress Protector")},
     {XScanEngine::RECORD_NAME_BAIDUPROTECTION, QString("Baidu Protection")},
@@ -359,6 +364,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_BAT2EXEC, QString("BAT2EXEC")},
     {XScanEngine::RECORD_NAME_BEAWEBLOGIC, QString("BEA WebLogic")},
     {XScanEngine::RECORD_NAME_BEROEXEPACKER, QString("BeRoEXEPacker")},
+    {XScanEngine::RECORD_NAME_BESTPROTECTIONKIT, QString("Best Protection Kit")},
     {XScanEngine::RECORD_NAME_BIOHAZARDCRYPTER, QString("Biohazard Crypter")},
     {XScanEngine::RECORD_NAME_BITMAPINFOHEADER, QString("Bitmap Info Header")},
     {XScanEngine::RECORD_NAME_BITROCKINSTALLER, QString("BitRock Installer")},
@@ -372,6 +378,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_BORLANDDELPHIDOTNET, QString("Borland Delphi .NET")},
     {XScanEngine::RECORD_NAME_BORLANDOBJECTPASCALDELPHI, QString("Borland Object Pascal(Delphi)")},
     {XScanEngine::RECORD_NAME_BORLANDOSSERVICES, QString("Borland OS Services")},
+    {XScanEngine::RECORD_NAME_BOXEDAPPPACKER, QString("BoxedApp Packer")},
     {XScanEngine::RECORD_NAME_BREAKINTOPATTERN, QString("Break Into Pattern")},
     {XScanEngine::RECORD_NAME_BRIDGEOS, QString("bridgeOS")},
     {XScanEngine::RECORD_NAME_BRIDGEOSSDK, QString("bridgeOS SDK")},
@@ -408,6 +415,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_COFF, QString("COFF")},
     {XScanEngine::RECORD_NAME_COMEXSIGNAPK, QString("COMEX SignApk")},
     {XScanEngine::RECORD_NAME_COMICBOOKARCHIVE, QString("Comic Book Archive")},
+    {XScanEngine::RECORD_NAME_COMPACK, QString("COMPACK")},
     {XScanEngine::RECORD_NAME_COMPOUNDFILEBINARYFORMAT, QString("Compound File Binary Format")},
     {XScanEngine::RECORD_NAME_CONFUSER, QString("Confuser")},
     {XScanEngine::RECORD_NAME_CONFUSEREX, QString("ConfuserEx")},
@@ -425,6 +433,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_CRYPTOCRACKPEPROTECTOR, QString("CrypToCrack Pe Protector")},
     {XScanEngine::RECORD_NAME_CRYPTOOBFUSCATORFORNET, QString("Crypto Obfuscator For .Net")},
     {XScanEngine::RECORD_NAME_CRYPTORBYDISMEMBER, QString("Cryptor by Dismember")},
+    {XScanEngine::RECORD_NAME_CRYPTORBYEVILGENIUS, QString("Cryptor by Evil Genius")},
     {XScanEngine::RECORD_NAME_CRYPTOZ, QString("CRyptOZ")},
     {XScanEngine::RECORD_NAME_CRYPTRROADS, QString("Crypt R.roads")},
     {XScanEngine::RECORD_NAME_CSHARP, QString("C#")},
@@ -445,6 +454,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_DEEPSEA, QString("DeepSea")},
     {XScanEngine::RECORD_NAME_DEPACK, QString("dePack")},
     {XScanEngine::RECORD_NAME_DEPLOYMASTER, QString("DeployMaster")},
+    {XScanEngine::RECORD_NAME_DESMETC, QString("DeSmet C")},
     {XScanEngine::RECORD_NAME_DEX2JAR, QString("dex2jar")},
     {XScanEngine::RECORD_NAME_DEX, QString("DEX")},
     {XScanEngine::RECORD_NAME_DEXGUARD, QString("DexGuard")},
@@ -453,6 +463,11 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_DEXMERGE, QString("DexMerge")},
     {XScanEngine::RECORD_NAME_DEXPROTECTOR, QString("DexProtector")},
     {XScanEngine::RECORD_NAME_DIET, QString("DIET")},
+    {XScanEngine::RECORD_NAME_DIGITALRESEARCH, QString("Digital Research")},
+    {XScanEngine::RECORD_NAME_DIGITALRESEARCHC, QString("Digital Research C")},
+    {XScanEngine::RECORD_NAME_DIGITALRESEARCHMTPASCAL, QString("Digital Research Pascal/MT+86")},
+    {XScanEngine::RECORD_NAME_DIGITALRESEARCHPLI86, QString("Digital Research PL/I-86")},
+    {XScanEngine::RECORD_NAME_DIGPAK, QString("DIGPAK")},
     {XScanEngine::RECORD_NAME_DINGBAOZENGNATIVEOBFUSCATOR, QString("Dingbaozeng native obfuscator")},
     {XScanEngine::RECORD_NAME_DIRTYCRYPTOR, QString("DirTy Cryptor")},
     {XScanEngine::RECORD_NAME_DJVU, QString("DjVu")},
@@ -492,12 +507,16 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_ENCRYPTPE, QString("EncryptPE")},
     {XScanEngine::RECORD_NAME_ENIGMA, QString("ENIGMA")},
     {XScanEngine::RECORD_NAME_ENIGMAVIRTUALBOX, QString("Enigma Virtual Box")},
+    {XScanEngine::RECORD_NAME_EPACK, QString("EPACK")},
     {XScanEngine::RECORD_NAME_EPEXEPACK, QString("!EP(EXE Pack)")},
     {XScanEngine::RECORD_NAME_EPROT, QString("!EProt")},
+    {XScanEngine::RECORD_NAME_EPW, QString("EPW")},
     {XScanEngine::RECORD_NAME_EXCELSIORJET, QString("Excelsior JET")},
+    {XScanEngine::RECORD_NAME_EXE2COM, QString("EXE2COM")},
     {XScanEngine::RECORD_NAME_EXE32PACK, QString("exe32pack")},
     {XScanEngine::RECORD_NAME_EXECRYPT, QString("EXECrypt")},
     {XScanEngine::RECORD_NAME_EXECRYPTOR, QString("EXECryptor")},
+    {XScanEngine::RECORD_NAME_EXECUTRIX, QString("Executrix Compressor")},
     {XScanEngine::RECORD_NAME_EXEFOG, QString("ExeFog")},
     {XScanEngine::RECORD_NAME_EXEJOINER, QString("ExeJoiner")},
     {XScanEngine::RECORD_NAME_EXEMPLARINSTALLER, QString("Exemplar Installer")},
@@ -546,6 +565,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_GNUASSEMBLER, QString("GNU Assembler")},
     {XScanEngine::RECORD_NAME_GNULINKER, QString("GNU ld")},
     {XScanEngine::RECORD_NAME_GO, QString("Go")},
+    {XScanEngine::RECORD_NAME_GO32STUB, QString("Go32 Stub")},
     {XScanEngine::RECORD_NAME_GOASM, QString("GoAsm")},
     {XScanEngine::RECORD_NAME_GOATSPEMUTILATOR, QString("Goat's PE Mutilator")},
     {XScanEngine::RECORD_NAME_GOLD, QString("gold")},
@@ -553,6 +573,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_GOLINK, QString("GoLink")},
     {XScanEngine::RECORD_NAME_GOOGLE, QString("Google")},
     {XScanEngine::RECORD_NAME_GOOGLEPLAY, QString("Google Play")},
+    {XScanEngine::RECORD_NAME_GPATCH, QString("GPatch")},
     {XScanEngine::RECORD_NAME_GPINSTALL, QString("GP-Install")},
     {XScanEngine::RECORD_NAME_GUARDIANSTEALTH, QString("Guardian Stealth")},
     {XScanEngine::RECORD_NAME_GZIP, QString("GZIP")},
@@ -575,6 +596,8 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_HXS, QString("HXS")},
     {XScanEngine::RECORD_NAME_HYPERTECHCRACKPROOF, QString("HyperTech Crackproof")},
     {XScanEngine::RECORD_NAME_IBMJDK, QString("IBM JDK")},
+    {XScanEngine::RECORD_NAME_IBMPCBASIC, QString("IBM PC BASIC Compiler")},
+    {XScanEngine::RECORD_NAME_IBMPCFORTRAN, QString("IBM PC Fortran")},
     {XScanEngine::RECORD_NAME_IBMPCPASCAL, QString("IBM PC Pascal")},
     {XScanEngine::RECORD_NAME_ICE, QString("ICE")},
     {XScanEngine::RECORD_NAME_ICRYPT, QString("ICrypt")},
@@ -586,11 +609,15 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_IMPORT, QString("Import")},
     {XScanEngine::RECORD_NAME_INFCRYPTOR, QString("INF Cryptor")},
     {XScanEngine::RECORD_NAME_INNOSETUP, QString("Inno Setup")},
+    {XScanEngine::RECORD_NAME_IEXPRESS, QString("IExpress")},
     {XScanEngine::RECORD_NAME_INQUARTOSOBFUSCATOR, QString("Inquartos Obfuscator")},
     {XScanEngine::RECORD_NAME_INSTALL4J, QString("install4j")},
     {XScanEngine::RECORD_NAME_INSTALLANYWHERE, QString("InstallAnywhere")},
     {XScanEngine::RECORD_NAME_INSTALLAWARE, QString("InstallAware")},
+    {XScanEngine::RECORD_NAME_INSTALLFORGE, QString("InstallForge")},
     {XScanEngine::RECORD_NAME_INSTALLSHIELD, QString("InstallShield")},
+    {XScanEngine::RECORD_NAME_INSTALLSIMPLE, QString("Install Simple")},
+    {XScanEngine::RECORD_NAME_INTELIC86, QString("Intel iC-86")},
     {XScanEngine::RECORD_NAME_IOS, QString("iOS")},
     {XScanEngine::RECORD_NAME_IOSSDK, QString("iOS SDK")},
     {XScanEngine::RECORD_NAME_IPA, QString("iOS App Store Package")},
@@ -601,6 +628,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_ISO9660, QString("ISO 9660")},
     {XScanEngine::RECORD_NAME_JACK, QString("Jack")},
     {XScanEngine::RECORD_NAME_JAM, QString("JAM")},
+    {XScanEngine::RECORD_NAME_JANUSADA, QString("Janus Ada")},
     {XScanEngine::RECORD_NAME_JAR, QString("JAR")},
     {XScanEngine::RECORD_NAME_JAVA, QString("Java")},
     {XScanEngine::RECORD_NAME_JAVACOMPILEDCLASS, QString("Java compiled class")},
@@ -608,6 +636,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_JDPACK, QString("JDPack")},
     {XScanEngine::RECORD_NAME_JETBRAINS, QString("JetBrains")},
     {XScanEngine::RECORD_NAME_JIAGU, QString("jiagu")},
+    {XScanEngine::RECORD_NAME_JMCE, QString("JMCE")},
     {XScanEngine::RECORD_NAME_JPEG, QString("JPEG")},
     {XScanEngine::RECORD_NAME_JSCRIPT, QString("JScript")},
     {XScanEngine::RECORD_NAME_JVM, QString("JVM")},
@@ -625,6 +654,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_KUR0KX2TO, QString("Kur0k.X2.to")},
     {XScanEngine::RECORD_NAME_LAMECRYPT, QString("LameCrypt")},
     {XScanEngine::RECORD_NAME_LARP64, QString("lARP64")},
+    {XScanEngine::RECORD_NAME_LATTICEC, QString("Lattice C")},
     {XScanEngine::RECORD_NAME_LAYHEYFORTRAN90, QString("Lahey Fortran 90")},
     {XScanEngine::RECORD_NAME_LAZARUS, QString("Lazarus")},
     {XScanEngine::RECORD_NAME_LCCLNK, QString("lcclnk")},
@@ -637,8 +667,9 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_LIGHTNINGCRYPTERPRIVATE, QString("Lightning Crypter Private")},
     {XScanEngine::RECORD_NAME_LIGHTNINGCRYPTERSCANTIME, QString("Lightning Crypter ScanTime")},
     {XScanEngine::RECORD_NAME_LINUX, QString("Linux")},
-    {XScanEngine::RECORD_NAME_LLD, QString("LDD")},
+    {XScanEngine::RECORD_NAME_LLD, QString("LLD")},
     {XScanEngine::RECORD_NAME_LOCKTITE, QString("LockTite+")},
+    {XScanEngine::RECORD_NAME_LOGITECHMODULA2, QString("Logitech Modula-2")},
     {XScanEngine::RECORD_NAME_LSCRYPRT, QString("LSCRYPT")},
     {XScanEngine::RECORD_NAME_LUACOMPILED, QString("Lua compiled")},
     {XScanEngine::RECORD_NAME_LUCYPHER, QString("LuCypher")},
@@ -655,6 +686,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_MACROBJECT, QString("Macrobject")},
     {XScanEngine::RECORD_NAME_MALPACKER, QString("Mal Packer")},
     {XScanEngine::RECORD_NAME_MANDRAKELINUX, QString("Mandrake Linux")},
+    {XScanEngine::RECORD_NAME_MARKWILLIAMSC, QString("Mark Williams C")},
     {XScanEngine::RECORD_NAME_MASKPE, QString("MaskPE")},
     {XScanEngine::RECORD_NAME_MASM32, QString("MASM32")},
     {XScanEngine::RECORD_NAME_MASM, QString("MASM")},
@@ -664,25 +696,34 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_MEW10, QString("MEW10")},
     {XScanEngine::RECORD_NAME_MEW11SE, QString("MEW11 SE")},
     {XScanEngine::RECORD_NAME_MFC, QString("MFC")},
+    {XScanEngine::RECORD_NAME_MICROC, QString("DDS MICRO-C")},
     {XScanEngine::RECORD_NAME_MICROSOFTACCESS, QString("Microsoft Access")},
+    {XScanEngine::RECORD_NAME_MICROSOFTBASIC, QString("Microsoft BASIC Compiler")},
     {XScanEngine::RECORD_NAME_MICROSOFTC, QString("Microsoft C")},
+    {XScanEngine::RECORD_NAME_MICROSOFTCOBOL, QString("Microsoft COBOL")},
     {XScanEngine::RECORD_NAME_MICROSOFTCOMPILEDHTMLHELP, QString("Microsoft Compiled HTML Help")},
     {XScanEngine::RECORD_NAME_MICROSOFTCOMPOUND, QString("Microsoft Compound")},
     {XScanEngine::RECORD_NAME_MICROSOFTCPP, QString("Microsoft C++")},
     {XScanEngine::RECORD_NAME_MICROSOFTDOTNETFRAMEWORK, QString("Microsoft .NET Framework")},
     {XScanEngine::RECORD_NAME_MICROSOFTEXCEL, QString("Microsoft Excel")},
+    {XScanEngine::RECORD_NAME_MICROSOFTFORTRAN, QString("Microsoft Fortran")},
     {XScanEngine::RECORD_NAME_MICROSOFTINSTALLER, QString("Microsoft Installer(MSI)")},
     {XScanEngine::RECORD_NAME_MICROSOFTLINKER, QString("Microsoft linker")},
     {XScanEngine::RECORD_NAME_MICROSOFTLINKERDATABASE, QString("Microsoft Linker Database")},
     {XScanEngine::RECORD_NAME_MICROSOFTOFFICE, QString("Microsoft Office")},
     {XScanEngine::RECORD_NAME_MICROSOFTOFFICEWORD, QString("Microsoft Office Word")},
+    {XScanEngine::RECORD_NAME_MICROSOFTPASCAL, QString("Microsoft Pascal")},
     {XScanEngine::RECORD_NAME_MICROSOFTPHOENIX, QString("Microsoft Phoenix")},
+    {XScanEngine::RECORD_NAME_MICROSOFTQUICKBASIC, QString("Microsoft QuickBASIC")},
+    {XScanEngine::RECORD_NAME_MICROSOFTQUICKC, QString("Microsoft QuickC")},
     {XScanEngine::RECORD_NAME_MICROSOFTVISIO, QString("Microsoft Visio")},
     {XScanEngine::RECORD_NAME_MICROSOFTVISUALSTUDIO, QString("Microsoft Visual Studio")},
     {XScanEngine::RECORD_NAME_MICROSOFTWINHELP, QString("Microsoft WinHelp")},
+    {XScanEngine::RECORD_NAME_MIDPAK, QString("MIDPAK")},
     {XScanEngine::RECORD_NAME_MINGW, QString("MinGW")},
     {XScanEngine::RECORD_NAME_MINIX, QString("Minix")},
     {XScanEngine::RECORD_NAME_MINKE, QString("Minke")},
+    {XScanEngine::RECORD_NAME_MIXC, QString("Mix C")},
     {XScanEngine::RECORD_NAME_MKFPACK, QString("MKFPack")},
     {XScanEngine::RECORD_NAME_MOBILETENCENTPROTECT, QString("Mobile Tencent Protect")},
     {XScanEngine::RECORD_NAME_MODESTO, QString("Modesto")},
@@ -731,6 +772,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_NSIS, QString("Nullsoft Scriptable Install System")},
     {XScanEngine::RECORD_NAME_NSK, QString("NSK")},
     {XScanEngine::RECORD_NAME_NSPACK, QString("NsPack")},
+    {XScanEngine::RECORD_NAME_OBERONM, QString("Oberon-M")},
     {XScanEngine::RECORD_NAME_OBFUSCAR, QString("Obfuscar")},
     {XScanEngine::RECORD_NAME_OBFUSCATORLLVM, QString("Obfuscator-LLVM")},
     {XScanEngine::RECORD_NAME_OBFUSCATORNET2009, QString("Obfuscator.NET 2009")},
@@ -748,6 +790,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_OPENVOS, QString("Open VOS")},
     {XScanEngine::RECORD_NAME_OPENWATCOMCCPP, QString("Open Watcom C/C++")},
     {XScanEngine::RECORD_NAME_OPERA, QString("Opera")},
+    {XScanEngine::RECORD_NAME_OPTLINK, QString("Optlink")},
     {XScanEngine::RECORD_NAME_ORACLESOLARISLINKEDITORS, QString("Oracle Solaris Link Editors")},
     {XScanEngine::RECORD_NAME_OREANSCODEVIRTUALIZER, QString("Oreans CodeVirtualizer")},
     {XScanEngine::RECORD_NAME_ORIEN, QString("ORiEN")},
@@ -755,6 +798,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_OSCCRYPTER, QString("OSC-Crypter")},
     {XScanEngine::RECORD_NAME_OS_X, QString("OS X")},
     {XScanEngine::RECORD_NAME_P0KESCRAMBLER, QString("p0ke Scrambler")},
+    {XScanEngine::RECORD_NAME_PACK, QString("PACK")},
     {XScanEngine::RECORD_NAME_PACKMAN, QString("Packman")},
     {XScanEngine::RECORD_NAME_PACKWIN, QString("PACKWIN")},
     {XScanEngine::RECORD_NAME_PANDORA, QString("Pandora")},
@@ -786,10 +830,13 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_PEX, QString("PeX")},
     {XScanEngine::RECORD_NAME_PFECX, QString("PFE CX")},
     {XScanEngine::RECORD_NAME_PGMPAK, QString("PGMPAK")},
+    {XScanEngine::RECORD_NAME_PHARLAP, QString("Phar Lap")},
     {XScanEngine::RECORD_NAME_PHOENIXPROTECTOR, QString("Phoenix Protector")},
     {XScanEngine::RECORD_NAME_PHP, QString("PHP")},
     {XScanEngine::RECORD_NAME_PICRYPTOR, QString("PI Cryptor")},
     {XScanEngine::RECORD_NAME_PKLITE32, QString("PKLITE32")},
+    {XScanEngine::RECORD_NAME_PKSFX, QString("PKSFX")},
+    {XScanEngine::RECORD_NAME_PKTINY, QString("PKTINY")},
     {XScanEngine::RECORD_NAME_PKLITE, QString("PKLITE")},
     {XScanEngine::RECORD_NAME_PKZIPMINISFX, QString("PKZIP mini-sfx")},
     {XScanEngine::RECORD_NAME_PLAIN, QString("Plain")},
@@ -800,6 +847,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_POLYCRYPTPE, QString("PolyCrypt PE")},
     {XScanEngine::RECORD_NAME_POSIX, QString("POSIX")},
     {XScanEngine::RECORD_NAME_POWERBASIC, QString("PowerBASIC")},
+    {XScanEngine::RECORD_NAME_POWERC, QString("Mix Power C")},
     {XScanEngine::RECORD_NAME_PRIVATEEXEPROTECTOR, QString("Private EXE Protector")},
     {XScanEngine::RECORD_NAME_PROGUARD, QString("ProGuard")},
     {XScanEngine::RECORD_NAME_PROPACK, QString("PRO-PACK")},
@@ -819,6 +867,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_QT, QString("Qt")},
     {XScanEngine::RECORD_NAME_QTINSTALLER, QString("Qt Installer")},
     {XScanEngine::RECORD_NAME_QUICKPACKNT, QString("QuickPack NT")},
+    {XScanEngine::RECORD_NAME_QUICKPASCAL, QString("Microsoft QuickPascal")},
     {XScanEngine::RECORD_NAME_R8, QString("R8")},
     {XScanEngine::RECORD_NAME_RADIALIX, QString("Radialix")},
     {XScanEngine::RECORD_NAME_RAR, QString("RAR")},
@@ -841,6 +890,8 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_ROGUEPACK, QString("RoguePack")},
     {XScanEngine::RECORD_NAME_ROSASM, QString("RosAsm")},
     {XScanEngine::RECORD_NAME_RTF, QString("Rich Text Format")},
+    {XScanEngine::RECORD_NAME_RTLINK, QString("RTLink")},
+    {XScanEngine::RECORD_NAME_RTPATCH, QString("RTPatch")},
     {XScanEngine::RECORD_NAME_RUBY, QString("Ruby")},
     {XScanEngine::RECORD_NAME_RUST, QString("Rust")},
     {XScanEngine::RECORD_NAME_SAFEENGINELLVM, QString("Safengine LLVM")},
@@ -869,6 +920,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_SINGLEJAR, QString("SingleJar")},
     {XScanEngine::RECORD_NAME_SIXXPACK, QString("Sixxpack")},
     {XScanEngine::RECORD_NAME_SKATER, QString("Skater")},
+    {XScanEngine::RECORD_NAME_SMALLC, QString("small-c")},
     {XScanEngine::RECORD_NAME_SMARTASSEMBLY, QString("Smart Assembly")},
     {XScanEngine::RECORD_NAME_SMARTINSTALLMAKER, QString("Smart Install Maker")},
     {XScanEngine::RECORD_NAME_SMOKESCREENCRYPTER, QString("SmokeScreen Crypter")},
@@ -894,6 +946,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_STARTOSLINUX, QString("StartOS Linux")},
     {XScanEngine::RECORD_NAME_STASFODIDOCRYPTOR, QString("StasFodidoCryptor")},
     {XScanEngine::RECORD_NAME_STONESPEENCRYPTOR, QString("Stone's PE Encryptor")},
+    {XScanEngine::RECORD_NAME_STONYBROOKPASCAL, QString("Stony Brook Pascal+")},
     {XScanEngine::RECORD_NAME_SUNOS, QString("SunOS")},
     {XScanEngine::RECORD_NAME_SUNWORKSHOP, QString("Sun WorkShop")},
     {XScanEngine::RECORD_NAME_SUNWORKSHOPCOMPILERS, QString("Sun WorkShop Compilers")},
@@ -918,6 +971,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_TINYC, QString("Tiny C")},
     {XScanEngine::RECORD_NAME_TINYPROG, QString("TinyProg")},
     {XScanEngine::RECORD_NAME_TINYSIGN, QString("tiny-sign")},
+    {XScanEngine::RECORD_NAME_TOPSPEED, QString("TopSpeed")},
     {XScanEngine::RECORD_NAME_TOTALCOMMANDERINSTALLER, QString("Total Commander Installer")},
     {XScanEngine::RECORD_NAME_TPPPACK, QString("TTP Pack")},
     {XScanEngine::RECORD_NAME_TRU64, QString("Tru64")},
@@ -929,6 +983,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_TURBOCPP, QString("Turbo C++")},
     {XScanEngine::RECORD_NAME_TURBOLINKER, QString("Turbo linker")},
     {XScanEngine::RECORD_NAME_TURBOLINUX, QString("Turbo Linux")},
+    {XScanEngine::RECORD_NAME_TURBOPASCAL, QString("Turbo Pascal")},
     {XScanEngine::RECORD_NAME_TURBOSTUDIO, QString("Turbo Studio")},
     {XScanEngine::RECORD_NAME_TURKISHCYBERSIGNATURE, QString("Turkish Cyber Signature")},
     {XScanEngine::RECORD_NAME_TURKOJANCRYPTER, QString("Turkojan Crypter")},
@@ -1003,6 +1058,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_WIXTOOLSET, QString("WiX Toolset")},
     {XScanEngine::RECORD_NAME_WLCRYPT, QString("WL-Crypt")},
     {XScanEngine::RECORD_NAME_WLGROUPCRYPTER, QString("WL-Group Crypter")},
+    {XScanEngine::RECORD_NAME_WOLVERINEPATCHER, QString("WOLVERiNE Patcher")},
     {XScanEngine::RECORD_NAME_WOUTHRSEXECRYPTER, QString("WouThrs EXE Crypter")},
     {XScanEngine::RECORD_NAME_WWPACK32, QString("WWPack32")},
     {XScanEngine::RECORD_NAME_WWPACK, QString("WWPack")},
@@ -1038,6 +1094,7 @@ XBinary::XIDSTRING _TABLE_XScanEngine_RECORD_NAME[] = {
     {XScanEngine::RECORD_NAME_ZIG, QString("Zig")},
     {XScanEngine::RECORD_NAME_ZIP, QString("ZIP")},
     {XScanEngine::RECORD_NAME_ZLIB, QString("zlib")},
+    {XScanEngine::RECORD_NAME_ZORTECHC, QString("Zortech C")},
     {XScanEngine::RECORD_NAME_ZPROTECT, QString("ZProtect")},
     {XScanEngine::RECORD_NAME_UNKNOWN0, QString("_Unknown")},
     {XScanEngine::RECORD_NAME_UNKNOWN1, QString("_Unknown")},
@@ -1214,6 +1271,7 @@ XScanEngine::DATABASE_STATE XScanEngine::getDatabaseState(XScanEngine::SCAN_OPTI
     listFT.append(XBinary::FT_LE);
     listFT.append(XBinary::FT_LX);
     listFT.append(XBinary::FT_PE);
+    listFT.append(XBinary::FT_CLI_ASSEMBLY);
     listFT.append(XBinary::FT_ELF);
     listFT.append(XBinary::FT_MACHO);
     listFT.append(XBinary::FT_PDF);
@@ -1333,6 +1391,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "LX", XBinary::FT_LX));  // TODO Check
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "NE", XBinary::FT_NE));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "PE", XBinary::FT_PE));
+                    m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "PE/dotnet", XBinary::FT_CLI_ASSEMBLY));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "ELF", XBinary::FT_ELF));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "MACH", XBinary::FT_MACHO));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "DOS16M", XBinary::FT_DOS16M));
@@ -1399,6 +1458,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "LX", databaseType, XBinary::FT_LX, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "NE", databaseType, XBinary::FT_NE, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "PE", databaseType, XBinary::FT_PE, pPdStruct));
+                listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "PE/dotnet", databaseType, XBinary::FT_CLI_ASSEMBLY, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "ELF", databaseType, XBinary::FT_ELF, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "MACH", databaseType, XBinary::FT_MACHO, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "DOS16M", databaseType, XBinary::FT_DOS16M, pPdStruct));
@@ -1460,6 +1520,7 @@ QList<XScanEngine::SIGNATURE_STATE> XScanEngine::getSignatureStates()
     listFT.append(XBinary::FT_LE);
     listFT.append(XBinary::FT_LX);
     listFT.append(XBinary::FT_PE);
+    listFT.append(XBinary::FT_CLI_ASSEMBLY);
     listFT.append(XBinary::FT_ELF);
     listFT.append(XBinary::FT_MACHO);
     listFT.append(XBinary::FT_PDF);
@@ -2680,9 +2741,15 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     if (stFT.contains(XBinary::FT_PE32)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE32, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_PE32;
+        if (stFT.contains(XBinary::FT_CLI_ASSEMBLY)) {
+            _processDetect(0, pScanResult, _pDevice, scanIdMain, XBinary::FT_CLI_ASSEMBLY, pScanOptions, false, pPdStruct);
+        }
     } else if (stFT.contains(XBinary::FT_PE64)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE64, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_PE64;
+        if (stFT.contains(XBinary::FT_CLI_ASSEMBLY)) {
+            _processDetect(0, pScanResult, _pDevice, scanIdMain, XBinary::FT_CLI_ASSEMBLY, pScanOptions, false, pPdStruct);
+        }
     } else if (stFT.contains(XBinary::FT_ELF32)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ELF32, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_ELF32;
@@ -3724,6 +3791,7 @@ QSet<XBinary::FT> XScanEngine::getFileTypesSupported()
     stResult.insert(XBinary::FT_LX);
     stResult.insert(XBinary::FT_PE32);
     stResult.insert(XBinary::FT_PE64);
+    stResult.insert(XBinary::FT_CLI_ASSEMBLY);
     stResult.insert(XBinary::FT_ELF32);
     stResult.insert(XBinary::FT_ELF64);
     stResult.insert(XBinary::FT_MACHO32);
