@@ -43,7 +43,6 @@ public slots:
     quint32 getNumberOfResources();
     bool isSectionNamePresent(const QString &sSectionName);
     bool _isSectionNamePresentExp(const QString &sSectionName);
-    bool isNET();
     bool isNet();
     bool isPE32();
     bool isPEPlus();

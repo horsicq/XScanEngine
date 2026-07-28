@@ -236,11 +236,6 @@ bool PE_Script::_isSectionNamePresentExp(const QString &sSectionName)
     return XBinary::isStringInListPresentExp(&m_listSectionNameStrings, sSectionName, getPdStruct());
 }
 
-bool PE_Script::isNET()
-{
-    return m_bIsNETPresent;
-}
-
 bool PE_Script::isNet()
 {
     return m_bIsNETPresent;
