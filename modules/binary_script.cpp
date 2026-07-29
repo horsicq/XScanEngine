@@ -102,7 +102,7 @@ bool Binary_Script::compare(const QString &sSignature, qint64 nOffset)
 
     if ((nSignatureSize + nOffset < m_nHeaderSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
         (!_sSignature.contains('%')) && (!_sSignature.contains('*'))) {
-        bResult = m_pBinary->compareSignatureStrings(m_sHeaderSignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
+        bResult = m_pBinary->compareSignatureStrings(m_sHeaderSignature.mid((int)((quint64)nOffset * 2), (int)((quint64)nSignatureSize * 2)), _sSignature);
     } else {
         bResult = m_pBinary->compareSignature(&m_memoryMap, _sSignature, nOffset, m_pPdStruct);
     }
