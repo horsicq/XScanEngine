@@ -293,9 +293,9 @@ private:
     qint32 m_nEntryPointSignatureSize;
     QString m_sOverlaySignature;
     qint32 m_nOverlaySignatureSize;
-    bool m_bIsPlainText;
-    bool m_bIsUTF8Text;
-    bool m_bIsUnicodeText;
+    bool m_bIsPlainText = false;
+    bool m_bIsUTF8Text = false;
+    bool m_bIsUnicodeText = false;
     QString m_sHeaderString;
     QString m_sFileDirectory;
     QString m_sFileBaseName;
