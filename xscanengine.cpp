@@ -1434,7 +1434,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "LX", XBinary::FT_LX));  // TODO Check
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "NE", XBinary::FT_NE));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "PE", XBinary::FT_PE));
-                    m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "PE/dotnet", XBinary::FT_CLI_ASSEMBLY));
+                    m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "PE/DOTNET", XBinary::FT_CLI_ASSEMBLY));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "ELF", XBinary::FT_ELF));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "MACH", XBinary::FT_MACHO));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "DOS16M", XBinary::FT_DOS16M));
@@ -1501,7 +1501,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "LX", databaseType, XBinary::FT_LX, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "NE", databaseType, XBinary::FT_NE, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "PE", databaseType, XBinary::FT_PE, pPdStruct));
-                listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "PE/dotnet", databaseType, XBinary::FT_CLI_ASSEMBLY, pPdStruct));
+                listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "PE/DOTNET", databaseType, XBinary::FT_CLI_ASSEMBLY, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "ELF", databaseType, XBinary::FT_ELF, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "MACH", databaseType, XBinary::FT_MACHO, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "DOS16M", databaseType, XBinary::FT_DOS16M, pPdStruct));
@@ -2784,13 +2784,15 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     if (stFT.contains(XBinary::FT_PE32)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE32, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_PE32;
-        if (stFT.contains(XBinary::FT_CLI_ASSEMBLY)) {
+
+        if (XPE::isNETPresent(_pDevice)) {
             _processDetect(0, pScanResult, _pDevice, scanIdMain, XBinary::FT_CLI_ASSEMBLY, pScanOptions, false, pPdStruct);
         }
     } else if (stFT.contains(XBinary::FT_PE64)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PE64, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_PE64;
-        if (stFT.contains(XBinary::FT_CLI_ASSEMBLY)) {
+
+        if (XPE::isNETPresent(_pDevice)) {
             _processDetect(0, pScanResult, _pDevice, scanIdMain, XBinary::FT_CLI_ASSEMBLY, pScanOptions, false, pPdStruct);
         }
     } else if (stFT.contains(XBinary::FT_ELF32)) {
