@@ -36,6 +36,8 @@ public slots:
     QList<QVariant> getStringValuesByKey(const QString &sKey);
     bool isValuesHexByKey(const QString &sKey);
     QString getHeaderCommentAsHex();
+    bool isEncrypted();
+    QString getEncryption();
 
 private:
     XPDF *m_pPDF;

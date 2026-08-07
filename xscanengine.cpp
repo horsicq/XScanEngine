@@ -4022,9 +4022,52 @@ bool XScanEngine::isScanStructPresent(QList<XScanEngine::SCANSTRUCT> *pListScanS
     bool bResult = false;
 
     if (pListScanStructs) {
-        for (int i = 0; i < pListScanStructs->count(); i++) {
+        qint32 nNumberOfRecords = pListScanStructs->count();
+
+        for (qint32 i = 0; i < nNumberOfRecords; i++) {
             const XScanEngine::SCANSTRUCT &ss = pListScanStructs->at(i);
-            if ((ss.type == type) && (ss.name == name) && (ss.sVersion == sVersion) && (ss.sInfo == sInfo)) {
+
+            // Each argument is an OPTIONAL filter: an argument left at its "unknown"/empty default
+            // is not compared. This lets callers query by fileType only, by name only, etc.
+            // (Previously the fileType argument was ignored entirely - ss.id.fileType was never read -
+            // and type/name/sVersion/sInfo had to match EXACTLY and simultaneously. No real detection
+            // record ever has type==RECORD_TYPE_UNKNOWN && name==RECORD_NAME_UNKNOWN && sVersion=="" &&
+            // sInfo=="" (only the synthetic "unknown" placeholder does), so a name-only query such as
+            // (FT_UNKNOWN, RECORD_TYPE_UNKNOWN, RECORD_NAME_PNG) could never match its intended record -
+            // additionally broken for formats that overwrite sInfo at runtime, e.g. PNG stores "WxH".)
+            bool bMatch = true;
+
+            if (fileType != XBinary::FT_UNKNOWN) {
+                if (ss.id.fileType != fileType) {
+                    bMatch = false;
+                }
+            }
+
+            if (bMatch && (type != RECORD_TYPE_UNKNOWN)) {
+                if (ss.type != type) {
+                    bMatch = false;
+                }
+            }
+
+            if (bMatch && (name != RECORD_NAME_UNKNOWN)) {
+                if (ss.name != name) {
+                    bMatch = false;
+                }
+            }
+
+            if (bMatch && (!sVersion.isEmpty())) {
+                if (ss.sVersion != sVersion) {
+                    bMatch = false;
+                }
+            }
+
+            if (bMatch && (!sInfo.isEmpty())) {
+                if (ss.sInfo != sInfo) {
+                    bMatch = false;
+                }
+            }
+
+            if (bMatch) {
                 bResult = true;
                 break;
             }

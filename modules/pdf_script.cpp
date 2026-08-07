@@ -85,3 +85,13 @@ QString PDF_Script::getHeaderCommentAsHex()
 {
     return m_pPDF->getHeaderCommentAsHex(getPdStruct());
 }
+
+bool PDF_Script::isEncrypted()
+{
+    return m_pPDF->isEncrypted();
+}
+
+QString PDF_Script::getEncryption()
+{
+    return m_pPDF->getEncryption(getPdStruct());
+}
