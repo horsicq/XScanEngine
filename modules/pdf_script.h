@@ -38,6 +38,7 @@ public slots:
     QString getHeaderCommentAsHex();
     bool isEncrypted();
     QString getEncryption();
+    QString getPermissions();
 
 private:
     XPDF *m_pPDF;

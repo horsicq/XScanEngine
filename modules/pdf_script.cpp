@@ -95,3 +95,8 @@ QString PDF_Script::getEncryption()
 {
     return m_pPDF->getEncryption(getPdStruct());
 }
+
+QString PDF_Script::getPermissions()
+{
+    return m_pPDF->getPermissions(getPdStruct());
+}
