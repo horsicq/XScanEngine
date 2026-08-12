@@ -24,6 +24,8 @@
 
 XScanEngineOptionsWidget::XScanEngineOptionsWidget(QWidget *pParent) : XShortcutsWidget(pParent), ui(new Ui::XScanEngineOptionsWidget)
 {
+    m_pOptions = nullptr;
+
     ui->setupUi(this);
     m_bIsNetPresent = false;
 

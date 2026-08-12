@@ -33,6 +33,7 @@ DialogXScanEngineDirectory::DialogXScanEngineDirectory(QWidget *pParent) : XShor
     m_scanOptions = {};
 
     ui->comboBoxFlags->setData(XScanEngine::getScanFlags(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Flags"));
+    ui->pushButtonScan->setEnabled(false);
 }
 
 DialogXScanEngineDirectory::~DialogXScanEngineDirectory()
@@ -43,6 +44,7 @@ DialogXScanEngineDirectory::~DialogXScanEngineDirectory()
 void DialogXScanEngineDirectory::setEngine(XScanEngine *pScanEngine)
 {
     m_pScanEngine = pScanEngine;
+    ui->pushButtonScan->setEnabled(m_pScanEngine != nullptr);
 }
 
 void DialogXScanEngineDirectory::adjustView()
@@ -84,7 +86,7 @@ void DialogXScanEngineDirectory::on_pushButtonScan_clicked()
 
 void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
 {
-    if (sDirectoryName != "") {
+    if (m_pScanEngine && !sDirectoryName.isEmpty()) {
         ui->textBrowserResult->clear();
 
         m_scanOptions.bUseCustomDatabase = true;

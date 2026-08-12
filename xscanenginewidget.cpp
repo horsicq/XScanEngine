@@ -72,6 +72,11 @@ XScanEngineWidget::XScanEngineWidget(QWidget *pParent) : XShortcutsWidget(pParen
     ui->comboBoxFlags->setData(XScanEngine::getScanFlags(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Flags"));
     ui->comboBoxDatabases->setData(XScanEngine::getDatabases(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Database"));
 
+    ui->pushButtonScanStart->setEnabled(false);
+    ui->pushButtonScanDirectory->setEnabled(false);
+    ui->pushButtonCollection->setEnabled(false);
+    ui->pushButtonSignatures->setEnabled(false);
+
     // ui->comboBoxDatabases->setItemEnabled(1, false);
 
     // ui->stackedWidgetDieScan->setCurrentIndex(0);
@@ -88,6 +93,18 @@ XScanEngineWidget::~XScanEngineWidget()
 void XScanEngineWidget::setEngine(XScanEngine *pScanEngine)
 {
     m_pScanEngine = pScanEngine;
+
+    const bool bHasEngine = m_pScanEngine != nullptr;
+    ui->pushButtonScanStart->setEnabled(bHasEngine);
+    ui->pushButtonScanDirectory->setEnabled(bHasEngine);
+    ui->pushButtonCollection->setEnabled(bHasEngine);
+    ui->pushButtonSignatures->setEnabled(bHasEngine);
+
+    if (!m_pScanEngine) {
+        ui->pushButtonSignatures->hide();
+        ui->comboBoxDatabases->hide();
+        return;
+    }
 
     XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
 
@@ -176,6 +193,10 @@ void XScanEngineWidget::clear()
 
 void XScanEngineWidget::process()
 {
+    if (!m_pScanEngine) {
+        return;
+    }
+
     XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
 
     m_scanOptions.bUseCustomDatabase = true;
@@ -305,6 +326,10 @@ void XScanEngineWidget::_on_pushButtonScanStart_clicked()
 
 void XScanEngineWidget::_on_pushButtonScanDirectory_clicked()
 {
+    if (!m_pScanEngine) {
+        return;
+    }
+
     QString sDirPath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
 
     if (sDirPath == "") {
@@ -319,6 +344,10 @@ void XScanEngineWidget::_on_pushButtonScanDirectory_clicked()
 
 void XScanEngineWidget::_on_pushButtonCollection_clicked()
 {
+    if (!m_pScanEngine) {
+        return;
+    }
+
     QString sDirPath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIRECTORY_PATH).toString();
 
     if (sDirPath == "") {

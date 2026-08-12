@@ -22,10 +22,499 @@
 #include "xconsoloutput.h"
 #include "xarchives.h"
 
+#include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMetaType>
+#include <QSet>
+#include <QVector>
 #include <QXmlStreamWriter>
+
+#include <algorithm>
+
+namespace {
+
+// Collect full archive records through the streaming unpack API so every
+// property the format parser filled (method, timestamps, CRC, ownership, ...)
+// is available, not just the handful the legacy flat RECORD struct carries.
+QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XArchive *pArchive, XBinary::PDSTRUCT *pPdStruct)
+{
+    QList<XBinary::ARCHIVERECORD> listResult;
+
+    if (!pArchive) {
+        return listResult;
+    }
+
+    XBinary::UNPACK_STATE state = {};
+    QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;
+
+    if (pArchive->initUnpack(&state, mapProperties, pPdStruct)) {
+        while ((state.nCurrentIndex < state.nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct)) {
+            listResult.append(pArchive->infoCurrent(&state, pPdStruct));
+
+            if (!pArchive->moveToNext(&state, pPdStruct)) {
+                break;
+            }
+        }
+
+        pArchive->finishUnpack(&state, pPdStruct);
+    }
+
+    return listResult;
+}
+
+QString recordName(const XBinary::ARCHIVERECORD &record)
+{
+    return record.mapProperties.value(XBinary::FPART_PROP_ORIGINALNAME).toString();
+}
+
+bool recordIsFolder(const XBinary::ARCHIVERECORD &record)
+{
+    QString sName = recordName(record);
+
+    return record.mapProperties.value(XBinary::FPART_PROP_ISFOLDER).toBool() || sName.endsWith(QChar('/')) || sName.endsWith(QChar('\\'));
+}
+
+qint64 recordSize(const XBinary::ARCHIVERECORD &record)
+{
+    return record.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong();
+}
+
+qint64 recordPacked(const XBinary::ARCHIVERECORD &record)
+{
+    if (record.mapProperties.contains(XBinary::FPART_PROP_COMPRESSEDSIZE)) {
+        return record.mapProperties.value(XBinary::FPART_PROP_COMPRESSEDSIZE).toLongLong();
+    }
+
+    return record.nStreamSize;
+}
+
+QString recordModified(const XBinary::ARCHIVERECORD &record)
+{
+    QDateTime dateTime;
+
+    if (record.mapProperties.contains(XBinary::FPART_PROP_DATETIME)) {
+        dateTime = record.mapProperties.value(XBinary::FPART_PROP_DATETIME).toDateTime();
+    } else if (record.mapProperties.contains(XBinary::FPART_PROP_MTIME)) {
+        dateTime = record.mapProperties.value(XBinary::FPART_PROP_MTIME).toDateTime();
+    }
+
+    if (dateTime.isValid()) {
+        // absolute timestamps (7z FILETIME is UTC) are shown in the viewer's local
+        // zone; local/wall-clock timestamps (DOS/ZIP) are already local, so
+        // toLocalTime() leaves them unchanged
+        return dateTime.toLocalTime().toString("yyyy-MM-dd hh:mm:ss");
+    }
+
+    return QString();
+}
+
+// Render a POSIX file mode as the familiar symbolic form plus octal, e.g.
+// "-rwxr-xr-x (0755)".  Decimal mode values are unreadable on their own.
+QString modeToString(quint32 nMode, bool bIsFolder)
+{
+    QString sResult;
+
+    quint32 nType = nMode & 0xF000u;  // S_IFMT
+
+    if (nType == 0x4000u) sResult += QChar('d');       // S_IFDIR
+    else if (nType == 0xA000u) sResult += QChar('l');  // S_IFLNK
+    else if (nType == 0x8000u) sResult += QChar('-');  // S_IFREG
+    else sResult += bIsFolder ? QChar('d') : QChar('-');
+
+    const char cPerms[9] = {'r', 'w', 'x', 'r', 'w', 'x', 'r', 'w', 'x'};
+
+    for (qint32 i = 0; i < 9; i++) {
+        sResult += (nMode & (1u << (8 - i))) ? QChar(cPerms[i]) : QChar('-');
+    }
+
+    return QString("%1 (0%2)").arg(sResult).arg(nMode & 0777u, 0, 8);
+}
+
+QString recordCRC(const XBinary::ARCHIVERECORD &record)
+{
+    XBinary::FPART_PROP prop = XBinary::FPART_PROP_UNKNOWN;
+
+    if (record.mapProperties.contains(XBinary::FPART_PROP_RESULTCRC)) {
+        prop = XBinary::FPART_PROP_RESULTCRC;
+    } else if (record.mapProperties.contains(XBinary::FPART_PROP_UNCOMPRESSEDCRC)) {
+        prop = XBinary::FPART_PROP_UNCOMPRESSEDCRC;
+    }
+
+    if (prop != XBinary::FPART_PROP_UNKNOWN) {
+        return QString("%1").arg(record.mapProperties.value(prop).toULongLong(), 8, 16, QChar('0')).toUpper();
+    }
+
+    return QString();
+}
+
+QString recordAttr(const XBinary::ARCHIVERECORD &record)
+{
+    QString sResult;
+
+    sResult += recordIsFolder(record) ? QChar('D') : QChar('.');
+    sResult += record.mapProperties.value(XBinary::FPART_PROP_ENCRYPTED).toBool() ? QChar('+') : QChar('.');
+
+    return sResult;
+}
+
+QString consoleFPartName(XBinary::FPART_PROP prop)
+{
+    QString sResult;
+
+    if (prop == XBinary::FPART_PROP_ORIGINALNAME) sResult = "Name";
+    else if (prop == XBinary::FPART_PROP_UNCOMPRESSEDSIZE) sResult = "Size";
+    else if (prop == XBinary::FPART_PROP_COMPRESSEDSIZE) sResult = "Compressed size";
+    else if (prop == XBinary::FPART_PROP_HANDLEMETHOD) sResult = "Method";
+    else if (prop == XBinary::FPART_PROP_HANDLEMETHOD2) sResult = "Method 2";
+    else if (prop == XBinary::FPART_PROP_DATETIME) sResult = "Modified";
+    else if (prop == XBinary::FPART_PROP_MTIME) sResult = "Modified";
+    else if (prop == XBinary::FPART_PROP_CTIME) sResult = "Created";
+    else if (prop == XBinary::FPART_PROP_ATIME) sResult = "Accessed";
+    else if (prop == XBinary::FPART_PROP_RESULTCRC) sResult = "CRC";
+    else if (prop == XBinary::FPART_PROP_UNCOMPRESSEDCRC) sResult = "CRC";
+    else if (prop == XBinary::FPART_PROP_CRC_TYPE) sResult = "CRC type";
+    else if (prop == XBinary::FPART_PROP_ENCRYPTED) sResult = "Encrypted";
+    else if (prop == XBinary::FPART_PROP_FILEMODE) sResult = "Mode";
+    else if (prop == XBinary::FPART_PROP_USERNAME) sResult = "User";
+    else if (prop == XBinary::FPART_PROP_GROUPNAME) sResult = "Group";
+    else if (prop == XBinary::FPART_PROP_UID) sResult = "UID";
+    else if (prop == XBinary::FPART_PROP_GID) sResult = "GID";
+    else if (prop == XBinary::FPART_PROP_LINKNAME) sResult = "Link";
+    else if (prop == XBinary::FPART_PROP_INFO) sResult = "Info";
+    else if (prop == XBinary::FPART_PROP_ISFOLDER) sResult = "Folder";
+    else if (prop == XBinary::FPART_PROP_ISSOLID) sResult = "Solid";
+    else if (prop == XBinary::FPART_PROP_SOLIDFOLDERINDEX) sResult = "Solid block";
+    else if (prop == XBinary::FPART_PROP_WINDOWSIZE) sResult = "Window size";
+    else if (prop == XBinary::FPART_PROP_STREAMOFFSET) sResult = "Stream offset";
+    else if (prop == XBinary::FPART_PROP_STREAMSIZE) sResult = "Stream size";
+    else if (prop == XBinary::FPART_PROP_STREAMUNPACKEDSIZE) sResult = "Stream unpacked size";
+    else if (prop == XBinary::FPART_PROP_SUBSTREAMOFFSET) sResult = "Substream offset";
+    else if (prop == XBinary::FPART_PROP_FILEMD5) sResult = "File MD5";
+    else if (prop == XBinary::FPART_PROP_FLAGS) sResult = "Flags";
+    else if (prop == XBinary::FPART_PROP_TYPE) sResult = "Raw method";
+    else if (prop == XBinary::FPART_PROP_COMPRESSPROPERTIES) sResult = "Compress properties";
+    else if (prop == XBinary::FPART_PROP_ISREADONLY) sResult = "Read-only";
+    else if (prop == XBinary::FPART_PROP_ISHIDDEN) sResult = "Hidden";
+    else if (prop == XBinary::FPART_PROP_ISSYSTEM) sResult = "System";
+    else if (prop == XBinary::FPART_PROP_ISARCHIVE) sResult = "Archive attribute";
+    else if (prop == XBinary::FPART_PROP_ISCOMMENTPRESENT) sResult = "Has comment";
+    else sResult = QString("#%1").arg(static_cast<qint32>(prop));
+
+    return sResult;
+}
+
+QString consoleFPartValueString(const XBinary::ARCHIVERECORD &record, XBinary::FPART_PROP prop)
+{
+    QVariant varValue = record.mapProperties.value(prop);
+
+    if ((prop == XBinary::FPART_PROP_HANDLEMETHOD) || (prop == XBinary::FPART_PROP_HANDLEMETHOD2) || (prop == XBinary::FPART_PROP_HANDLEMETHOD3)) {
+        QMap<XBinary::FPART_PROP, QVariant> mapOne;
+        mapOne.insert(XBinary::FPART_PROP_HANDLEMETHOD, varValue);
+        QString sMethod = XBinary::getHandleMethods(mapOne);
+
+        if (!sMethod.isEmpty()) {
+            return sMethod;
+        }
+    }
+
+    if ((prop == XBinary::FPART_PROP_RESULTCRC) || (prop == XBinary::FPART_PROP_UNCOMPRESSEDCRC)) {
+        return QString("%1").arg(varValue.toULongLong(), 8, 16, QChar('0')).toUpper();
+    }
+
+    if ((prop == XBinary::FPART_PROP_DATETIME) || (prop == XBinary::FPART_PROP_MTIME) || (prop == XBinary::FPART_PROP_CTIME) ||
+        (prop == XBinary::FPART_PROP_ATIME)) {
+        return varValue.toDateTime().toLocalTime().toString("yyyy-MM-dd hh:mm:ss");
+    }
+
+    if (prop == XBinary::FPART_PROP_FILEMODE) {
+        return modeToString(varValue.toUInt(), recordIsFolder(record));
+    }
+
+    if ((prop == XBinary::FPART_PROP_COMPRESSPROPERTIES) || (prop == XBinary::FPART_PROP_COMPRESSPROPERTIES2)) {
+        QByteArray baProps = varValue.toByteArray();
+        QString sHex = QString(baProps.toHex());
+        XBinary::FPART_PROP methodProp = (prop == XBinary::FPART_PROP_COMPRESSPROPERTIES) ? XBinary::FPART_PROP_HANDLEMETHOD : XBinary::FPART_PROP_HANDLEMETHOD2;
+        XBinary::HANDLE_METHOD handleMethod = (XBinary::HANDLE_METHOD)record.mapProperties.value(methodProp).toUInt();
+        QString sDecoded = XBinary::getCoderParamsString(handleMethod, baProps);
+
+        if (!sDecoded.isEmpty()) {
+            return QString("%1 (%2:%3)").arg(sHex, XBinary::handleMethodToString(handleMethod), sDecoded);
+        }
+
+        return sHex;
+    }
+
+    if (varValue.userType() == QMetaType::Bool) {
+        return varValue.toBool() ? QString("Yes") : QString("No");
+    }
+
+    if (varValue.userType() == QMetaType::QByteArray) {
+        return QString(varValue.toByteArray().toHex());
+    }
+
+    return varValue.toString();
+}
+
+QString cellValue(const XBinary::ARCHIVERECORD &record, qint32 nColId)
+{
+    if (nColId == 0) return recordAttr(record);
+    if (nColId == 1) return recordModified(record);
+    if (nColId == 2) return QString::number(recordSize(record));
+    if (nColId == 3) return QString::number(recordPacked(record));
+    if (nColId == 4) return XBinary::getHandleMethods(record.mapProperties);
+    if (nColId == 5) return recordCRC(record);
+
+    return recordName(record);
+}
+
+// Human-readable, aligned archive listing with a format/size summary line and
+// (when bVerbose) a full per-record property dump.  Only columns the format
+// actually populates are shown, so each archive type surfaces its own metadata.
+QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECORD> &listRecords, qint64 nPhysicalSize, bool bVerbose)
+{
+    QString sResult;
+
+    qint32 nNumberOfRecords = listRecords.count();
+
+    qint64 nTotalSize = 0;
+    qint64 nTotalPacked = 0;
+    qint32 nNumberOfFiles = 0;
+    qint32 nNumberOfFolders = 0;
+    bool bAnyModified = false;
+    bool bAnyMethod = false;
+    bool bAnyCRC = false;
+    bool bAnyAttr = false;
+    bool bSolid = false;
+    QSet<qint64> stBlocks;
+
+    // Solid formats report the same shared compressed stream on every member of
+    // a block, so count each distinct stream region once for the total and blank
+    // the repeated "Packed" cells (7-Zip shows the compressed size on the first
+    // member of a folder only).
+    QStringList listPackedDisplay;
+    QSet<QString> stSeenStreams;
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        const XBinary::ARCHIVERECORD &record = listRecords.at(i);
+
+        nTotalSize += recordSize(record);
+
+        if (recordIsFolder(record)) {
+            nNumberOfFolders++;
+        } else {
+            nNumberOfFiles++;
+        }
+
+        if (record.mapProperties.value(XBinary::FPART_PROP_ISSOLID).toBool()) {
+            bSolid = true;
+        }
+
+        if (record.mapProperties.contains(XBinary::FPART_PROP_SOLIDFOLDERINDEX)) {
+            stBlocks.insert(record.mapProperties.value(XBinary::FPART_PROP_SOLIDFOLDERINDEX).toLongLong());
+        }
+
+        qint64 nPacked = recordPacked(record);
+        QString sPackedDisplay = QString::number(nPacked);
+
+        if ((record.nStreamSize > 0) && !recordIsFolder(record)) {
+            QString sStreamKey = QString("%1:%2").arg(record.nStreamOffset).arg(record.nStreamSize);
+
+            if (stSeenStreams.contains(sStreamKey)) {
+                sPackedDisplay.clear();  // already counted: this file shares the block
+            } else {
+                stSeenStreams.insert(sStreamKey);
+                nTotalPacked += nPacked;
+            }
+        } else {
+            nTotalPacked += nPacked;
+        }
+
+        listPackedDisplay.append(sPackedDisplay);
+
+        if (!recordModified(record).isEmpty()) bAnyModified = true;
+        if (!XBinary::getHandleMethods(record.mapProperties).isEmpty()) bAnyMethod = true;
+        if (!recordCRC(record).isEmpty()) bAnyCRC = true;
+        if (recordIsFolder(record) || record.mapProperties.value(XBinary::FPART_PROP_ENCRYPTED).toBool()) bAnyAttr = true;
+    }
+
+    QString sRatio;
+
+    if (nTotalSize > 0) {
+        sRatio = QString(" (%1%)").arg(QString::number(double(nTotalPacked) * 100.0 / double(nTotalSize), 'f', 1));
+    }
+
+    sResult += QString("%1: %2 file(s)%3, %4 -> %5%6\n")
+                   .arg(XBinary::fileTypeIdToString(fileType))
+                   .arg(nNumberOfFiles)
+                   .arg(nNumberOfFolders > 0 ? QString(", %1 folder(s)").arg(nNumberOfFolders) : QString())
+                   .arg(XBinary::bytesCountToString(nTotalSize, 1024))
+                   .arg(XBinary::bytesCountToString(nTotalPacked, 1024))
+                   .arg(sRatio);
+
+    // archive-level info line: on-disk size, metadata overhead, solidity
+    QStringList listInfo;
+
+    if (nPhysicalSize > 0) {
+        listInfo.append(QString("physical %1").arg(XBinary::bytesCountToString(nPhysicalSize, 1024)));
+
+        qint64 nOverhead = nPhysicalSize - nTotalPacked;
+
+        if (nOverhead > 0) {
+            listInfo.append(QString("overhead %1").arg(XBinary::bytesCountToString(nOverhead, 1024)));
+        }
+    }
+
+    if (bSolid) {
+        listInfo.append(QString("solid"));
+
+        if (stBlocks.count() > 0) {
+            listInfo.append(QString("%1 block(s)").arg(stBlocks.count()));
+        }
+    }
+
+    if (!listInfo.isEmpty()) {
+        sResult += QString("  %1\n").arg(listInfo.join(", "));
+    }
+
+    if (bVerbose) {
+        for (qint32 i = 0; i < nNumberOfRecords; i++) {
+            const XBinary::ARCHIVERECORD &record = listRecords.at(i);
+
+            sResult += QString("\n[%1]\n").arg(recordName(record));
+
+            QList<XBinary::FPART_PROP> listKeys = record.mapProperties.keys();
+            std::sort(listKeys.begin(), listKeys.end());
+
+            for (qint32 k = 0; k < listKeys.count(); k++) {
+                XBinary::FPART_PROP prop = listKeys.at(k);
+
+                if (prop == XBinary::FPART_PROP_ORIGINALNAME) {
+                    continue;
+                }
+
+                sResult += QString("  %1: %2\n").arg(consoleFPartName(prop), consoleFPartValueString(record, prop));
+            }
+        }
+
+        return sResult;
+    }
+
+    // choose the columns present for this format (Name/Size/Packed always shown)
+    QList<qint32> listColIds;
+    QStringList listHeaders;
+    QList<bool> listRightAlign;
+
+    if (bAnyAttr) {
+        listColIds.append(0);
+        listHeaders.append("Attr");
+        listRightAlign.append(false);
+    }
+
+    if (bAnyModified) {
+        listColIds.append(1);
+        listHeaders.append("Modified");
+        listRightAlign.append(false);
+    }
+
+    listColIds.append(2);
+    listHeaders.append("Size");
+    listRightAlign.append(true);
+
+    listColIds.append(3);
+    listHeaders.append("Packed");
+    listRightAlign.append(true);
+
+    if (bAnyMethod) {
+        listColIds.append(4);
+        listHeaders.append("Method");
+        listRightAlign.append(false);
+    }
+
+    if (bAnyCRC) {
+        listColIds.append(5);
+        listHeaders.append("CRC");
+        listRightAlign.append(false);
+    }
+
+    listColIds.append(6);
+    listHeaders.append("Name");
+    listRightAlign.append(false);
+
+    qint32 nNumberOfColumns = listColIds.count();
+
+    QVector<qint32> vWidths(nNumberOfColumns);
+
+    for (qint32 c = 0; c < nNumberOfColumns; c++) {
+        vWidths[c] = listHeaders.at(c).length();
+    }
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        for (qint32 c = 0; c < nNumberOfColumns; c++) {
+            qint32 nColId = listColIds.at(c);
+            QString sCell = (nColId == 3) ? listPackedDisplay.at(i) : cellValue(listRecords.at(i), nColId);
+            qint32 nLength = sCell.length();
+
+            if (nLength > vWidths[c]) {
+                vWidths[c] = nLength;
+            }
+        }
+    }
+
+    QString sHeader;
+    QString sSeparator;
+
+    for (qint32 c = 0; c < nNumberOfColumns; c++) {
+        if (c > 0) {
+            sHeader += "  ";
+            sSeparator += "  ";
+        }
+
+        bool bLastColumn = (c == (nNumberOfColumns - 1));
+
+        if (listRightAlign.at(c)) {
+            sHeader += listHeaders.at(c).rightJustified(vWidths[c], QChar(' '));
+        } else if (bLastColumn) {
+            sHeader += listHeaders.at(c);
+        } else {
+            sHeader += listHeaders.at(c).leftJustified(vWidths[c], QChar(' '));
+        }
+
+        sSeparator += QString(vWidths[c], QChar('-'));
+    }
+
+    sResult += sHeader + "\n";
+    sResult += sSeparator + "\n";
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        QString sRow;
+
+        for (qint32 c = 0; c < nNumberOfColumns; c++) {
+            if (c > 0) {
+                sRow += "  ";
+            }
+
+            qint32 nColId = listColIds.at(c);
+            QString sCell = (nColId == 3) ? listPackedDisplay.at(i) : cellValue(listRecords.at(i), nColId);
+            bool bLastColumn = (c == (nNumberOfColumns - 1));
+
+            if (listRightAlign.at(c)) {
+                sRow += sCell.rightJustified(vWidths[c], QChar(' '));
+            } else if (bLastColumn) {
+                sRow += sCell;
+            } else {
+                sRow += sCell.leftJustified(vWidths[c], QChar(' '));
+            }
+        }
+
+        sResult += sRow + "\n";
+    }
+
+    return sResult;
+}
+
+}  // namespace
 
 XScanEngineConsole::XScanEngineConsole(QCoreApplication &app, XScanEngine &scanEngine, const QString &sDescription, QObject *pParent)
     : QObject(pParent), m_app(app), m_scanEngine(scanEngine), m_sDescription(sDescription)
@@ -277,21 +766,20 @@ int XScanEngineConsole::process()
                     continue;
                 }
 
-                QList<XArchive::RECORD> listRecords = XArchives::getRecords(&file, fileType, -1, &pdStruct);
+                XArchive *pArchive = static_cast<XArchive *>(XFormats::createClass(fileType, &file));
+                QList<XBinary::ARCHIVERECORD> listRecords;
 
-                file.close();
-
-                printf("Name\tSize\tPacked\tCRC32\n");
-
-                for (const XArchive::RECORD &record : listRecords) {
-                    QString sLine = QString("%1\t%2\t%3\t%4\n")
-                                        .arg(record.spInfo.sRecordName)
-                                        .arg(record.spInfo.nUncompressedSize)
-                                        .arg(record.nDataSize)
-                                        .arg(QString("%1").arg(static_cast<qulonglong>(record.spInfo.nCRC32), 8, 16, QChar('0')).toUpper());
-
-                    printf("%s", sLine.toUtf8().data());
+                if (pArchive) {
+                    listRecords = collectArchiveRecords(pArchive, &pdStruct);
                 }
+
+                qint64 nPhysicalSize = file.size();
+
+                QString sListing = formatArchiveList(fileType, listRecords, nPhysicalSize, parser.isSet(clVerbose));
+                printf("%s", sListing.toUtf8().data());
+
+                delete pArchive;
+                file.close();
             }
         } else {
             printf("Error: --showarchive requires <target>\n");
@@ -342,17 +830,37 @@ int XScanEngineConsole::process()
 
                 XArchive *pArchive = static_cast<XArchive *>(XFormats::createClass(fileType, &file));
                 bool bExtracted = false;
+                qint32 nNumberOfFiles = 0;
+                qint64 nTotalSize = 0;
 
                 if (pArchive) {
-                    QList<XArchive::RECORD> listRecords = pArchive->getRecords(-1, &pdStruct);
-                    bExtracted = pArchive->decompressToPath(&listRecords, "", sResultDirectory, &pdStruct);
+                    QList<XBinary::ARCHIVERECORD> listRecords = collectArchiveRecords(pArchive, &pdStruct);
+
+                    for (qint32 i = 0; i < listRecords.count(); i++) {
+                        if (!recordIsFolder(listRecords.at(i))) {
+                            nNumberOfFiles++;
+                            nTotalSize += recordSize(listRecords.at(i));
+
+                            if (parser.isSet(clVerbose)) {
+                                printf("  %s\n", recordName(listRecords.at(i)).toUtf8().data());
+                            }
+                        }
+                    }
+
+                    bExtracted = pArchive->unpackToFolder(sResultDirectory, &pdStruct);
+
+                    if (!bExtracted) {
+                        QList<XArchive::RECORD> listLegacyRecords = pArchive->getRecords(-1, &pdStruct);
+                        bExtracted = pArchive->decompressToPath(&listLegacyRecords, "", sResultDirectory, &pdStruct);
+                    }
                 }
 
                 delete pArchive;
                 file.close();
 
                 if (bExtracted) {
-                    printf("Extracted: %s -> %s\n", QDir().toNativeSeparators(sFileName).toUtf8().data(), QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
+                    printf("Extracted %d file(s), %s -> %s\n", nNumberOfFiles, XBinary::bytesCountToString(nTotalSize, 1024).toUtf8().data(),
+                           QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
                 } else {
                     printf("Cannot extract: %s\n", sFileName.toUtf8().data());
                     nResult = XOptions::CR_CANNOTOPENFILE;
