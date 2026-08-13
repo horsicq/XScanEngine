@@ -33,10 +33,12 @@ public:
 
 public slots:
     bool isNE16();
+    bool isDriver();
 
 private:
     XNE *m_pNE;
     bool m_bIs16;
+    bool m_bIsDriver;
 };
 
 #endif  // NE_SCRIPT_H

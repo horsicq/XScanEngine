@@ -24,6 +24,7 @@ NE_Script::NE_Script(XNE *pNE, XBinary::FILEPART filePart, const OPTIONS &scanOp
 {
     m_pNE = pNE;
     m_bIs16 = m_pNE->is16(getMemoryMap());
+    m_bIsDriver = m_pNE->getType() == XNE::TYPE_DRIVER;
 }
 
 NE_Script::~NE_Script()
@@ -33,4 +34,9 @@ NE_Script::~NE_Script()
 bool NE_Script::isNE16()
 {
     return is16();
+}
+
+bool NE_Script::isDriver()
+{
+    return m_bIsDriver;
 }
