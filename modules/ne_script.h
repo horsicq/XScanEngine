@@ -31,8 +31,12 @@ public:
     explicit NE_Script(XNE *pNE, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct);
     ~NE_Script();
 
+public slots:
+    bool isNE16();
+
 private:
     XNE *m_pNE;
+    bool m_bIs16;
 };
 
 #endif  // NE_SCRIPT_H

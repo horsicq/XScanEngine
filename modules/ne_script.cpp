@@ -23,8 +23,14 @@
 NE_Script::NE_Script(XNE *pNE, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : MSDOS_Script(pNE, filePart, scanOptions, pPdStruct)
 {
     m_pNE = pNE;
+    m_bIs16 = m_pNE->is16(getMemoryMap());
 }
 
 NE_Script::~NE_Script()
 {
+}
+
+bool NE_Script::isNE16()
+{
+    return is16();
 }
