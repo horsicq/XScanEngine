@@ -34,11 +34,15 @@ public:
 public slots:
     bool isNE16();
     bool isDriver();
+    bool isFont();
+    bool isDll();
 
 private:
     XNE *m_pNE;
     bool m_bIs16;
     bool m_bIsDriver;
+    bool m_bIsFont;
+    bool m_bIsDll;
 };
 
 #endif  // NE_SCRIPT_H

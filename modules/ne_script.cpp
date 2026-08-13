@@ -25,6 +25,8 @@ NE_Script::NE_Script(XNE *pNE, XBinary::FILEPART filePart, const OPTIONS &scanOp
     m_pNE = pNE;
     m_bIs16 = m_pNE->is16(getMemoryMap());
     m_bIsDriver = m_pNE->getType() == XNE::TYPE_DRIVER;
+    m_bIsFont = m_pNE->getType() == XNE::TYPE_FONT;
+    m_bIsDll = m_pNE->getType() == XNE::TYPE_DLL;
 }
 
 NE_Script::~NE_Script()
@@ -39,4 +41,14 @@ bool NE_Script::isNE16()
 bool NE_Script::isDriver()
 {
     return m_bIsDriver;
+}
+
+bool NE_Script::isFont()
+{
+    return m_bIsFont;
+}
+
+bool NE_Script::isDll()
+{
+    return m_bIsDll;
 }
