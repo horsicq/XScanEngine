@@ -521,9 +521,261 @@ XScanEngineConsole::XScanEngineConsole(QCoreApplication &app, XScanEngine &scanE
 {
 }
 
+XScanEngine *XScanEngineConsole::scanEngine()
+{
+    return &m_scanEngine;
+}
+
+void XScanEngineConsole::addEngineOptions(QCommandLineParser *pParser)
+{
+    Q_UNUSED(pParser)
+}
+
+void XScanEngineConsole::applyEngineOptions(const QCommandLineParser *pParser, XScanEngine::SCAN_OPTIONS *pScanOptions)
+{
+    Q_UNUSED(pParser)
+    Q_UNUSED(pScanOptions)
+}
+
+bool XScanEngineConsole::processEngineModes(const QCommandLineParser *pParser, const QStringList &listArgs, XScanEngine::SCAN_OPTIONS *pScanOptions,
+                                            XBinary::PDSTRUCT *pPdStruct, qint32 *pnResult)
+{
+    Q_UNUSED(pParser)
+    Q_UNUSED(listArgs)
+    Q_UNUSED(pScanOptions)
+    Q_UNUSED(pPdStruct)
+    Q_UNUSED(pnResult)
+
+    return false;
+}
+
+XOptions::CR XScanEngineConsole::reportScanErrors(XScanEngine::SCAN_RESULT *pScanResult)
+{
+    printf("%s", XScanEngine::getErrorsString(pScanResult).toUtf8().data());
+
+    return XOptions::CR_CANNOTOPENFILE;
+}
+
+XOptions::CR XScanEngineConsole::showDatabaseState(XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    Q_UNUSED(pPdStruct)
+
+    XScanEngine::DATABASE_STATE dataBaseState = m_scanEngine.getDatabaseState(pScanOptions);
+
+    QString sResult;
+
+    if (pScanOptions->bResultAsJSON) {
+        sResult = XScanEngine::databaseStateToJson(dataBaseState);
+    } else if (pScanOptions->bResultAsXML) {
+        sResult = XScanEngine::databaseStateToXml(dataBaseState);
+    } else if (pScanOptions->bResultAsCSV) {
+        sResult = XScanEngine::databaseStateToCSV(dataBaseState);
+    } else if (pScanOptions->bResultAsTSV) {
+        sResult = XScanEngine::databaseStateToTSV(dataBaseState);
+    } else {
+        sResult = XScanEngine::databaseStateToText(dataBaseState);
+    }
+
+    printf("%s", sResult.toUtf8().data());
+
+    return XOptions::CR_SUCCESS;
+}
+
+XOptions::CR XScanEngineConsole::showStructsOverview(const QStringList &listArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    XOptions::CR result = XOptions::CR_SUCCESS;
+
+    if (!listArgs.isEmpty()) {
+        XBinary::FT fileType = pScanOptions->fileType;
+
+        QFile file;
+
+        file.setFileName(listArgs.at(0));
+
+        if (file.open(QIODevice::ReadOnly)) {
+            if (fileType == XBinary::FT_UNKNOWN) {
+                fileType = XFormats::getPrefFileType(&file, true, pPdStruct);
+            }
+
+            XBinary *pBinary = XFormats::createClass(fileType, &file);
+
+            if (pBinary) {
+                QList<XBinary::XFHEADER> listHeaders = pBinary->_getXFHeaders(pPdStruct);
+                XBinary::INDATA inData = XFormats::createINDATA(fileType, &file);
+
+                XFTreeModel treeModel(nullptr);
+                treeModel.setData(inData, listHeaders);
+
+                QString sStructs;
+
+                if (pScanOptions->bResultAsJSON) {
+                    sStructs = treeModel.toJSON();
+                } else if (pScanOptions->bResultAsXML) {
+                    sStructs = treeModel.toXML();
+                } else if (pScanOptions->bResultAsCSV) {
+                    sStructs = treeModel.toCSV();
+                } else if (pScanOptions->bResultAsTSV) {
+                    sStructs = treeModel.toTSV();
+                } else {
+                    sStructs = treeModel.toFormattedString();
+                }
+
+                printf("%s", sStructs.toUtf8().data());
+
+                delete pBinary;
+            } else {
+                printf("Cannot read structures: %s\n", listArgs.at(0).toUtf8().data());
+                result = XOptions::CR_CANNOTOPENFILE;
+            }
+
+            file.close();
+        } else {
+            printf("Cannot open: %s\n", listArgs.at(0).toUtf8().data());
+            result = XOptions::CR_CANNOTOPENFILE;
+        }
+    } else {
+        printf("Error: --showstructs requires <target>\n");
+        result = XOptions::CR_INVALIDPARAMETER;
+    }
+
+    return result;
+}
+
+XOptions::CR XScanEngineConsole::showFileEntropy(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    XOptions::CR result = XOptions::CR_SUCCESS;
+
+    QFile file;
+    file.setFileName(sFileName);
+
+    if (file.open(QIODevice::ReadOnly)) {
+        QVector<XBinary::KeyValueItem> listItems = XFormats::getEntropy(&file, false, -1, pPdStruct);
+
+        QString sResult;
+        if (pScanOptions->bResultAsJSON) sResult = XFormats::toJSON(listItems);
+        else if (pScanOptions->bResultAsXML) sResult = XFormats::toXML(listItems);
+        else if (pScanOptions->bResultAsCSV) sResult = XFormats::toCSV(listItems);
+        else if (pScanOptions->bResultAsTSV) sResult = XFormats::toTSV(listItems);
+        else sResult = XFormats::toFormattedString(listItems);
+
+        printf("%s", sResult.toUtf8().data());
+        file.close();
+    } else {
+        printf("Cannot open: %s\n", sFileName.toUtf8().data());
+        result = XOptions::CR_CANNOTOPENFILE;
+    }
+
+    return result;
+}
+
+XOptions::CR XScanEngineConsole::showFileInfo(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    XOptions::CR result = XOptions::CR_SUCCESS;
+
+    QFile file;
+    file.setFileName(sFileName);
+
+    if (file.open(QIODevice::ReadOnly)) {
+        QVector<XBinary::KeyValueItem> listItems = XFormats::getFileInfo(&file, false, -1, pPdStruct);
+
+        QString sResult;
+        if (pScanOptions->bResultAsJSON) sResult = XFormats::toJSON(listItems);
+        else if (pScanOptions->bResultAsXML) sResult = XFormats::toXML(listItems);
+        else if (pScanOptions->bResultAsCSV) sResult = XFormats::toCSV(listItems);
+        else if (pScanOptions->bResultAsTSV) sResult = XFormats::toTSV(listItems);
+        else sResult = XFormats::toFormattedString(listItems);
+
+        printf("%s", sResult.toUtf8().data());
+        file.close();
+    } else {
+        printf("Cannot open: %s\n", sFileName.toUtf8().data());
+        result = XOptions::CR_CANNOTOPENFILE;
+    }
+
+    return result;
+}
+
+XOptions::CR XScanEngineConsole::showFileStruct(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct)
+{
+    XOptions::CR result = XOptions::CR_SUCCESS;
+
+    QFile file;
+
+    file.setFileName(sFileName);
+
+    if (file.open(QIODevice::ReadOnly)) {
+        XBinary::XFHEADER xFHeader = XFormats::getXFHeaderFromStructName(&file, pScanOptions->sStruct, false, -1, pPdStruct);
+
+        if (xFHeader.xfType != XBinary::XFTYPE_UNKNOWN) {
+            XBinary *pBinary = XFormats::createClass(xFHeader.fileType, &file);
+
+            if (pBinary) {
+                QString sStructInfo;
+                XBinary::INDATA inData = XFormats::createINDATA(xFHeader.fileType, &file);
+
+                if (xFHeader.xfType == XBinary::XFTYPE_HEADER) {
+                    XFModel_header modelHeader(nullptr);
+                    modelHeader.setData(inData, xFHeader);
+
+                    if (pScanOptions->bResultAsJSON) {
+                        sStructInfo = modelHeader.toJSON();
+                    } else if (pScanOptions->bResultAsXML) {
+                        sStructInfo = modelHeader.toXML();
+                    } else if (pScanOptions->bResultAsCSV) {
+                        sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_CSV);
+                    } else if (pScanOptions->bResultAsTSV) {
+                        sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_TSV);
+                    } else {
+                        XOptions::printModel(&modelHeader);
+                    }
+                } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
+                    XFModel_table modelTable;
+                    modelTable.setData(inData, xFHeader);
+                    modelTable.setShowPresentation(true);
+
+                    if (pScanOptions->bResultAsJSON) {
+                        sStructInfo = modelTable.toJSON();
+                    } else if (pScanOptions->bResultAsXML) {
+                        sStructInfo = modelTable.toXML();
+                    } else if (pScanOptions->bResultAsCSV) {
+                        sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_CSV);
+                    } else if (pScanOptions->bResultAsTSV) {
+                        sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_TSV);
+                    } else {
+                        XOptions::printModel(&modelTable);
+                    }
+                }
+
+                if (!sStructInfo.isEmpty()) {
+                    printf("%s", sStructInfo.toUtf8().data());
+                }
+
+                delete pBinary;
+            } else {
+                printf("Cannot read structure: %s\n", sFileName.toUtf8().data());
+                result = XOptions::CR_CANNOTOPENFILE;
+            }
+        } else {
+            printf("Cannot find struct '%s': %s\n", pScanOptions->sStruct.toUtf8().data(), sFileName.toUtf8().data());
+            result = XOptions::CR_INVALIDPARAMETER;
+        }
+
+        file.close();
+    } else {
+        printf("Cannot open: %s\n", sFileName.toUtf8().data());
+        result = XOptions::CR_CANNOTOPENFILE;
+    }
+
+    return result;
+}
+
 int XScanEngineConsole::process()
 {
     qint32 nResult = XOptions::CR_SUCCESS;
+
+    // Text codecs (e.g. cp437 for DOS-era strings) are used by the format
+    // parsers; register them once for every console front end.
+    XOptions::registerCodecs();
 
     XBinary::PDSTRUCT pdStruct = XBinary::createPdStruct();
 
@@ -611,6 +863,8 @@ int XScanEngineConsole::process()
     parser.addOption(clExtractArchive);
     parser.addOption(clNoColor);
 
+    addEngineOptions(&parser);
+
     parser.process(m_app);
 
     QStringList listArgs = parser.positionalArguments();
@@ -663,6 +917,8 @@ int XScanEngineConsole::process()
 
     scanOptions.sStruct = parser.value(clStruct);
 
+    applyEngineOptions(&parser, &scanOptions);
+
     if (bHasMainDb) {
         scanOptions.sMainDatabasePath = parser.value(clDatabaseMain);
     }
@@ -709,23 +965,12 @@ int XScanEngineConsole::process()
             bIsDbUsed = true;
         }
 
-        XScanEngine::DATABASE_STATE dataBaseState = m_scanEngine.getDatabaseState(&scanOptions);
+        XOptions::CR crDatabase = showDatabaseState(&scanOptions, &pdStruct);
 
-        QString sResult;
-
-        if (scanOptions.bResultAsJSON) {
-            sResult = XScanEngine::databaseStateToJson(dataBaseState);
-        } else if (scanOptions.bResultAsXML) {
-            sResult = XScanEngine::databaseStateToXml(dataBaseState);
-        } else if (scanOptions.bResultAsCSV) {
-            sResult = XScanEngine::databaseStateToCSV(dataBaseState);
-        } else if (scanOptions.bResultAsTSV) {
-            sResult = XScanEngine::databaseStateToTSV(dataBaseState);
-        } else {
-            sResult = XScanEngine::databaseStateToText(dataBaseState);
+        if (crDatabase != XOptions::CR_SUCCESS) {
+            nResult = crDatabase;
         }
 
-        printf("%s", sResult.toUtf8().data());
         bProcessed = true;
     }
 
@@ -872,60 +1117,19 @@ int XScanEngineConsole::process()
     }
 
     if (parser.isSet(clShowStructs)) {
-        if (!listArgs.isEmpty()) {
-            XBinary::FT fileType = scanOptions.fileType;
+        XOptions::CR crStructs = showStructsOverview(listArgs, &scanOptions, &pdStruct);
 
-            QFile file;
-
-            file.setFileName(listArgs.at(0));
-
-            if (file.open(QIODevice::ReadOnly)) {
-                if (fileType == XBinary::FT_UNKNOWN) {
-                    fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
-                }
-
-                XBinary *pBinary = XFormats::createClass(fileType, &file);
-
-                if (pBinary) {
-                    QList<XBinary::XFHEADER> listHeaders = pBinary->_getXFHeaders(&pdStruct);
-                    XBinary::INDATA inData = XFormats::createINDATA(fileType, &file);
-
-                    XFTreeModel treeModel(nullptr);
-                    treeModel.setData(inData, listHeaders);
-
-                    QString sStructs;
-
-                    if (scanOptions.bResultAsJSON) {
-                        sStructs = treeModel.toJSON();
-                    } else if (scanOptions.bResultAsXML) {
-                        sStructs = treeModel.toXML();
-                    } else if (scanOptions.bResultAsCSV) {
-                        sStructs = treeModel.toCSV();
-                    } else if (scanOptions.bResultAsTSV) {
-                        sStructs = treeModel.toTSV();
-                    } else {
-                        sStructs = treeModel.toFormattedString();
-                    }
-
-                    printf("%s", sStructs.toUtf8().data());
-
-                    delete pBinary;
-                } else {
-                    printf("Cannot read structures: %s\n", listArgs.at(0).toUtf8().data());
-                    nResult = XOptions::CR_CANNOTOPENFILE;
-                }
-
-                file.close();
-            } else {
-                printf("Cannot open: %s\n", listArgs.at(0).toUtf8().data());
-                nResult = XOptions::CR_CANNOTOPENFILE;
-            }
-        } else {
-            printf("Error: --showstructs requires <target>\n");
-            nResult = XOptions::CR_INVALIDPARAMETER;
+        if (crStructs != XOptions::CR_SUCCESS) {
+            nResult = crStructs;
         }
 
         bProcessed = true;
+    }
+
+    if (!bProcessed) {
+        if (processEngineModes(&parser, listArgs, &scanOptions, &pdStruct, &nResult)) {
+            bProcessed = true;
+        }
     }
 
     if (!bProcessed && !scanOptions.sStruct.isEmpty() && listArgs.isEmpty()) {
@@ -935,13 +1139,19 @@ int XScanEngineConsole::process()
     }
 
     if (!bProcessed && listArgs.count()) {
-        if (bIsDatabaseUsing && !bIsDbUsed) {
+        // The signature database is only needed for actual scanning; entropy,
+        // file info and structure dumps must work without one.
+        bool bNeedDatabase = bIsDatabaseUsing && (!(scanOptions.bShowEntropy || scanOptions.bShowFileInfo || (scanOptions.sStruct != "")));
+
+        if (bNeedDatabase && !bIsDbUsed) {
             bDbLoaded = m_scanEngine.loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
         }
 
-        if (!bIsDatabaseUsing || bDbLoaded) {
+        if ((!bNeedDatabase) || bDbLoaded) {
             nResult = handleFiles(listArgs, &scanOptions, m_scanEngine, &pdStruct);
+        } else {
+            printf("Cannot load database: %s\n", scanOptions.sMainDatabasePath.toUtf8().data());
         }
 
         bProcessed = true;
@@ -987,111 +1197,22 @@ XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanE
         }
 
         if (pScanOptions->bShowEntropy) {
-            QFile file;
-            file.setFileName(sFileName);
+            XOptions::CR crFile = showFileEntropy(sFileName, pScanOptions, pPdStruct);
 
-            if (file.open(QIODevice::ReadOnly)) {
-                QVector<XBinary::KeyValueItem> listItems = XFormats::getEntropy(&file, false, -1, pPdStruct);
-
-                QString sResult;
-                if (pScanOptions->bResultAsJSON) sResult = XFormats::toJSON(listItems);
-                else if (pScanOptions->bResultAsXML) sResult = XFormats::toXML(listItems);
-                else if (pScanOptions->bResultAsCSV) sResult = XFormats::toCSV(listItems);
-                else if (pScanOptions->bResultAsTSV) sResult = XFormats::toTSV(listItems);
-                else sResult = XFormats::toFormattedString(listItems);
-
-                printf("%s", sResult.toUtf8().data());
-                file.close();
-            } else {
-                printf("Cannot open: %s\n", sFileName.toUtf8().data());
-                result = XOptions::CR_CANNOTOPENFILE;
+            if (crFile != XOptions::CR_SUCCESS) {
+                result = crFile;
             }
         } else if (pScanOptions->bShowFileInfo) {
-            QFile file;
-            file.setFileName(sFileName);
+            XOptions::CR crFile = showFileInfo(sFileName, pScanOptions, pPdStruct);
 
-            if (file.open(QIODevice::ReadOnly)) {
-                QVector<XBinary::KeyValueItem> listItems = XFormats::getFileInfo(&file, false, -1, pPdStruct);
-
-                QString sResult;
-                if (pScanOptions->bResultAsJSON) sResult = XFormats::toJSON(listItems);
-                else if (pScanOptions->bResultAsXML) sResult = XFormats::toXML(listItems);
-                else if (pScanOptions->bResultAsCSV) sResult = XFormats::toCSV(listItems);
-                else if (pScanOptions->bResultAsTSV) sResult = XFormats::toTSV(listItems);
-                else sResult = XFormats::toFormattedString(listItems);
-
-                printf("%s", sResult.toUtf8().data());
-                file.close();
-            } else {
-                printf("Cannot open: %s\n", sFileName.toUtf8().data());
-                result = XOptions::CR_CANNOTOPENFILE;
+            if (crFile != XOptions::CR_SUCCESS) {
+                result = crFile;
             }
         } else if (pScanOptions->sStruct != "") {
-            QFile file;
+            XOptions::CR crFile = showFileStruct(sFileName, pScanOptions, pPdStruct);
 
-            file.setFileName(sFileName);
-
-            if (file.open(QIODevice::ReadOnly)) {
-                XBinary::XFHEADER xFHeader = XFormats::getXFHeaderFromStructName(&file, pScanOptions->sStruct, false, -1, pPdStruct);
-
-                if (xFHeader.xfType != XBinary::XFTYPE_UNKNOWN) {
-                    XBinary *pBinary = XFormats::createClass(xFHeader.fileType, &file);
-
-                    if (pBinary) {
-                        QString sStructInfo;
-                        XBinary::INDATA inData = XFormats::createINDATA(xFHeader.fileType, &file);
-
-                        if (xFHeader.xfType == XBinary::XFTYPE_HEADER) {
-                            XFModel_header modelHeader(nullptr);
-                            modelHeader.setData(inData, xFHeader);
-
-                            if (pScanOptions->bResultAsJSON) {
-                                sStructInfo = modelHeader.toJSON();
-                            } else if (pScanOptions->bResultAsXML) {
-                                sStructInfo = modelHeader.toXML();
-                            } else if (pScanOptions->bResultAsCSV) {
-                                sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_CSV);
-                            } else if (pScanOptions->bResultAsTSV) {
-                                sStructInfo = XFModel::exportToString(&modelHeader, XFModel::EXPORT_TSV);
-                            } else {
-                                XOptions::printModel(&modelHeader);
-                            }
-                        } else if (xFHeader.xfType == XBinary::XFTYPE_TABLE) {
-                            XFModel_table modelTable;
-                            modelTable.setData(inData, xFHeader);
-                            modelTable.setShowPresentation(true);
-
-                            if (pScanOptions->bResultAsJSON) {
-                                sStructInfo = modelTable.toJSON();
-                            } else if (pScanOptions->bResultAsXML) {
-                                sStructInfo = modelTable.toXML();
-                            } else if (pScanOptions->bResultAsCSV) {
-                                sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_CSV);
-                            } else if (pScanOptions->bResultAsTSV) {
-                                sStructInfo = XFModel::exportToString(&modelTable, XFModel::EXPORT_TSV);
-                            } else {
-                                XOptions::printModel(&modelTable);
-                            }
-                        }
-
-                        if (!sStructInfo.isEmpty()) {
-                            printf("%s", sStructInfo.toUtf8().data());
-                        }
-
-                        delete pBinary;
-                    } else {
-                        printf("Cannot read structure: %s\n", sFileName.toUtf8().data());
-                        result = XOptions::CR_CANNOTOPENFILE;
-                    }
-                } else {
-                    printf("Cannot find struct '%s': %s\n", pScanOptions->sStruct.toUtf8().data(), sFileName.toUtf8().data());
-                    result = XOptions::CR_INVALIDPARAMETER;
-                }
-
-                file.close();
-            } else {
-                printf("Cannot open: %s\n", sFileName.toUtf8().data());
-                result = XOptions::CR_CANNOTOPENFILE;
+            if (crFile != XOptions::CR_SUCCESS) {
+                result = crFile;
             }
         } else {
             XScanEngine::SCAN_RESULT scanResult = scanEngine.scanFile(sFileName, pScanOptions, pPdStruct);
@@ -1113,8 +1234,11 @@ XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanE
             }
 
             if (scanResult.listErrors.count()) {
-                printf("%s", XScanEngine::getErrorsString(&scanResult).toUtf8().data());
-                result = XOptions::CR_CANNOTOPENFILE;
+                XOptions::CR crErrors = reportScanErrors(&scanResult);
+
+                if (crErrors != XOptions::CR_SUCCESS) {
+                    result = crErrors;
+                }
             }
             printf("\n");
         }
