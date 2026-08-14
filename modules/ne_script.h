@@ -38,6 +38,7 @@ public slots:
     bool isDll();
     bool isImportPresent();
     bool isExportPresent();
+    bool isResourcesPresent();
 
 private:
     XNE *m_pNE;
@@ -47,6 +48,7 @@ private:
     bool m_bIsDll;
     bool m_bIsImportPresent;
     bool m_bIsExportPresent;
+    bool m_bIsResourcesPresent;
 };
 
 #endif  // NE_SCRIPT_H

@@ -29,6 +29,7 @@ NE_Script::NE_Script(XNE *pNE, XBinary::FILEPART filePart, const OPTIONS &scanOp
     m_bIsDll = m_pNE->getType() == XNE::TYPE_DLL;
     m_bIsImportPresent = m_pNE->isImportPresent();
     m_bIsExportPresent = m_pNE->isExportPresent();
+    m_bIsResourcesPresent = m_pNE->isResourcesPresent();
 }
 
 NE_Script::~NE_Script()
@@ -63,4 +64,9 @@ bool NE_Script::isImportPresent()
 bool NE_Script::isExportPresent()
 {
     return m_bIsExportPresent;
+}
+
+bool NE_Script::isResourcesPresent()
+{
+    return m_bIsResourcesPresent;
 }
