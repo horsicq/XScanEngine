@@ -27,6 +27,8 @@ NE_Script::NE_Script(XNE *pNE, XBinary::FILEPART filePart, const OPTIONS &scanOp
     m_bIsDriver = m_pNE->getType() == XNE::TYPE_DRIVER;
     m_bIsFont = m_pNE->getType() == XNE::TYPE_FONT;
     m_bIsDll = m_pNE->getType() == XNE::TYPE_DLL;
+    m_bIsImportPresent = m_pNE->isImportPresent();
+    m_bIsExportPresent = m_pNE->isExportPresent();
 }
 
 NE_Script::~NE_Script()
@@ -51,4 +53,14 @@ bool NE_Script::isFont()
 bool NE_Script::isDll()
 {
     return m_bIsDll;
+}
+
+bool NE_Script::isImportPresent()
+{
+    return m_bIsImportPresent;
+}
+
+bool NE_Script::isExportPresent()
+{
+    return m_bIsExportPresent;
 }

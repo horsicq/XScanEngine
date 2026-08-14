@@ -36,6 +36,8 @@ public slots:
     bool isDriver();
     bool isFont();
     bool isDll();
+    bool isImportPresent();
+    bool isExportPresent();
 
 private:
     XNE *m_pNE;
@@ -43,6 +45,8 @@ private:
     bool m_bIsDriver;
     bool m_bIsFont;
     bool m_bIsDll;
+    bool m_bIsImportPresent;
+    bool m_bIsExportPresent;
 };
 
 #endif  // NE_SCRIPT_H
