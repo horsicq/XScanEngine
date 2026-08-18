@@ -32,36 +32,101 @@
 #include <QXmlStreamWriter>
 
 #include <algorithm>
+#include <cstdio>
 
 namespace {
 
 // Collect full archive records through the streaming unpack API so every
 // property the format parser filled (method, timestamps, CRC, ownership, ...)
 // is available, not just the handful the legacy flat RECORD struct carries.
-QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XArchive *pArchive, XBinary::PDSTRUCT *pPdStruct)
+QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XBinary *pArchive, const QMap<XBinary::UNPACK_PROP, QVariant> &mapUnpackProperties,
+                                                    XBinary::PDSTRUCT *pPdStruct, bool *pbComplete = nullptr)
 {
     QList<XBinary::ARCHIVERECORD> listResult;
+
+    if (pbComplete) {
+        *pbComplete = false;
+    }
 
     if (!pArchive) {
         return listResult;
     }
 
     XBinary::UNPACK_STATE state = {};
-    QMap<XBinary::UNPACK_PROP, QVariant> mapProperties;
+    QMap<XBinary::UNPACK_PROP, QVariant> mapProperties = mapUnpackProperties;
+    bool bInitialized = pArchive->initUnpack(&state, mapProperties, pPdStruct);
 
-    if (pArchive->initUnpack(&state, mapProperties, pPdStruct)) {
+    if (!bInitialized && XBinary::isPdStructNotCanceled(pPdStruct)) {
+        state = XBinary::UNPACK_STATE();
+        mapProperties.insert(XBinary::UNPACK_PROP_METADATAONLY, true);
+        bInitialized = pArchive->initUnpack(&state, mapProperties, pPdStruct);
+    }
+
+    if (bInitialized) {
+        bool bEnumerationComplete = true;
+
         while ((state.nCurrentIndex < state.nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct)) {
-            listResult.append(pArchive->infoCurrent(&state, pPdStruct));
+            const XBinary::ARCHIVERECORD record = pArchive->infoCurrent(&state, pPdStruct);
+            if (record.mapProperties.isEmpty()) {
+                bEnumerationComplete = false;
+                break;
+            }
+            listResult.append(record);
 
             if (!pArchive->moveToNext(&state, pPdStruct)) {
+                if (state.nCurrentIndex < state.nNumberOfRecords) {
+                    bEnumerationComplete = false;
+                }
                 break;
             }
         }
 
-        pArchive->finishUnpack(&state, pPdStruct);
+        bEnumerationComplete = bEnumerationComplete && (state.nCurrentIndex == state.nNumberOfRecords) &&
+                               XBinary::isPdStructNotCanceled(pPdStruct) && pArchive->finishUnpack(&state, pPdStruct);
+        if (pbComplete) {
+            *pbComplete = bEnumerationComplete;
+        }
+        if (!bEnumerationComplete) {
+            listResult.clear();
+        }
     }
 
     return listResult;
+}
+
+bool allowsReadOnlyMetadataFallback(const QString &sPassword)
+{
+    // With no credential supplied, a native parser may still expose public
+    // headers from an encrypted archive. An explicitly supplied credential is
+    // authoritative and must never be disguised by metadata-only fallback.
+    return sPassword.isEmpty();
+}
+
+bool listWithIp7zSource(XBinary::FT fileType, QIODevice *pDevice, const QString &sFileName, const QString &sPassword,
+                        QList<XBinary::ARCHIVERECORD> *pListRecords, QString *pIp7zError,
+                        XBinary::PDSTRUCT *pPdStruct, bool *pbTerminalFailure)
+{
+    if (pbTerminalFailure) *pbTerminalFailure = false;
+
+    // The native compressed-TAR handlers expose the records inside the TAR.
+    // 7-Zip intentionally treats the outer compressor as a one-file archive,
+    // so accepting that result would hide the actual members from the UI/CLI.
+    if (XArchives::isNativeReaderPreferredFileType(fileType, pDevice, pPdStruct)) return false;
+
+    if (XArchives::isIp7zSourceAvailable()) {
+        if (XArchives::listArchiveWithIp7zSource(sFileName, sPassword, pListRecords, pIp7zError, pPdStruct)) {
+            return true;
+        }
+        const QString sError = pIp7zError ? *pIp7zError : QString();
+        if (!XBinary::isPdStructNotCanceled(pPdStruct) ||
+            (!XArchives::isIp7zUnsupportedFormatError(sError) &&
+             !allowsReadOnlyMetadataFallback(sPassword))) {
+            if (pbTerminalFailure) *pbTerminalFailure = true;
+            return false;
+        }
+    }
+
+    return false;
 }
 
 QString recordName(const XBinary::ARCHIVERECORD &record)
@@ -81,13 +146,75 @@ qint64 recordSize(const XBinary::ARCHIVERECORD &record)
     return record.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong();
 }
 
-qint64 recordPacked(const XBinary::ARCHIVERECORD &record)
+// A record's stream coordinates are not always its own.  Two cases:
+//   * an archive-stream record (HANDLE_METHOD_ARCHIVE_STREAM) publishes no
+//     extent at all, because the member has no addressable extent on the
+//     compressed device - the container's single stream holds every member;
+//   * a solid record whose stream decodes to more than the member itself
+//     (FPART_PROP_STREAMUNPACKEDSIZE > its uncompressed size) shares one
+//     compressed stream with every other member of the block.
+// In both cases nStreamSize is the container's number, not the member's, and
+// printing it per row multiplies the archive size by the record count.
+bool recordSharesContainerStream(const XBinary::ARCHIVERECORD &record)
 {
-    if (record.mapProperties.contains(XBinary::FPART_PROP_COMPRESSEDSIZE)) {
-        return record.mapProperties.value(XBinary::FPART_PROP_COMPRESSEDSIZE).toLongLong();
+    qint32 nArchiveStreamIndex = -1;
+
+    if (XBinary::getArchiveStreamRecordIndex(record, &nArchiveStreamIndex)) {
+        return true;
     }
 
-    return record.nStreamSize;
+    if (record.mapProperties.value(XBinary::FPART_PROP_ISSOLID).toBool() && record.mapProperties.contains(XBinary::FPART_PROP_STREAMUNPACKEDSIZE)) {
+        return record.mapProperties.value(XBinary::FPART_PROP_STREAMUNPACKEDSIZE).toLongLong() >
+               record.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong();
+    }
+
+    return false;
+}
+
+enum PACKEDSTATE {
+    PACKEDSTATE_VALUE = 0,  // the member's own packed size
+    PACKEDSTATE_NONE,       // no payload to account for (directory entry)
+    PACKEDSTATE_UNKNOWN     // not derivable from this container
+};
+
+// Report the member's own packed size, never a number that belongs to the
+// container.  An honest "unknown" is preferable to a confident wrong total.
+PACKEDSTATE recordPacked(const XBinary::ARCHIVERECORD &record, qint64 *pnPacked)
+{
+    if (pnPacked) *pnPacked = 0;
+
+    // Directories have no payload, so they have no packed size - not zero, not
+    // the container's size.
+    if (recordIsFolder(record)) {
+        return PACKEDSTATE_NONE;
+    }
+
+    if (record.mapProperties.contains(XBinary::FPART_PROP_COMPRESSEDSIZE)) {
+        if (pnPacked) *pnPacked = record.mapProperties.value(XBinary::FPART_PROP_COMPRESSEDSIZE).toLongLong();
+        return PACKEDSTATE_VALUE;
+    }
+
+    if (recordSharesContainerStream(record)) {
+        return PACKEDSTATE_UNKNOWN;
+    }
+
+    if (record.nStreamSize > 0) {
+        if (pnPacked) *pnPacked = record.nStreamSize;
+        return PACKEDSTATE_VALUE;
+    }
+
+    return PACKEDSTATE_UNKNOWN;
+}
+
+QString recordPackedString(const XBinary::ARCHIVERECORD &record)
+{
+    qint64 nPacked = 0;
+
+    if (recordPacked(record, &nPacked) == PACKEDSTATE_VALUE) {
+        return QString::number(nPacked);
+    }
+
+    return QString();
 }
 
 QString recordModified(const XBinary::ARCHIVERECORD &record)
@@ -200,6 +327,8 @@ QString consoleFPartName(XBinary::FPART_PROP prop)
     else if (prop == XBinary::FPART_PROP_ISSYSTEM) sResult = "System";
     else if (prop == XBinary::FPART_PROP_ISARCHIVE) sResult = "Archive attribute";
     else if (prop == XBinary::FPART_PROP_ISCOMMENTPRESENT) sResult = "Has comment";
+    else if (prop == XBinary::FPART_PROP_ARCHIVE_RECORD_INDEX) sResult = "Archive record index";
+    else if (prop == XBinary::FPART_PROP_ARCHIVE_RECORD_TOKEN) sResult = "Archive record token";
     else sResult = QString("#%1").arg(static_cast<qint32>(prop));
 
     return sResult;
@@ -262,7 +391,7 @@ QString cellValue(const XBinary::ARCHIVERECORD &record, qint32 nColId)
     if (nColId == 0) return recordAttr(record);
     if (nColId == 1) return recordModified(record);
     if (nColId == 2) return QString::number(recordSize(record));
-    if (nColId == 3) return QString::number(recordPacked(record));
+    if (nColId == 3) return recordPackedString(record);
     if (nColId == 4) return XBinary::getHandleMethods(record.mapProperties);
     if (nColId == 5) return recordCRC(record);
 
@@ -287,12 +416,16 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
     bool bAnyCRC = false;
     bool bAnyAttr = false;
     bool bSolid = false;
+    bool bPackedComplete = true;
     QSet<qint64> stBlocks;
 
     // Solid formats report the same shared compressed stream on every member of
     // a block, so count each distinct stream region once for the total and blank
     // the repeated "Packed" cells (7-Zip shows the compressed size on the first
-    // member of a folder only).
+    // member of a folder only).  Only records that actually declare solid-block
+    // membership are folded this way: readers that report offset 0 for every
+    // member (the 7-Zip source does) would otherwise collapse distinct members
+    // of equal size into one and understate the total.
     QStringList listPackedDisplay;
     QSet<QString> stSeenStreams;
 
@@ -315,21 +448,33 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
             stBlocks.insert(record.mapProperties.value(XBinary::FPART_PROP_SOLIDFOLDERINDEX).toLongLong());
         }
 
-        qint64 nPacked = recordPacked(record);
-        QString sPackedDisplay = QString::number(nPacked);
+        qint64 nPacked = 0;
+        PACKEDSTATE packedState = recordPacked(record, &nPacked);
+        QString sPackedDisplay;
 
-        if ((record.nStreamSize > 0) && !recordIsFolder(record)) {
-            QString sStreamKey = QString("%1:%2").arg(record.nStreamOffset).arg(record.nStreamSize);
+        if (packedState == PACKEDSTATE_UNKNOWN) {
+            bPackedComplete = false;
+        } else if (packedState == PACKEDSTATE_VALUE) {
+            sPackedDisplay = QString::number(nPacked);
 
-            if (stSeenStreams.contains(sStreamKey)) {
-                sPackedDisplay.clear();  // already counted: this file shares the block
+            const bool bDeclaresSolidBlock = record.mapProperties.value(XBinary::FPART_PROP_ISSOLID).toBool() ||
+                                             record.mapProperties.contains(XBinary::FPART_PROP_SOLIDFOLDERINDEX);
+
+            if (bDeclaresSolidBlock && (record.nStreamSize > 0)) {
+                QString sStreamKey = QString("%1:%2").arg(record.nStreamOffset).arg(record.nStreamSize);
+
+                if (stSeenStreams.contains(sStreamKey)) {
+                    sPackedDisplay.clear();  // already counted: this file shares the block
+                } else {
+                    stSeenStreams.insert(sStreamKey);
+                    nTotalPacked += nPacked;
+                }
             } else {
-                stSeenStreams.insert(sStreamKey);
                 nTotalPacked += nPacked;
             }
-        } else {
-            nTotalPacked += nPacked;
         }
+        // PACKEDSTATE_NONE (directory): no cell, no contribution, and no reason
+        // to call the total incomplete.
 
         listPackedDisplay.append(sPackedDisplay);
 
@@ -339,18 +484,29 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
         if (recordIsFolder(record) || record.mapProperties.value(XBinary::FPART_PROP_ENCRYPTED).toBool()) bAnyAttr = true;
     }
 
+    // A packed total can never exceed the bytes that are actually on disk.  If
+    // the per-record numbers add up to more than the file itself, they are not
+    // this container's packed sizes; report that they are unknown rather than
+    // publishing a sum (and a ratio) that the file cannot support.
+    if (bPackedComplete && (nPhysicalSize > 0) && (nTotalPacked > nPhysicalSize)) {
+        bPackedComplete = false;
+    }
+
     QString sRatio;
 
-    if (nTotalSize > 0) {
+    if (bPackedComplete && (nTotalSize > 0)) {
         sRatio = QString(" (%1%)").arg(QString::number(double(nTotalPacked) * 100.0 / double(nTotalSize), 'f', 1));
     }
+
+    const QString sPackedSummary = bPackedComplete ?
+        XBinary::bytesCountToString(nTotalPacked, 1024) : QString("unknown");
 
     sResult += QString("%1: %2 file(s)%3, %4 -> %5%6\n")
                    .arg(XBinary::fileTypeIdToString(fileType))
                    .arg(nNumberOfFiles)
                    .arg(nNumberOfFolders > 0 ? QString(", %1 folder(s)").arg(nNumberOfFolders) : QString())
                    .arg(XBinary::bytesCountToString(nTotalSize, 1024))
-                   .arg(XBinary::bytesCountToString(nTotalPacked, 1024))
+                   .arg(sPackedSummary)
                    .arg(sRatio);
 
     // archive-level info line: on-disk size, metadata overhead, solidity
@@ -359,7 +515,7 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
     if (nPhysicalSize > 0) {
         listInfo.append(QString("physical %1").arg(XBinary::bytesCountToString(nPhysicalSize, 1024)));
 
-        qint64 nOverhead = nPhysicalSize - nTotalPacked;
+        qint64 nOverhead = bPackedComplete ? (nPhysicalSize - nTotalPacked) : 0;
 
         if (nOverhead > 0) {
             listInfo.append(QString("overhead %1").arg(XBinary::bytesCountToString(nOverhead, 1024)));
@@ -391,6 +547,33 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
                 XBinary::FPART_PROP prop = listKeys.at(k);
 
                 if (prop == XBinary::FPART_PROP_ORIGINALNAME) {
+                    continue;
+                }
+
+                // An opaque identity digest is bookkeeping between a record and
+                // the session that produced it, not something the archive says
+                // about this member.  A listing describes the member.
+                if (prop == XBinary::FPART_PROP_ARCHIVE_RECORD_TOKEN) {
+                    continue;
+                }
+
+                // A stream coordinate describes where a payload lives.  A
+                // directory entry has no payload, so no coordinate on any
+                // device describes it and none may be shown for it.
+                if (recordIsFolder(record) &&
+                    ((prop == XBinary::FPART_PROP_STREAMOFFSET) || (prop == XBinary::FPART_PROP_STREAMSIZE) ||
+                     (prop == XBinary::FPART_PROP_STREAMUNPACKEDSIZE) || (prop == XBinary::FPART_PROP_SUBSTREAMOFFSET))) {
+                    continue;
+                }
+
+                // A record that shares the container's single compressed
+                // stream has no extent of its own either; printing the shared
+                // one per row presents a transport-envelope number as this
+                // member's own metadata, which is how "Stream size: <whole
+                // container>" ended up on every row of a compressed-tar
+                // listing.
+                if (((prop == XBinary::FPART_PROP_STREAMOFFSET) || (prop == XBinary::FPART_PROP_STREAMSIZE)) &&
+                    recordSharesContainerStream(record)) {
                     continue;
                 }
 
@@ -594,7 +777,7 @@ XOptions::CR XScanEngineConsole::showStructsOverview(const QStringList &listArgs
 
         if (file.open(QIODevice::ReadOnly)) {
             if (fileType == XBinary::FT_UNKNOWN) {
-                fileType = XFormats::getPrefFileType(&file, true, pPdStruct);
+                fileType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_FORMATS, pPdStruct);
             }
 
             XBinary *pBinary = XFormats::createClass(fileType, &file);
@@ -815,7 +998,6 @@ int XScanEngineConsole::process()
     QCommandLineOption clResultAsPlainText = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_PLAINTEXT);
 
     QCommandLineOption clDatabaseMain = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_DATABASE);
-    QCommandLineOption clDatabaseExtra = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_EXTRADATABASE);
     QCommandLineOption clDatabaseCustom = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_CUSTOMDATABASE);
     QCommandLineOption clShowDatabase = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWDATABASE);
 
@@ -823,6 +1005,11 @@ int XScanEngineConsole::process()
     QCommandLineOption clShowStructs = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWSTRUCTS);
     QCommandLineOption clListArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_LISTARCHIVE);
     QCommandLineOption clExtractArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_EXTRACTARCHIVE);
+    QCommandLineOption clArchivePassword(QStringList() << QStringLiteral("password"),
+                                         QStringLiteral("Archive password (use --password-stdin to read it from standard input instead)."),
+                                         QStringLiteral("password"));
+    QCommandLineOption clArchivePasswordStdin(QStringList() << QStringLiteral("password-stdin"),
+                                              QStringLiteral("Read the archive password as one UTF-8 line from standard input."));
 
     QCommandLineOption clFileType = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FILETYPE);
     QCommandLineOption clFirstWrapperOnly = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FIRSTWRAPPERONLY);
@@ -850,7 +1037,6 @@ int XScanEngineConsole::process()
         parser.addOption(clShowDatabase);
     }
     if (bHasExtraCustomDb) {
-        parser.addOption(clDatabaseExtra);
         parser.addOption(clDatabaseCustom);
     }
     parser.addOption(clOverlayScan);
@@ -861,6 +1047,8 @@ int XScanEngineConsole::process()
     parser.addOption(clShowStructs);
     parser.addOption(clListArchive);
     parser.addOption(clExtractArchive);
+    parser.addOption(clArchivePassword);
+    parser.addOption(clArchivePasswordStdin);
     parser.addOption(clNoColor);
 
     addEngineOptions(&parser);
@@ -883,7 +1071,6 @@ int XScanEngineConsole::process()
 
     XScanEngine::SCAN_OPTIONS scanOptions = {};
 
-    scanOptions.bUseExtraDatabase = (engineType == XScanEngine::SCANENGINETYPE_DIE);
     scanOptions.bUseCustomDatabase = (engineType == XScanEngine::SCANENGINETYPE_DIE);
     scanOptions.bShowType = true;
     scanOptions.bShowInfo = true;
@@ -917,13 +1104,39 @@ int XScanEngineConsole::process()
 
     scanOptions.sStruct = parser.value(clStruct);
 
+    QMap<XBinary::UNPACK_PROP, QVariant> mapUnpackProperties;
+    QString sArchivePassword;
+    if (parser.isSet(clArchivePassword) && parser.isSet(clArchivePasswordStdin)) {
+        printf("Error: use either --password or --password-stdin, not both\n");
+        return XOptions::CR_INVALIDPARAMETER;
+    }
+    if (parser.isSet(clArchivePasswordStdin)) {
+        QFile passwordInput;
+        if (!passwordInput.open(stdin, QIODevice::ReadOnly, QFileDevice::DontCloseHandle)) {
+            printf("Error: cannot read archive password from standard input\n");
+            return XOptions::CR_INVALIDPARAMETER;
+        }
+        QByteArray baPassword = passwordInput.readLine(1024 * 1024);
+        if (!baPassword.endsWith('\n') && !passwordInput.atEnd()) {
+            printf("Error: archive password is too long\n");
+            return XOptions::CR_INVALIDPARAMETER;
+        }
+        if (baPassword.endsWith('\n')) baPassword.chop(1);
+        if (baPassword.endsWith('\r')) baPassword.chop(1);
+        sArchivePassword = QString::fromUtf8(baPassword);
+    } else if (parser.isSet(clArchivePassword)) {
+        sArchivePassword = parser.value(clArchivePassword);
+    }
+    if (!sArchivePassword.isEmpty()) {
+        mapUnpackProperties.insert(XBinary::UNPACK_PROP_PASSWORD, sArchivePassword);
+    }
+
     applyEngineOptions(&parser, &scanOptions);
 
     if (bHasMainDb) {
         scanOptions.sMainDatabasePath = parser.value(clDatabaseMain);
     }
     if (bHasExtraCustomDb) {
-        scanOptions.sExtraDatabasePath = parser.value(clDatabaseExtra);
         scanOptions.sCustomDatabasePath = parser.value(clDatabaseCustom);
     }
 
@@ -938,10 +1151,6 @@ int XScanEngineConsole::process()
     }
 
     if (bHasExtraCustomDb) {
-        if (scanOptions.sExtraDatabasePath.isEmpty()) {
-            scanOptions.sExtraDatabasePath = "$data/db_extra";
-        }
-
         if (scanOptions.sCustomDatabasePath.isEmpty()) {
             scanOptions.sCustomDatabasePath = "$data/db_custom";
         }
@@ -1001,33 +1210,73 @@ int XScanEngineConsole::process()
                 XBinary::FT fileType = scanOptions.fileType;
 
                 if (fileType == XBinary::FT_UNKNOWN) {
-                    fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
+                    // Packer/installer handle-method formats (Inno Setup, NSIS, ...) take priority:
+                    // they are executables that a generic reader would otherwise list as raw PE
+                    // sections. Only when no such format matches do we fall back to archive detection.
+                    XBinary::FT ftStatic =
+                        XFormats::getPrefFileType(&file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
+
+                    if (XFormats::isStaticUnpacker(ftStatic)) {
+                        fileType = ftStatic;
+                    } else {
+                        fileType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES, &pdStruct);
+                    }
                 }
 
-                if (!XFormats::isArchive(fileType)) {
-                    printf("Cannot open archive: %s\n", sFileName.toUtf8().data());
-                    file.close();
-                    nResult = XOptions::CR_CANNOTOPENFILE;
-                    continue;
-                }
-
-                XArchive *pArchive = static_cast<XArchive *>(XFormats::createClass(fileType, &file));
                 QList<XBinary::ARCHIVERECORD> listRecords;
+                QString sSevenZipError;
+                bool bTerminalSourceFailure = false;
+                bool bListed = false;
+                XBinary *pArchive = nullptr;
 
-                if (pArchive) {
-                    listRecords = collectArchiveRecords(pArchive, &pdStruct);
+                if (XFormats::isStaticUnpacker(fileType)) {
+                    // Installers/packers are enumerated through the shared XBinary streaming API
+                    // (initUnpack/infoCurrent/moveToNext), not the XArchive container readers.
+                    pArchive = XFormats::createClass(fileType, &file);
+                    if (pArchive) {
+                        bool bStaticComplete = false;
+                        listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &pdStruct, &bStaticComplete);
+                        bListed = bStaticComplete;
+                    }
+                } else {
+                    bListed = listWithIp7zSource(fileType, &file, sFileName, sArchivePassword, &listRecords,
+                                                 &sSevenZipError, &pdStruct, &bTerminalSourceFailure);
+                    if (bListed && (fileType == XBinary::FT_UNKNOWN)) {
+                        fileType = XBinary::FT_ARCHIVE;
+                    }
+
+                    // Password, corruption, cancellation, resource-limit, and
+                    // safety failures from the compiled-source reader are
+                    // authoritative. Its unsupported-format result permits the
+                    // native reader to try the same input.
+                    if (!bListed && !bTerminalSourceFailure && XFormats::isArchive(fileType)) {
+                        pArchive = XFormats::createClass(fileType, &file);
+                        if (pArchive) {
+                            bool bNativeComplete = false;
+                            listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &pdStruct, &bNativeComplete);
+                            bListed = bNativeComplete;
+                        }
+                    }
                 }
 
-                qint64 nPhysicalSize = file.size();
+                const qint64 nPhysicalSize = file.size();
 
-                QString sListing = formatArchiveList(fileType, listRecords, nPhysicalSize, parser.isSet(clVerbose));
-                printf("%s", sListing.toUtf8().data());
+                if (bListed) {
+                    QString sListing = formatArchiveList(fileType, listRecords, nPhysicalSize, parser.isSet(clVerbose));
+                    printf("%s", sListing.toUtf8().data());
+                } else {
+                    printf("Cannot open archive: %s\n", sFileName.toUtf8().data());
+                    if (parser.isSet(clVerbose) && !sSevenZipError.isEmpty()) {
+                        printf("  7-Zip: %s\n", sSevenZipError.toUtf8().data());
+                    }
+                    nResult = XOptions::CR_CANNOTOPENFILE;
+                }
 
                 delete pArchive;
                 file.close();
             }
         } else {
-            printf("Error: --showarchive requires <target>\n");
+            printf("Error: --listarchive requires <target>\n");
             nResult = XOptions::CR_INVALIDPARAMETER;
         }
 
@@ -1063,51 +1312,54 @@ int XScanEngineConsole::process()
                 XBinary::FT fileType = scanOptions.fileType;
 
                 if (fileType == XBinary::FT_UNKNOWN) {
-                    fileType = XFormats::getPrefFileType(&file, true, &pdStruct);
+                    fileType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES, &pdStruct);
                 }
 
-                if (!XFormats::isArchive(fileType)) {
-                    printf("Cannot open archive: %s\n", sFileName.toUtf8().data());
-                    file.close();
-                    nResult = XOptions::CR_CANNOTOPENFILE;
-                    continue;
-                }
-
-                XArchive *pArchive = static_cast<XArchive *>(XFormats::createClass(fileType, &file));
-                bool bExtracted = false;
                 qint32 nNumberOfFiles = 0;
                 qint64 nTotalSize = 0;
+                QList<XBinary::ARCHIVERECORD> listRecords;
+                QString sSevenZipError;
+                bool bTerminalSourceFailure = false;
+                const bool bListed = listWithIp7zSource(fileType, &file, sFileName, sArchivePassword, &listRecords,
+                                                        &sSevenZipError, &pdStruct, &bTerminalSourceFailure);
 
-                if (pArchive) {
-                    QList<XBinary::ARCHIVERECORD> listRecords = collectArchiveRecords(pArchive, &pdStruct);
-
-                    for (qint32 i = 0; i < listRecords.count(); i++) {
-                        if (!recordIsFolder(listRecords.at(i))) {
-                            nNumberOfFiles++;
-                            nTotalSize += recordSize(listRecords.at(i));
-
-                            if (parser.isSet(clVerbose)) {
-                                printf("  %s\n", recordName(listRecords.at(i)).toUtf8().data());
-                            }
-                        }
+                XArchive *pArchive = nullptr;
+                if (!bListed && !bTerminalSourceFailure && XFormats::isArchive(fileType)) {
+                    pArchive = static_cast<XArchive *>(XFormats::createClass(fileType, &file));
+                    if (pArchive) {
+                        listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &pdStruct);
                     }
+                }
 
-                    bExtracted = pArchive->unpackToFolder(sResultDirectory, &pdStruct);
+                for (qint32 i = 0; i < listRecords.count(); i++) {
+                    if (!recordIsFolder(listRecords.at(i))) {
+                        nNumberOfFiles++;
+                        nTotalSize += recordSize(listRecords.at(i));
 
-                    if (!bExtracted) {
-                        QList<XArchive::RECORD> listLegacyRecords = pArchive->getRecords(-1, &pdStruct);
-                        bExtracted = pArchive->decompressToPath(&listLegacyRecords, "", sResultDirectory, &pdStruct);
+                        if (parser.isSet(clVerbose)) {
+                            printf("  %s\n", recordName(listRecords.at(i)).toUtf8().data());
+                        }
                     }
                 }
 
                 delete pArchive;
                 file.close();
 
+                XBinary::setPdStructErrorString(&pdStruct, QString());
+                const bool bExtracted = XArchives::decompressToFolder(sFileName, sResultDirectory, mapUnpackProperties, &pdStruct);
+
                 if (bExtracted) {
                     printf("Extracted %d file(s), %s -> %s\n", nNumberOfFiles, XBinary::bytesCountToString(nTotalSize, 1024).toUtf8().data(),
                            QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
                 } else {
                     printf("Cannot extract: %s\n", sFileName.toUtf8().data());
+                    QString sExtractionError = XBinary::getPdStructErrorString(&pdStruct);
+                    if (sExtractionError.isEmpty()) {
+                        sExtractionError = sSevenZipError;
+                    }
+                    if (parser.isSet(clVerbose) && !sExtractionError.isEmpty()) {
+                        printf("  %s\n", sExtractionError.toUtf8().data());
+                    }
                     nResult = XOptions::CR_CANNOTOPENFILE;
                 }
             }

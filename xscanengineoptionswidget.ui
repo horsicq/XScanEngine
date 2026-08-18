@@ -325,58 +325,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBoxDIEDatabaseExtra">
-         <property name="title">
-          <string>Extra database</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <property name="leftMargin">
-           <number>1</number>
-          </property>
-          <property name="topMargin">
-           <number>1</number>
-          </property>
-          <property name="rightMargin">
-           <number>1</number>
-          </property>
-          <property name="bottomMargin">
-           <number>1</number>
-          </property>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <item>
-             <widget class="QLineEdit" name="lineEditDIEDatabaseExtra"/>
-            </item>
-            <item>
-             <widget class="QToolButton" name="toolButtonDIEDatabaseExtra">
-              <property name="text">
-               <string notr="true">...</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <item>
-             <widget class="QLineEdit" name="lineEditDIEDatabaseExtraUpdateUrl"/>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButtonUpdateDIEDatabaseExtra">
-              <property name="text">
-               <string>Update</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="QGroupBox" name="groupBoxDIEDatabaseCustom">
          <property name="title">
           <string>Custom database</string>

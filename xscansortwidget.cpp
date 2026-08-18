@@ -69,15 +69,11 @@ QVariant getOptionValue(XOptions *pOptions, XOptions::ID id, const QVariant &var
     return result;
 }
 
-void setDatabaseControlsVisible(Ui::XScanSortWidget *pUi, bool bMain, bool bExtra, bool bCustom)
+void setDatabaseControlsVisible(Ui::XScanSortWidget *pUi, bool bMain, bool bCustom)
 {
     pUi->checkBoxDatabaseMain->setVisible(bMain);
     pUi->lineEditDatabaseMain->setVisible(bMain);
     pUi->pushButtonDatabaseMain->setVisible(bMain);
-
-    pUi->checkBoxDatabaseExtra->setVisible(bExtra);
-    pUi->lineEditDatabaseExtra->setVisible(bExtra);
-    pUi->pushButtonDatabaseExtra->setVisible(bExtra);
 
     pUi->checkBoxDatabaseCustom->setVisible(bCustom);
     pUi->lineEditDatabaseCustom->setVisible(bCustom);
@@ -178,9 +174,7 @@ void XScanSortWidget::saveOptions()
     if (m_pScanEngine) {
         if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, ui->lineEditDatabaseMain->text());
-            m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, ui->lineEditDatabaseExtra->text());
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, ui->lineEditDatabaseCustom->text());
-            m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, ui->checkBoxDatabaseExtra->isChecked());
             m_sortOptions.setValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, ui->checkBoxDatabaseCustom->isChecked());
         } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
             m_sortOptions.setValue(XOptions::ID_SCAN_PEID_DATABASE_PATH, ui->lineEditDatabaseMain->text());
@@ -255,9 +249,7 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
 
     if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, "$data/db"));
-        m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, "$data/db_extra"));
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, "$data/db_custom"));
-        m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, getOptionBool(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, true));
         m_sortOptions.addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, getOptionBool(pGlobalOptions, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, true));
     } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
         m_sortOptions.addID(XOptions::ID_SCAN_PEID_DATABASE_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_PEID_DATABASE_PATH, "$data/peid"));
@@ -353,22 +345,20 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
 
     if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
         ui->groupBoxDatabases->show();
-        setDatabaseControlsVisible(ui, true, true, true);
+        setDatabaseControlsVisible(ui, true, true);
 
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString());
-        ui->lineEditDatabaseExtra->setText(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString());
         ui->lineEditDatabaseCustom->setText(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString());
         ui->checkBoxDatabaseMain->setChecked(true);
-        ui->checkBoxDatabaseExtra->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED).toBool());
         ui->checkBoxDatabaseCustom->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED).toBool());
     } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
         ui->groupBoxDatabases->show();
-        setDatabaseControlsVisible(ui, true, false, false);
+        setDatabaseControlsVisible(ui, true, false);
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString());
         ui->checkBoxDatabaseMain->setChecked(true);
     } else if (m_engineType == XScanEngine::SCANENGINETYPE_YARA) {
         ui->groupBoxDatabases->show();
-        setDatabaseControlsVisible(ui, true, false, false);
+        setDatabaseControlsVisible(ui, true, false);
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString());
         ui->checkBoxDatabaseMain->setChecked(true);
     } else {
@@ -466,9 +456,7 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     if (m_pScanEngine && m_pScanEngine->isDatabaseUsing()) {
         if (m_engineType == XScanEngine::SCANENGINETYPE_DIE) {
             m_scanOptions.sMainDatabasePath = ui->lineEditDatabaseMain->text();
-            m_scanOptions.sExtraDatabasePath = ui->lineEditDatabaseExtra->text();
             m_scanOptions.sCustomDatabasePath = ui->lineEditDatabaseCustom->text();
-            m_scanOptions.bUseExtraDatabase = ui->checkBoxDatabaseExtra->isChecked();
             m_scanOptions.bUseCustomDatabase = ui->checkBoxDatabaseCustom->isChecked();
         } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
             m_scanOptions.sMainDatabasePath = ui->lineEditDatabaseMain->text();
@@ -551,11 +539,6 @@ void XScanSortWidget::on_pushButtonResult_clicked()
 void XScanSortWidget::on_pushButtonDatabaseMain_clicked()
 {
     selectDatabaseDirectory(this, ui->lineEditDatabaseMain, tr("Open directory") + "...");
-}
-
-void XScanSortWidget::on_pushButtonDatabaseExtra_clicked()
-{
-    selectDatabaseDirectory(this, ui->lineEditDatabaseExtra, tr("Open directory") + "...");
 }
 
 void XScanSortWidget::on_pushButtonDatabaseCustom_clicked()

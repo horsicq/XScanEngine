@@ -34,7 +34,6 @@ XScanEngineOptionsWidget::XScanEngineOptionsWidget(QWidget *pParent) : XShortcut
 #endif
 
     ui->pushButtonUpdateDIEDatabase->hide();
-    ui->pushButtonUpdateDIEDatabaseExtra->hide();
     ui->pushButtonUpdatePEIDDatabase->hide();
     ui->pushButtonUpdateYARADatabase->hide();
 }
@@ -77,10 +76,7 @@ void XScanEngineOptionsWidget::save()
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
         m_pOptions->getLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH);
         m_pOptions->getLineEdit(ui->lineEditDIEDatabaseUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL);
-        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH);
-        m_pOptions->getLineEdit(ui->lineEditDIEDatabaseExtraUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL);
         m_pOptions->getLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
-        m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED);
         m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
     }
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
@@ -119,23 +115,17 @@ void XScanEngineOptionsWidget::reload()
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
         ui->groupBoxDIEDatabase->show();
-        ui->groupBoxDIEDatabaseExtra->show();
         ui->groupBoxDIEDatabaseCustom->show();
         m_pOptions->setLineEdit(ui->lineEditDIEDatabase, XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH);
         m_pOptions->setLineEdit(ui->lineEditDIEDatabaseUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL);
-        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH);
-        m_pOptions->setLineEdit(ui->lineEditDIEDatabaseExtraUpdateUrl, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL);
         m_pOptions->setLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
-        m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseExtra, XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED);
         m_pOptions->setCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
 
         if (m_bIsNetPresent) {
             ui->pushButtonUpdateDIEDatabase->show();
-            ui->pushButtonUpdateDIEDatabaseExtra->show();
         }
     } else {
         ui->groupBoxDIEDatabase->hide();
-        ui->groupBoxDIEDatabaseExtra->hide();
         ui->groupBoxDIEDatabaseCustom->hide();
     }
 
@@ -262,10 +252,7 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_DIE_ENABLED)) {
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH, "$data/db");
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL, "https://github.com/horsicq/Detect-It-Easy/releases/tag/db");
-        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH, "$data/db_extra");
-        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL, "https://github.com/horsicq/Detect-It-Easy/releases/tag/db_extra");
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH, "$data/db_custom");
-        pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, true);
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, true);
     }
 
@@ -296,18 +283,6 @@ void XScanEngineOptionsWidget::on_toolButtonDIEDatabase_clicked()
 
     if (!sDirectoryName.isEmpty()) {
         ui->lineEditDIEDatabase->setText(sDirectoryName);
-    }
-}
-
-void XScanEngineOptionsWidget::on_toolButtonDIEDatabaseExtra_clicked()
-{
-    QString sText = ui->lineEditDIEDatabaseExtra->text();
-    QString sInitDirectory = XOptions::convertPathName(sText);
-
-    QString sDirectoryName = QFileDialog::getExistingDirectory(this, tr("Open directory") + QString("..."), sInitDirectory, QFileDialog::ShowDirsOnly);
-
-    if (!sDirectoryName.isEmpty()) {
-        ui->lineEditDIEDatabaseExtra->setText(sDirectoryName);
     }
 }
 
@@ -404,11 +379,6 @@ QList<DialogViewColors::RECORD> XScanEngineOptionsWidget::getRecords()
 void XScanEngineOptionsWidget::on_pushButtonUpdateDIEDatabase_clicked()
 {
     QDesktopServices::openUrl(QUrl(ui->lineEditDIEDatabaseUpdateUrl->text()));
-}
-
-void XScanEngineOptionsWidget::on_pushButtonUpdateDIEDatabaseExtra_clicked()
-{
-    QDesktopServices::openUrl(QUrl(ui->lineEditDIEDatabaseExtraUpdateUrl->text()));
 }
 
 void XScanEngineOptionsWidget::on_pushButtonUpdatePEIDDatabase_clicked()

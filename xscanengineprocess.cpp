@@ -310,7 +310,7 @@ XScanEngine::SCAN_RESULT XScanEngineProcess::_scanDevice(QIODevice *pDevice, XSc
     }
 
     if (m_pScanOptions->bCollection) {
-        QSet<XBinary::FT> stFT = XFormats::getFileTypes(pDevice, true, pPdStruct);
+        QSet<XBinary::FT> stFT = XFormats::getFileTypes(pDevice, XBinary::FT_FLAG_FORMATS, pPdStruct);
 
         if (m_pScanOptions->bIsArchivesScan) {
             bool bScanableArchive = false;

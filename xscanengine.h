@@ -81,7 +81,6 @@ class XScanEngine : public QObject {
 public:
     enum DT {
         DT_MAIN = 0,
-        DT_EXTRA,
         DT_CUSTOM
     };
 
@@ -1173,7 +1172,6 @@ public:
 
     enum DATABASE {
         DATABASE_MAIN = 1,
-        DATABASE_EXTRA = 2,
         DATABASE_CUSTOM = 4,
     };
 
@@ -1219,9 +1217,7 @@ public:
         QString sDetectFunction;
         bool bIsSort;
         QString sMainDatabasePath;
-        QString sExtraDatabasePath;
         QString sCustomDatabasePath;
-        bool bUseExtraDatabase;
         bool bUseCustomDatabase;
         SCAN_ENGINE_CALLBACK scanEngineCallback;
         void *pUserData;
@@ -1286,9 +1282,15 @@ public:
 
     struct DATABASE_STATE {
         QString sMainDatabasePath;
-        QString sExtraDatabasePath;
         QString sCustomDatabasePath;
         QList<DATABASE_STATE_RECORD> listRecords;
+    };
+
+    // Signature metadata loaded from db/_metadata/<FileType>.txt (lines: "<signature-file>#<tag1,tag2,...>")
+    struct METADATA_RECORD {
+        XBinary::FT fileType;
+        QString sName;  // Signature file name, e.g. "protector_UPX.3.sg"
+        QStringList listTags;
     };
 
     DATABASE_STATE getDatabaseState(XScanEngine::SCAN_OPTIONS *pOptions);
@@ -1302,6 +1304,10 @@ public:
     QList<SIGNATURE_STATE> getSignatureStates();
     qint32 getNumberOfSignatures(XBinary::FT fileType);
     QList<SIGNATURE_RECORD> *getSignatures();
+
+    void initMetadata();
+    void loadMetadata(const QString &sDatabasePath, XBinary::PDSTRUCT *pPdStruct = nullptr);
+    QList<METADATA_RECORD> *getMetadata();
 
     SIGNATURE_RECORD getSignatureByFilePath(const QString &sSignatureFilePath);
     bool updateSignature(const QString &sSignatureFilePath, const QString &sText);
@@ -1396,6 +1402,8 @@ private:
     QList<SIGNATURE_RECORD> _loadDatabaseFromPath(const QString &sDatabasePath, DT databaseType, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
     QList<SIGNATURE_RECORD> _loadDatabaseFromArchive(XArchive *pArchive, QList<XArchive::RECORD> *pListRecords, DT databaseType, const QString &sPrefix,
                                                      XBinary::FT fileType);  // TODO pdStruct
+    static QMap<QString, XBinary::FT> _getDatabaseFileTypeMap();
+    QList<METADATA_RECORD> _parseMetadata(const QString &sData, XBinary::FT fileType);
     static QString _getDatabaseCachePath(const QString &sDatabasePath);
     static void _getDatabaseStats(const QString &sDatabasePath, quint32 *pnFileCount, quint64 *pnTotalSize, qint64 *pnNewestMtime);
     bool _loadDatabaseCache(const QString &sCachePath, quint32 nFileCount, quint64 nTotalSize, qint64 nNewestMtime, XBinary::PDSTRUCT *pPdStruct);
@@ -1417,6 +1425,7 @@ signals:
 
 protected:
     QList<SIGNATURE_RECORD> m_listSignatures;
+    QList<METADATA_RECORD> m_listMetadata;
 
 private:
 };

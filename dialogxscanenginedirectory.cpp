@@ -90,7 +90,6 @@ void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
         ui->textBrowserResult->clear();
 
         m_scanOptions.bUseCustomDatabase = true;
-        m_scanOptions.bUseExtraDatabase = true;
         m_scanOptions.bShowType = true;
         m_scanOptions.bShowVersion = true;
         m_scanOptions.bShowInfo = true;
@@ -105,7 +104,6 @@ void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
             XScanEngine::SCANENGINETYPE type = m_pScanEngine->getEngineType();
             if (type == XScanEngine::SCANENGINETYPE_DIE) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
-                m_scanOptions.sExtraDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_PATH).toString();
                 m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
             } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();

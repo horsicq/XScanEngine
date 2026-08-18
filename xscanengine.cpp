@@ -1174,10 +1174,6 @@ QString XScanEngine::databaseStateToJson(const DATABASE_STATE &databaseState)
 
     jsonObject["mainDatabasePath"] = databaseState.sMainDatabasePath;
 
-    if (!databaseState.sExtraDatabasePath.isEmpty()) {
-        jsonObject["extraDatabasePath"] = databaseState.sExtraDatabasePath;
-    }
-
     if (!databaseState.sCustomDatabasePath.isEmpty()) {
         jsonObject["customDatabasePath"] = databaseState.sCustomDatabasePath;
     }
@@ -1212,10 +1208,6 @@ QString XScanEngine::databaseStateToXml(const DATABASE_STATE &databaseState)
 
     xml.writeTextElement("mainDatabasePath", databaseState.sMainDatabasePath);
 
-    if (!databaseState.sExtraDatabasePath.isEmpty()) {
-        xml.writeTextElement("extraDatabasePath", databaseState.sExtraDatabasePath);
-    }
-
     if (!databaseState.sCustomDatabasePath.isEmpty()) {
         xml.writeTextElement("customDatabasePath", databaseState.sCustomDatabasePath);
     }
@@ -1244,10 +1236,6 @@ QString XScanEngine::databaseStateToText(const DATABASE_STATE &databaseState)
 
     sResult += QString("Main signature path: %1\n").arg(databaseState.sMainDatabasePath);
 
-    if (!databaseState.sExtraDatabasePath.isEmpty()) {
-        sResult += QString("Extra signature path: %1\n").arg(databaseState.sExtraDatabasePath);
-    }
-
     if (!databaseState.sCustomDatabasePath.isEmpty()) {
         sResult += QString("Custom signature path: %1\n").arg(databaseState.sCustomDatabasePath);
     }
@@ -1267,15 +1255,13 @@ static QString _databaseStateToSV(const XScanEngine::DATABASE_STATE &databaseSta
 {
     QString sResult;
 
-    sResult += QString("mainDatabasePath%1extraDatabasePath%1customDatabasePath%1fileType%1numberOfSignatures\n").arg(sep);
+    sResult += QString("mainDatabasePath%1customDatabasePath%1fileType%1numberOfSignatures\n").arg(sep);
 
     qint32 nNumberOfRecords = databaseState.listRecords.count();
     for (qint32 i = 0; i < nNumberOfRecords; i++) {
         const XScanEngine::DATABASE_STATE_RECORD &record = databaseState.listRecords.at(i);
-        sResult += QString("%1%2%3%4%5%6%7%8%9\n")
+        sResult += QString("%1%2%3%4%5%6%7\n")
                        .arg(databaseState.sMainDatabasePath)
-                       .arg(sep)
-                       .arg(databaseState.sExtraDatabasePath)
                        .arg(sep)
                        .arg(databaseState.sCustomDatabasePath)
                        .arg(sep)
@@ -1302,7 +1288,6 @@ XScanEngine::DATABASE_STATE XScanEngine::getDatabaseState(XScanEngine::SCAN_OPTI
     XScanEngine::DATABASE_STATE result = {};
 
     result.sMainDatabasePath = pOptions->sMainDatabasePath;
-    result.sExtraDatabasePath = pOptions->sExtraDatabasePath;
     result.sCustomDatabasePath = pOptions->sCustomDatabasePath;
 
     QList<XBinary::FT> listFT;
@@ -1361,13 +1346,11 @@ bool XScanEngine::loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pP
 
     bResult = loadDatabase(pScanOptions->sMainDatabasePath, DT_MAIN, pScanOptions->bUseCache, pPdStruct);
 
-    if (pScanOptions->bUseExtraDatabase) {
-        loadDatabase(pScanOptions->sExtraDatabasePath, DT_EXTRA, pScanOptions->bUseCache, pPdStruct);
-    }
-
     if (pScanOptions->bUseCustomDatabase) {
         loadDatabase(pScanOptions->sCustomDatabasePath, DT_CUSTOM, pScanOptions->bUseCache, pPdStruct);
     }
+
+    loadMetadata(pScanOptions->sMainDatabasePath, pPdStruct);
 
     return bResult;
 }
@@ -1380,6 +1363,166 @@ bool XScanEngine::_loadDatabase(const QString &sDatabasePath, DT databaseType)
 void XScanEngine::initDatabase()
 {
     m_listSignatures.clear();
+    m_listMetadata.clear();
+}
+
+void XScanEngine::initMetadata()
+{
+    m_listMetadata.clear();
+}
+
+QList<XScanEngine::METADATA_RECORD> *XScanEngine::getMetadata()
+{
+    return &m_listMetadata;
+}
+
+QMap<QString, XBinary::FT> XScanEngine::_getDatabaseFileTypeMap()
+{
+    QMap<QString, XBinary::FT> mapResult;
+
+    mapResult.insert("Binary", XBinary::FT_BINARY);
+    mapResult.insert("COM", XBinary::FT_COM);
+    mapResult.insert("Archive", XBinary::FT_ARCHIVE);
+    mapResult.insert("ZIP", XBinary::FT_ZIP);
+    mapResult.insert("JAR", XBinary::FT_JAR);
+    mapResult.insert("APK", XBinary::FT_APK);
+    mapResult.insert("IPA", XBinary::FT_IPA);
+    mapResult.insert("NPM", XBinary::FT_NPM);
+    mapResult.insert("MACHOFAT", XBinary::FT_MACHOFAT);
+    mapResult.insert("DEB", XBinary::FT_DEB);
+    mapResult.insert("DEX", XBinary::FT_DEX);
+    mapResult.insert("MSDOS", XBinary::FT_MSDOS);
+    mapResult.insert("LE", XBinary::FT_LE);
+    mapResult.insert("LX", XBinary::FT_LX);
+    mapResult.insert("NE", XBinary::FT_NE);
+    mapResult.insert("PE", XBinary::FT_PE);
+    mapResult.insert("ELF", XBinary::FT_ELF);
+    mapResult.insert("MACH", XBinary::FT_MACHO);
+    mapResult.insert("DOS16M", XBinary::FT_DOS16M);
+    mapResult.insert("DOS4G", XBinary::FT_DOS4G);
+    mapResult.insert("Amiga", XBinary::FT_AMIGAHUNK);
+    mapResult.insert("AtariST", XBinary::FT_ATARIST);
+    mapResult.insert("JavaClass", XBinary::FT_JAVACLASS);
+    mapResult.insert("PYC", XBinary::FT_PYC);
+    mapResult.insert("PDF", XBinary::FT_PDF);
+    mapResult.insert("CFBF", XBinary::FT_CFBF);
+    mapResult.insert("Image", XBinary::FT_IMAGE);
+    mapResult.insert("JPEG", XBinary::FT_JPEG);
+    mapResult.insert("PNG", XBinary::FT_PNG);
+    mapResult.insert("RAR", XBinary::FT_RAR);
+    mapResult.insert("ISO9660", XBinary::FT_ISO9660);
+
+    return mapResult;
+}
+
+QList<XScanEngine::METADATA_RECORD> XScanEngine::_parseMetadata(const QString &sData, XBinary::FT fileType)
+{
+    QList<METADATA_RECORD> listResult;
+
+    QStringList listLines = sData.split(QChar('\n'));
+    qint32 nNumberOfLines = listLines.count();
+
+    for (qint32 i = 0; i < nNumberOfLines; i++) {
+        QString sLine = listLines.at(i).trimmed();
+
+        if (sLine.isEmpty()) {
+            continue;
+        }
+
+        METADATA_RECORD record = {};
+        record.fileType = fileType;
+
+        qint32 nPos = sLine.indexOf(QChar('#'));
+
+        if (nPos != -1) {
+            record.sName = sLine.left(nPos).trimmed();
+
+            QString sTags = sLine.mid(nPos + 1).trimmed();
+
+            if (!sTags.isEmpty()) {
+                QStringList listTags = sTags.split(QChar(','));
+                qint32 nNumberOfTags = listTags.count();
+
+                for (qint32 j = 0; j < nNumberOfTags; j++) {
+                    QString sTag = listTags.at(j).trimmed();
+
+                    if (!sTag.isEmpty()) {
+                        record.listTags.append(sTag);
+                    }
+                }
+            }
+        } else {
+            record.sName = sLine;
+        }
+
+        if (!record.sName.isEmpty()) {
+            listResult.append(record);
+        }
+    }
+
+    return listResult;
+}
+
+void XScanEngine::loadMetadata(const QString &sDatabasePath, XBinary::PDSTRUCT *pPdStruct)
+{
+    XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();
+
+    if (pPdStruct == nullptr) {
+        pPdStruct = &pdStructEmpty;
+    }
+
+    QString _sDatabasePath = sDatabasePath;
+
+    if (_sDatabasePath == "") {
+        _sDatabasePath = "$data/db";
+    }
+
+    _sDatabasePath = XOptions::convertPathName(_sDatabasePath);
+
+    QMap<QString, XBinary::FT> mapFileTypes = _getDatabaseFileTypeMap();
+
+    if (XBinary::isFileExists(_sDatabasePath)) {
+        // Load metadata from db.zip (any "_metadata/<FileType>.txt" record)
+        QFile file;
+        file.setFileName(_sDatabasePath);
+
+        if (file.open(QIODevice::ReadOnly)) {
+            XZip zip(&file);
+
+            if (zip.isValid(pPdStruct)) {
+                QList<XArchive::RECORD> listRecords = zip.getRecords(-1, pPdStruct);
+                qint32 nNumberOfRecords = listRecords.count();
+
+                for (qint32 i = 0; (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+                    XArchive::RECORD _record = listRecords.at(i);
+                    QFileInfo fi(_record.spInfo.sRecordName);
+
+                    if ((fi.suffix().toLower() == "txt") && (fi.dir().dirName() == "_metadata")) {
+                        XBinary::FT fileType = mapFileTypes.value(fi.completeBaseName(), XBinary::FT_UNKNOWN);
+                        QString sData = zip.decompress(&_record, pPdStruct);
+                        m_listMetadata.append(_parseMetadata(sData, fileType));
+                    }
+                }
+            }
+
+            file.close();
+        }
+    } else if (XBinary::isDirectoryExists(_sDatabasePath)) {
+        // Load metadata from directory (<db>/_metadata/<FileType>.txt)
+        QString sMetadataPath = _sDatabasePath + QDir::separator() + "_metadata";
+
+        if (XBinary::isDirectoryExists(sMetadataPath)) {
+            QDir dir(sMetadataPath);
+            QFileInfoList eil = dir.entryInfoList(QStringList() << "*.txt", QDir::Files);
+            qint32 nNumberOfFiles = eil.count();
+
+            for (qint32 i = 0; (i < nNumberOfFiles) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+                XBinary::FT fileType = mapFileTypes.value(eil.at(i).completeBaseName(), XBinary::FT_UNKNOWN);
+                QString sData = XBinary::readFile(eil.at(i).absoluteFilePath(), pPdStruct);
+                m_listMetadata.append(_parseMetadata(sData, fileType));
+            }
+        }
+    }
 }
 
 bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bool bUseCache, XBinary::PDSTRUCT *pPdStruct)
@@ -1391,8 +1534,6 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
     if (_sDatabasePath == "") {
         if (databaseType == DT_MAIN) {
             _sDatabasePath = "$data/db";
-        } else if (databaseType == DT_EXTRA) {
-            _sDatabasePath = "$data/db_extra";
         } else if (databaseType == DT_CUSTOM) {
             _sDatabasePath = "$data/db_custom";
         }
@@ -2751,7 +2892,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         _pDevice = bufDevice;
     }
 
-    QSet<XBinary::FT> stFT = XFormats::getFileTypes(_pDevice, true, pPdStruct);
+    QSet<XBinary::FT> stFT = XFormats::getFileTypes(_pDevice, XBinary::FT_FLAG_FORMATS, pPdStruct);
 
     if (bInit || (pScanOptions->fileType == XBinary::FT_BINARY)) {
         if (pScanOptions->fileType != XBinary::FT_UNKNOWN) {
@@ -2982,7 +3123,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                                 bool bScan = pScanOptions->bIsAggressiveScan;
 
                                 if (!bScan) {
-                                    QSet<XBinary::FT> _stFT = XFormats::getFileTypes(pArchiveRecord, 0, -1, true, pPdStruct);
+                                    QSet<XBinary::FT> _stFT = XFormats::getFileTypes(pArchiveRecord, 0, -1, XBinary::FT_FLAG_FORMATS, pPdStruct);
                                     bScan = isScanable(_stFT);
                                 }
 
@@ -3079,7 +3220,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                                     bScan = pScanOptions->bIsAggressiveScan;
 
                                     if (!bScan) {
-                                        QSet<XBinary::FT> _stFT = XFormats::getFileTypes(&subDevice, 0, -1, true, pPdStruct);
+                                        QSet<XBinary::FT> _stFT = XFormats::getFileTypes(&subDevice, 0, -1, XBinary::FT_FLAG_FORMATS, pPdStruct);
                                         bScan = isScanable(_stFT);
                                     }
                                 }
@@ -3769,7 +3910,6 @@ QMap<quint64, QString> XScanEngine::getDatabases()
     QMap<quint64, QString> mapResult;
 
     mapResult.insert(DATABASE_MAIN, tr("Main"));
-    mapResult.insert(DATABASE_EXTRA, tr("Extra"));
     mapResult.insert(DATABASE_CUSTOM, tr("Custom"));
 
     return mapResult;
@@ -3778,10 +3918,6 @@ QMap<quint64, QString> XScanEngine::getDatabases()
 quint64 XScanEngine::getDatabases(SCAN_OPTIONS *pScanOptions)
 {
     quint64 nResult = DATABASE_MAIN;
-
-    if (pScanOptions->bUseExtraDatabase) {
-        nResult |= DATABASE_EXTRA;
-    }
 
     if (pScanOptions->bUseCustomDatabase) {
         nResult |= DATABASE_CUSTOM;
@@ -3792,17 +3928,12 @@ quint64 XScanEngine::getDatabases(SCAN_OPTIONS *pScanOptions)
 
 void XScanEngine::setDatabases(SCAN_OPTIONS *pScanOptions, quint64 nDatabases)
 {
-    pScanOptions->bUseExtraDatabase = (nDatabases & DATABASE_EXTRA);
     pScanOptions->bUseCustomDatabase = (nDatabases & DATABASE_CUSTOM);
 }
 
 quint64 XScanEngine::getDatabasesFromGlobalOptions(XOptions *pGlobalOptions)
 {
     quint64 nResult = DATABASE_MAIN;
-
-    if (pGlobalOptions->getValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED).toBool()) {
-        nResult |= DATABASE_EXTRA;
-    }
 
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED).toBool()) {
         nResult |= DATABASE_CUSTOM;
@@ -3813,7 +3944,6 @@ quint64 XScanEngine::getDatabasesFromGlobalOptions(XOptions *pGlobalOptions)
 
 void XScanEngine::setDatabasesToGlobalOptions(XOptions *pGlobalOptions, quint64 nDatabases)
 {
-    pGlobalOptions->setValue(XOptions::ID_SCAN_DIE_DATABASE_EXTRA_ENABLED, nDatabases & DATABASE_EXTRA);
     pGlobalOptions->setValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, nDatabases & DATABASE_CUSTOM);
 }
 
