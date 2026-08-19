@@ -227,7 +227,7 @@ XBinary::XCONVERT _TABLE_XScanEngine_RECORD_TYPE[] = {
     {XScanEngine::RECORD_TYPE_NETCOMPRESSOR, ".NET compressor", QString(".NET %1").arg(QObject::tr("Compressor"))},
     {XScanEngine::RECORD_TYPE_NETOBFUSCATOR, ".NET obfuscator", QString(".NET %1").arg(QObject::tr("Obfuscator"))},
     {XScanEngine::RECORD_TYPE_OBFUSCATOR, "Obfuscator", QObject::tr("Obfuscator")},
-    {XScanEngine::RECORD_TYPE_OPERATIONSYSTEM, "Operation system", QObject::tr("Operation system")},
+    {XScanEngine::RECORD_TYPE_OPERATIONSYSTEM, "Operating system", QObject::tr("Operating system")},
     {XScanEngine::RECORD_TYPE_OVERLAY, "Overlay", QObject::tr("Overlay")},
     {XScanEngine::RECORD_TYPE_PACKAGE, "Package", QObject::tr("Package")},
     {XScanEngine::RECORD_TYPE_PACKER, "Packer", QObject::tr("Packer")},
@@ -3061,7 +3061,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
             if (xcom.isValid(pPdStruct)) {
                 XScanEngine::SCAN_OPTIONS _options = *pScanOptions;
-                _options.bIsVerbose = false;  // do not show Operation System
+                _options.bIsVerbose = false;  // do not show Operating System
 
                 _processDetect(&scanIdMain, &_scanResultCOM, _pDevice, parentId, XBinary::FT_COM, &_options, false, pPdStruct);
             }
