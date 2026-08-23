@@ -6,6 +6,9 @@ DEPENDPATH += $$PWD/modules
 XCONFIG += use_dex
 XCONFIG += use_pdf
 XCONFIG += use_archive
+!contains(XCONFIG, no_xemulator) {
+    XCONFIG += use_xemulator
+}
 
 HEADERS += \
     $$PWD/scanitem.h \
