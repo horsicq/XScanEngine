@@ -1029,7 +1029,7 @@ XOptions::CR XScanEngineConsole::showFileInfo(const QString &sFileName, XScanEng
     file.setFileName(sFileName);
 
     if (file.open(QIODevice::ReadOnly)) {
-        QVector<XBinary::KeyValueItem> listItems = XFormats::getFileInfo(&file, false, -1, pPdStruct);
+        QVector<XBinary::KeyValueItem> listItems = XFormats::getFileInfo(&file, false, -1, pPdStruct, pScanOptions->fileType);
 
         QString sResult;
         if (pScanOptions->bResultAsJSON) sResult = XFormats::toJSON(listItems);
@@ -1425,7 +1425,13 @@ int XScanEngineConsole::process()
 
                     if (XFormats::isStaticUnpacker(ftStatic)) {
                         fileType = ftStatic;
-                    } else {
+                    } else if (fileType == XBinary::FT_UNKNOWN) {
+                        // Only re-probe for an archive type when the user did not
+                        // force one with -F.  Without this guard an explicit
+                        // --filetype (e.g. UDF on a bridge disc that, by definition,
+                        // also carries an ISO 9660 descriptor) is silently overwritten
+                        // by auto-detection.  This mirrors the FT_UNKNOWN guard the
+                        // --extractarchive path already applies to the same re-probe.
                         const XBinary::FT ftArchive = XFormats::getPrefFileType(
                             &file, XBinary::FT_FLAG_ARCHIVES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
 
