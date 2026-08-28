@@ -1541,7 +1541,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
 
     if (_sDatabasePath != "") {
 #ifdef QT_DEBUG
-        QElapsedTimer *pElapsedTimer = new QElapsedTimer;
+        QScopedPointer<QElapsedTimer> pElapsedTimer(new QElapsedTimer);
         pElapsedTimer->start();
 #endif
         _sDatabasePath = XOptions::convertPathName(_sDatabasePath);
