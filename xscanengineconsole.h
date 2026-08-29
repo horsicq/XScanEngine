@@ -49,8 +49,8 @@ protected:
     virtual void addEngineOptions(QCommandLineParser *pParser);
     virtual void applyEngineOptions(const QCommandLineParser *pParser, XScanEngine::SCAN_OPTIONS *pScanOptions);
     // Returns true when an engine-specific mode consumed the invocation.
-    virtual bool processEngineModes(const QCommandLineParser *pParser, const QStringList &listArgs, XScanEngine::SCAN_OPTIONS *pScanOptions,
-                                    XBinary::PDSTRUCT *pPdStruct, qint32 *pnResult);
+    virtual bool processEngineModes(const QCommandLineParser *pParser, const QStringList &listArgs, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct,
+                                    qint32 *pnResult);
     // Called when a scan produced engine errors; the returned code (if not
     // CR_SUCCESS) becomes the process result. diec overrides this to keep its
     // historical exit code 0 for scans with script errors.

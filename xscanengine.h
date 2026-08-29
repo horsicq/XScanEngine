@@ -1237,7 +1237,7 @@ public:
         QString sCollectionCopyFormat;
         QString sCollectionCatalogFormat;
         QString sCollectionStartFile;  // Optional
-        QString sScanID;  // Optional
+        QString sScanID;               // Optional
     };
 
     struct SCAN_DATA {

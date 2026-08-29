@@ -51,8 +51,8 @@ bool hasAuthoritativeExternalStreamingReader(XBinary::FT fileType)
 // Collect full archive records through the streaming unpack API so every
 // property the format parser filled (method, timestamps, CRC, ownership, ...)
 // is available, not just the handful the legacy flat RECORD struct carries.
-QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XBinary *pArchive, const QMap<XBinary::UNPACK_PROP, QVariant> &mapUnpackProperties,
-                                                    XBinary::PDSTRUCT *pPdStruct, bool *pbComplete = nullptr)
+QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XBinary *pArchive, const QMap<XBinary::UNPACK_PROP, QVariant> &mapUnpackProperties, XBinary::PDSTRUCT *pPdStruct,
+                                                    bool *pbComplete = nullptr)
 {
     QList<XBinary::ARCHIVERECORD> listResult;
 
@@ -68,14 +68,9 @@ QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XBinary *pArchive, const QMa
     QMap<XBinary::UNPACK_PROP, QVariant> mapProperties = mapUnpackProperties;
     bool bInitialized = pArchive->initUnpack(&state, mapProperties, pPdStruct);
 
-    const bool bPasswordSupplied =
-        !mapUnpackProperties.value(XBinary::UNPACK_PROP_PASSWORD)
-             .toString().isEmpty() ||
-        !mapUnpackProperties.value(XBinary::UNPACK_PROP_PASSWORD_BYTES)
-             .toByteArray().isEmpty();
-    if (!bInitialized && XBinary::isPdStructNotCanceled(pPdStruct) &&
-        !bPasswordSupplied &&
-        !hasAuthoritativeExternalStreamingReader(pArchive->getFileType())) {
+    const bool bPasswordSupplied = !mapUnpackProperties.value(XBinary::UNPACK_PROP_PASSWORD).toString().isEmpty() ||
+                                   !mapUnpackProperties.value(XBinary::UNPACK_PROP_PASSWORD_BYTES).toByteArray().isEmpty();
+    if (!bInitialized && XBinary::isPdStructNotCanceled(pPdStruct) && !bPasswordSupplied && !hasAuthoritativeExternalStreamingReader(pArchive->getFileType())) {
         state = XBinary::UNPACK_STATE();
         mapProperties.insert(XBinary::UNPACK_PROP_METADATAONLY, true);
         bInitialized = pArchive->initUnpack(&state, mapProperties, pPdStruct);
@@ -83,27 +78,18 @@ QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XBinary *pArchive, const QMa
 
     if (bInitialized) {
         const qint32 nNumberOfRecords = state.nNumberOfRecords;
-        bool bEnumerationComplete = (state.nCurrentIndex == 0) &&
-                                    (nNumberOfRecords >= 0) &&
-                                    (state.nCurrentIndex <= nNumberOfRecords);
+        bool bEnumerationComplete = (state.nCurrentIndex == 0) && (nNumberOfRecords >= 0) && (state.nCurrentIndex <= nNumberOfRecords);
 
         // The streaming contract advances only *between* declared records.
         // A single-record archive therefore finishes with currentIndex == 0;
         // moveToNext() returning false at that point is not an enumeration
         // failure.  Keep an independent bounded loop and validate that the
         // archive cannot silently change its declared count or cursor.
-        for (qint32 i = 0; bEnumerationComplete &&
-             (i < nNumberOfRecords) &&
-             XBinary::isPdStructNotCanceled(pPdStruct); ++i) {
+        for (qint32 i = 0; bEnumerationComplete && (i < nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct); ++i) {
             const qint32 nExpectedIndex = state.nCurrentIndex;
-            const XBinary::ARCHIVERECORD record =
-                pArchive->infoCurrent(&state, pPdStruct);
-            if (!XBinary::isPdStructNotCanceled(pPdStruct) ||
-                record.mapProperties.isEmpty() ||
-                !XBinary::isArchiveRecordExtentValid(record) ||
-                (state.nCurrentIndex < 0) ||
-                (state.nCurrentIndex >= nNumberOfRecords) ||
-                (state.nCurrentIndex != nExpectedIndex) ||
+            const XBinary::ARCHIVERECORD record = pArchive->infoCurrent(&state, pPdStruct);
+            if (!XBinary::isPdStructNotCanceled(pPdStruct) || record.mapProperties.isEmpty() || !XBinary::isArchiveRecordExtentValid(record) ||
+                (state.nCurrentIndex < 0) || (state.nCurrentIndex >= nNumberOfRecords) || (state.nCurrentIndex != nExpectedIndex) ||
                 (state.nNumberOfRecords != nNumberOfRecords)) {
                 bEnumerationComplete = false;
                 break;
@@ -112,12 +98,8 @@ QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XBinary *pArchive, const QMa
 
             if (i + 1 < nNumberOfRecords) {
                 const qint32 nPreviousIndex = state.nCurrentIndex;
-                const bool bMoved =
-                    pArchive->moveToNext(&state, pPdStruct);
-                if (!bMoved ||
-                    !XBinary::isPdStructNotCanceled(pPdStruct) ||
-                    (state.nCurrentIndex != (nPreviousIndex + 1)) ||
-                    (state.nCurrentIndex >= nNumberOfRecords) ||
+                const bool bMoved = pArchive->moveToNext(&state, pPdStruct);
+                if (!bMoved || !XBinary::isPdStructNotCanceled(pPdStruct) || (state.nCurrentIndex != (nPreviousIndex + 1)) || (state.nCurrentIndex >= nNumberOfRecords) ||
                     (state.nNumberOfRecords != nNumberOfRecords)) {
                     bEnumerationComplete = false;
                     break;
@@ -126,9 +108,7 @@ QList<XBinary::ARCHIVERECORD> collectArchiveRecords(XBinary *pArchive, const QMa
         }
 
         const bool bFinished = pArchive->finishUnpack(&state, nullptr);
-        bEnumerationComplete = bEnumerationComplete && bFinished &&
-                               (listResult.size() == nNumberOfRecords) &&
-                               XBinary::isPdStructNotCanceled(pPdStruct);
+        bEnumerationComplete = bEnumerationComplete && bFinished && (listResult.size() == nNumberOfRecords) && XBinary::isPdStructNotCanceled(pPdStruct);
         if (pbComplete) {
             *pbComplete = bEnumerationComplete;
         }
@@ -311,8 +291,7 @@ QString recordCRC(const XBinary::ARCHIVERECORD &record)
         return QString("%1").arg(record.mapProperties.value(prop).toULongLong(), 8, 16, QChar('0')).toUpper();
     }
 
-    const QString sChecksum = record.mapProperties.value(
-        XBinary::FPART_PROP_CHECKSUM).toString().trimmed();
+    const QString sChecksum = record.mapProperties.value(XBinary::FPART_PROP_CHECKSUM).toString().trimmed();
     if (!sChecksum.isEmpty()) {
         return sChecksum.toUpper();
     }
@@ -343,8 +322,7 @@ QString recordAttr(const XBinary::ARCHIVERECORD &record)
 
 QString recordRatio(const XBinary::ARCHIVERECORD &record)
 {
-    if (recordIsFolder(record) ||
-        record.mapProperties.value(XBinary::FPART_PROP_ISSOLID).toBool() || !recordHasSize(record)) {
+    if (recordIsFolder(record) || record.mapProperties.value(XBinary::FPART_PROP_ISSOLID).toBool() || !recordHasSize(record)) {
         return QString();
     }
 
@@ -354,8 +332,7 @@ QString recordRatio(const XBinary::ARCHIVERECORD &record)
         return QString();
     }
 
-    return QString("%1%").arg(QString::number(
-        (double)nPacked * 100.0 / (double)nSize, 'f', 1));
+    return QString("%1%").arg(QString::number((double)nPacked * 100.0 / (double)nSize, 'f', 1));
 }
 
 QString consoleFPartName(XBinary::FPART_PROP prop)
@@ -434,8 +411,7 @@ QString consoleFPartValueString(const XBinary::ARCHIVERECORD &record, XBinary::F
         return QString("%1").arg(varValue.toULongLong(), 8, 16, QChar('0')).toUpper();
     }
 
-    if ((prop == XBinary::FPART_PROP_DATETIME) || (prop == XBinary::FPART_PROP_MTIME) || (prop == XBinary::FPART_PROP_CTIME) ||
-        (prop == XBinary::FPART_PROP_ATIME)) {
+    if ((prop == XBinary::FPART_PROP_DATETIME) || (prop == XBinary::FPART_PROP_MTIME) || (prop == XBinary::FPART_PROP_CTIME) || (prop == XBinary::FPART_PROP_ATIME)) {
         return varValue.toDateTime().toLocalTime().toString("yyyy-MM-dd hh:mm:ss");
     }
 
@@ -545,8 +521,7 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
         PACKEDSTATE packedState = recordPacked(record, &nPacked);
         QString sPackedDisplay;
         const bool bHasBlock = record.mapProperties.contains(XBinary::FPART_PROP_SOLIDFOLDERINDEX);
-        const qint64 nBlock = bHasBlock ?
-            record.mapProperties.value(XBinary::FPART_PROP_SOLIDFOLDERINDEX).toLongLong() : -1;
+        const qint64 nBlock = bHasBlock ? record.mapProperties.value(XBinary::FPART_PROP_SOLIDFOLDERINDEX).toLongLong() : -1;
 
         if (packedState == PACKEDSTATE_UNKNOWN) {
             if (bHasBlock) {
@@ -557,8 +532,7 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
         } else if (packedState == PACKEDSTATE_VALUE) {
             sPackedDisplay = QString::number(nPacked);
 
-            const bool bDeclaresSolidBlock = record.mapProperties.value(XBinary::FPART_PROP_ISSOLID).toBool() ||
-                                             bHasBlock;
+            const bool bDeclaresSolidBlock = record.mapProperties.value(XBinary::FPART_PROP_ISSOLID).toBool() || bHasBlock;
 
             if (bHasBlock) {
                 // recordPacked() synthesizes zero for an empty regular file.
@@ -566,9 +540,7 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
                 // provider supplied this solid folder's packed size.  Only an
                 // actual packed-size/stream value can make unknown sibling
                 // members complete.
-                const bool bProviderPackedValue =
-                    record.mapProperties.contains(XBinary::FPART_PROP_COMPRESSEDSIZE) ||
-                    (record.nStreamSize > 0);
+                const bool bProviderPackedValue = record.mapProperties.contains(XBinary::FPART_PROP_COMPRESSEDSIZE) || (record.nStreamSize > 0);
 
                 if (bProviderPackedValue) {
                     stBlocksWithPackedValue.insert(nBlock);
@@ -601,12 +573,10 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
         if (!recordModified(record).isEmpty()) bAnyModified = true;
         if (!XBinary::getHandleMethods(record.mapProperties).isEmpty()) bAnyMethod = true;
         if (!recordCRC(record).isEmpty()) bAnyCRC = true;
-        if (recordIsFolder(record) ||
-            record.mapProperties.value(XBinary::FPART_PROP_ISREADONLY).toBool() ||
-            record.mapProperties.value(XBinary::FPART_PROP_ISHIDDEN).toBool() ||
-            record.mapProperties.value(XBinary::FPART_PROP_ISSYSTEM).toBool() ||
-            record.mapProperties.value(XBinary::FPART_PROP_ISARCHIVE).toBool() ||
-            record.mapProperties.value(XBinary::FPART_PROP_ENCRYPTED).toBool()) bAnyAttr = true;
+        if (recordIsFolder(record) || record.mapProperties.value(XBinary::FPART_PROP_ISREADONLY).toBool() ||
+            record.mapProperties.value(XBinary::FPART_PROP_ISHIDDEN).toBool() || record.mapProperties.value(XBinary::FPART_PROP_ISSYSTEM).toBool() ||
+            record.mapProperties.value(XBinary::FPART_PROP_ISARCHIVE).toBool() || record.mapProperties.value(XBinary::FPART_PROP_ENCRYPTED).toBool())
+            bAnyAttr = true;
         if (!recordRatio(record).isEmpty()) bAnyRatio = true;
     }
 
@@ -637,10 +607,8 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
         sRatio = QString(" (%1%)").arg(QString::number(double(nTotalPacked) * 100.0 / double(nTotalSize), 'f', 1));
     }
 
-    const QString sSizeSummary = bSizeComplete ?
-        XBinary::bytesCountToString(nTotalSize, 1024) : QString("unknown");
-    const QString sPackedSummary = bPackedComplete ?
-        XBinary::bytesCountToString(nTotalPacked, 1024) : QString("unknown");
+    const QString sSizeSummary = bSizeComplete ? XBinary::bytesCountToString(nTotalSize, 1024) : QString("unknown");
+    const QString sPackedSummary = bPackedComplete ? XBinary::bytesCountToString(nTotalPacked, 1024) : QString("unknown");
 
     sResult += QString("%1: %2 file(s)%3, %4 -> %5%6\n")
                    .arg(XBinary::fileTypeIdToString(fileType))
@@ -700,17 +668,15 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
 
                 // The exact provider text is already rendered as Method via
                 // getHandleMethods(); do not print a duplicate verbose field.
-                if ((prop == XBinary::FPART_PROP_REPORTEDMETHOD) &&
-                    record.mapProperties.contains(XBinary::FPART_PROP_HANDLEMETHOD)) {
+                if ((prop == XBinary::FPART_PROP_REPORTEDMETHOD) && record.mapProperties.contains(XBinary::FPART_PROP_HANDLEMETHOD)) {
                     continue;
                 }
 
                 // A stream coordinate describes where a payload lives.  A
                 // directory entry has no payload, so no coordinate on any
                 // device describes it and none may be shown for it.
-                if (recordIsFolder(record) &&
-                    ((prop == XBinary::FPART_PROP_STREAMOFFSET) || (prop == XBinary::FPART_PROP_STREAMSIZE) ||
-                     (prop == XBinary::FPART_PROP_STREAMUNPACKEDSIZE) || (prop == XBinary::FPART_PROP_SUBSTREAMOFFSET))) {
+                if (recordIsFolder(record) && ((prop == XBinary::FPART_PROP_STREAMOFFSET) || (prop == XBinary::FPART_PROP_STREAMSIZE) ||
+                                               (prop == XBinary::FPART_PROP_STREAMUNPACKEDSIZE) || (prop == XBinary::FPART_PROP_SUBSTREAMOFFSET))) {
                     continue;
                 }
 
@@ -720,8 +686,7 @@ QString formatArchiveList(XBinary::FT fileType, const QList<XBinary::ARCHIVERECO
                 // member's own metadata, which is how "Stream size: <whole
                 // container>" ended up on every row of a compressed-tar
                 // listing.
-                if (((prop == XBinary::FPART_PROP_STREAMOFFSET) || (prop == XBinary::FPART_PROP_STREAMSIZE)) &&
-                    recordSharesContainerStream(record)) {
+                if (((prop == XBinary::FPART_PROP_STREAMOFFSET) || (prop == XBinary::FPART_PROP_STREAMSIZE)) && recordSharesContainerStream(record)) {
                     continue;
                 }
 
@@ -1160,16 +1125,13 @@ int XScanEngineConsole::process()
     QCommandLineOption clListArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_LISTARCHIVE);
     QCommandLineOption clExtractArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_EXTRACTARCHIVE);
     QCommandLineOption clArchivePassword(QStringList() << QStringLiteral("password"),
-                                         QStringLiteral("Archive password (use --password-stdin to read it from standard input instead)."),
-                                         QStringLiteral("password"));
+                                         QStringLiteral("Archive password (use --password-stdin to read it from standard input instead)."), QStringLiteral("password"));
     QCommandLineOption clArchivePasswordStdin(QStringList() << QStringLiteral("password-stdin"),
-                                               QStringLiteral("Read the archive password as one UTF-8 line from standard input."));
-    QCommandLineOption clArchivePasswordHex(QStringList() << QStringLiteral("password-hex"),
-                                             QStringLiteral("Exact legacy archive password bytes as hexadecimal."),
-                                             QStringLiteral("hex"));
+                                              QStringLiteral("Read the archive password as one UTF-8 line from standard input."));
+    QCommandLineOption clArchivePasswordHex(QStringList() << QStringLiteral("password-hex"), QStringLiteral("Exact legacy archive password bytes as hexadecimal."),
+                                            QStringLiteral("hex"));
     QCommandLineOption clArchiveCodePage(QStringList() << QStringLiteral("codepage"),
-                                         QStringLiteral("Windows code page for legacy archive filenames and password bytes."),
-                                         QStringLiteral("number"));
+                                         QStringLiteral("Windows code page for legacy archive filenames and password bytes."), QStringLiteral("number"));
 
     QCommandLineOption clFileType = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FILETYPE);
     QCommandLineOption clFirstWrapperOnly = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FIRSTWRAPPERONLY);
@@ -1268,9 +1230,7 @@ int XScanEngineConsole::process()
 
     QMap<XBinary::UNPACK_PROP, QVariant> mapUnpackProperties;
     QString sArchivePassword;
-    const qint32 nPasswordOptions = qint32(parser.isSet(clArchivePassword)) +
-                                    qint32(parser.isSet(clArchivePasswordStdin)) +
-                                    qint32(parser.isSet(clArchivePasswordHex));
+    const qint32 nPasswordOptions = qint32(parser.isSet(clArchivePassword)) + qint32(parser.isSet(clArchivePasswordStdin)) + qint32(parser.isSet(clArchivePasswordHex));
     if (nPasswordOptions > 1) {
         printf("Error: use only one of --password, --password-stdin, or --password-hex\n");
         return XOptions::CR_INVALIDPARAMETER;
@@ -1297,11 +1257,9 @@ int XScanEngineConsole::process()
     }
     if (parser.isSet(clArchivePasswordHex)) {
         const QByteArray baHex = parser.value(clArchivePasswordHex).toLatin1();
-        bool bHexValid = !baHex.isEmpty() && ((baHex.size() & 1) == 0) &&
-                         (baHex.size() <= 2 * 1024 * 1024);
+        bool bHexValid = !baHex.isEmpty() && ((baHex.size() & 1) == 0) && (baHex.size() <= 2 * 1024 * 1024);
         for (char ch : baHex) {
-            if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') ||
-                  (ch >= 'A' && ch <= 'F'))) {
+            if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))) {
                 bHexValid = false;
                 break;
             }
@@ -1310,8 +1268,7 @@ int XScanEngineConsole::process()
             printf("Error: --password-hex requires an even, non-empty hexadecimal byte string\n");
             return XOptions::CR_INVALIDPARAMETER;
         }
-        mapUnpackProperties.insert(XBinary::UNPACK_PROP_PASSWORD_BYTES,
-                                   QByteArray::fromHex(baHex));
+        mapUnpackProperties.insert(XBinary::UNPACK_PROP_PASSWORD_BYTES, QByteArray::fromHex(baHex));
     }
     if (parser.isSet(clArchiveCodePage)) {
         bool bCodePageValid = false;
@@ -1404,8 +1361,7 @@ int XScanEngineConsole::process()
                 if (!XFormats::isStaticUnpacker(fileType)) {
                     // A preliminary scan commonly reports a generic PE type. Probe the executable
                     // for a specific packer/installer before sending it to the archive backends.
-                    const XBinary::FT ftStatic = XFormats::getPrefFileType(
-                        &file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
+                    const XBinary::FT ftStatic = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
 
                     if (XFormats::isStaticUnpacker(ftStatic)) {
                         fileType = ftStatic;
@@ -1416,11 +1372,9 @@ int XScanEngineConsole::process()
                         // also carries an ISO 9660 descriptor) is silently overwritten
                         // by auto-detection.  This mirrors the FT_UNKNOWN guard the
                         // --extractarchive path already applies to the same re-probe.
-                        const XBinary::FT ftArchive = XFormats::getPrefFileType(
-                            &file, XBinary::FT_FLAG_ARCHIVES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
+                        const XBinary::FT ftArchive = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
 
-                        if (XFormats::isStaticUnpacker(ftArchive) ||
-                            XArchives::getArchiveOpenValidFileTypes().contains(ftArchive)) {
+                        if (XFormats::isStaticUnpacker(ftArchive) || XArchives::getArchiveOpenValidFileTypes().contains(ftArchive)) {
                             fileType = ftArchive;
                         }
                     }
@@ -1496,16 +1450,11 @@ int XScanEngineConsole::process()
                 XBinary::FT fileType = scanOptions.fileType;
 
                 if (!XFormats::isStaticUnpacker(fileType)) {
-                    const XBinary::FT staticType = XFormats::getPrefFileType(
-                        &file,
-                        XBinary::FT_FLAG_EXECUTABLES |
-                            XBinary::FT_FLAG_STATICUNPACKERS,
-                        &pdStruct);
+                    const XBinary::FT staticType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
                     if (XFormats::isStaticUnpacker(staticType)) {
                         fileType = staticType;
                     } else if (fileType == XBinary::FT_UNKNOWN) {
-                        fileType = XFormats::getPrefFileType(
-                            &file, XBinary::FT_FLAG_ARCHIVES, &pdStruct);
+                        fileType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES, &pdStruct);
                     }
                 }
 
@@ -1518,8 +1467,7 @@ int XScanEngineConsole::process()
                 if (XFormats::isStaticUnpacker(fileType) || XFormats::isArchive(fileType)) {
                     pArchive = XFormats::createClass(fileType, &file);
                     if (pArchive) {
-                        listRecords = collectArchiveRecords(
-                            pArchive, mapUnpackProperties, &pdStruct);
+                        listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &pdStruct);
                     }
                 }
 
@@ -1546,8 +1494,7 @@ int XScanEngineConsole::process()
 
                 if (bExtracted) {
                     const QString sTotalSize = bTotalSizeComplete ? XBinary::bytesCountToString(nTotalSize, 1024) : QString("unknown");
-                    printf("Extracted %d file(s), %s -> %s\n", nNumberOfFiles, sTotalSize.toUtf8().data(),
-                           QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
+                    printf("Extracted %d file(s), %s -> %s\n", nNumberOfFiles, sTotalSize.toUtf8().data(), QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
                 } else {
                     printf("Cannot extract: %s\n", sFileName.toUtf8().data());
                     const QString sExtractionError = XBinary::getPdStructErrorString(&pdStruct);

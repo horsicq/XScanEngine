@@ -120,9 +120,8 @@ bool isFileInDirectory(const QString &sFileName, const QString &sDirectoryName, 
         if (bSubdirectories) {
             QDir directory(directoryInfo.absoluteFilePath());
             QString sRelativePath = directory.relativeFilePath(fileInfo.absoluteFilePath());
-            bResult =
-                !(sRelativePath.isEmpty() || (sRelativePath == "..") || sRelativePath.startsWith("../") || sRelativePath.startsWith("..\\") ||
-                  QFileInfo(sRelativePath).isAbsolute());
+            bResult = !(sRelativePath.isEmpty() || (sRelativePath == "..") || sRelativePath.startsWith("../") || sRelativePath.startsWith("..\\") ||
+                        QFileInfo(sRelativePath).isAbsolute());
         } else {
             bResult = isSamePath(fileInfo.absolutePath(), directoryInfo.absoluteFilePath());
         }
@@ -418,8 +417,7 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     QString sCurrentFileName = XScanEngineProcess::getCollectionCurrentFile(m_scanOptions.sCollectionResultDirectory);
 
     if (!sCurrentFileName.isEmpty() && isFileInDirectory(sCurrentFileName, sDirectory, m_scanOptions.bSubdirectories)) {
-        if (QMessageBox::question(this, tr("Resume scan"),
-                                  QString("%1\n\n%2").arg(tr("Continue from this file?"), QDir::toNativeSeparators(sCurrentFileName)),
+        if (QMessageBox::question(this, tr("Resume scan"), QString("%1\n\n%2").arg(tr("Continue from this file?"), QDir::toNativeSeparators(sCurrentFileName)),
                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
             m_scanOptions.sCollectionStartFile = sCurrentFileName;
         }
