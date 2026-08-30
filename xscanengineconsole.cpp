@@ -1124,6 +1124,7 @@ int XScanEngineConsole::process()
     QCommandLineOption clShowStructs = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWSTRUCTS);
     QCommandLineOption clListArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_LISTARCHIVE);
     QCommandLineOption clExtractArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_EXTRACTARCHIVE);
+    QCommandLineOption clStopOnError(QStringList() << "stoponerror", "Abort archive extraction when a member fails instead of skipping it.");
     QCommandLineOption clArchivePassword(QStringList() << QStringLiteral("password"),
                                          QStringLiteral("Archive password (use --password-stdin to read it from standard input instead)."), QStringLiteral("password"));
     QCommandLineOption clArchivePasswordStdin(QStringList() << QStringLiteral("password-stdin"),
@@ -1169,6 +1170,7 @@ int XScanEngineConsole::process()
     parser.addOption(clShowStructs);
     parser.addOption(clListArchive);
     parser.addOption(clExtractArchive);
+    parser.addOption(clStopOnError);
     parser.addOption(clArchivePassword);
     parser.addOption(clArchivePasswordStdin);
     parser.addOption(clArchivePasswordHex);
@@ -1229,6 +1231,13 @@ int XScanEngineConsole::process()
     scanOptions.sStruct = parser.value(clStruct);
 
     QMap<XBinary::UNPACK_PROP, QVariant> mapUnpackProperties;
+    // Best-effort extraction is the console default (like mainstream archive
+    // tools): damaged or partially present archives yield every recoverable
+    // member, and the skip tally is reported after the run.  --stoponerror
+    // restores the strict all-or-nothing transaction.
+    if (!parser.isSet(clStopOnError)) {
+        mapUnpackProperties.insert(XBinary::UNPACK_PROP_CONTINUEONERROR, true);
+    }
     QString sArchivePassword;
     const qint32 nPasswordOptions = qint32(parser.isSet(clArchivePassword)) + qint32(parser.isSet(clArchivePasswordStdin)) + qint32(parser.isSet(clArchivePasswordHex));
     if (nPasswordOptions > 1) {
@@ -1489,12 +1498,26 @@ int XScanEngineConsole::process()
                 delete pArchive;
 
                 XBinary::setPdStructErrorString(&pdStruct, QString());
-                const bool bExtracted = file.seek(0) && XArchives::decompressToFolder(&file, sResultDirectory, mapUnpackProperties, &pdStruct);
+                qint32 nSkippedEntries = 0;
+                const bool bExtracted = file.seek(0) && XArchives::decompressToFolder(&file, sResultDirectory, mapUnpackProperties, &pdStruct, &nSkippedEntries);
                 file.close();
 
                 if (bExtracted) {
                     const QString sTotalSize = bTotalSizeComplete ? XBinary::bytesCountToString(nTotalSize, 1024) : QString("unknown");
-                    printf("Extracted %d file(s), %s -> %s\n", nNumberOfFiles, sTotalSize.toUtf8().data(), QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
+                    if (nSkippedEntries > 0) {
+                        const qint32 nExtractedFiles = qMax(0, nNumberOfFiles - nSkippedEntries);
+                        printf("Extracted %d of %d file(s), %s -> %s\n", nExtractedFiles, nNumberOfFiles, sTotalSize.toUtf8().data(),
+                               QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
+                    } else {
+                        printf("Extracted %d file(s), %s -> %s\n", nNumberOfFiles, sTotalSize.toUtf8().data(), QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
+                    }
+                    // Best-effort extraction commits with a skip tally in the
+                    // progress error string; surface it so a partial result is
+                    // never mistaken for a complete one.
+                    const QString sSkippedWarning = XBinary::getPdStructErrorString(&pdStruct);
+                    if (!sSkippedWarning.isEmpty()) {
+                        printf("  Warning: %s\n", sSkippedWarning.toUtf8().data());
+                    }
                 } else {
                     printf("Cannot extract: %s\n", sFileName.toUtf8().data());
                     const QString sExtractionError = XBinary::getPdStructErrorString(&pdStruct);
