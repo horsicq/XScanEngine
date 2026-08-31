@@ -3,8 +3,6 @@ DEPENDPATH += $$PWD
 INCLUDEPATH += $$PWD/modules
 DEPENDPATH += $$PWD/modules
 
-XCONFIG += use_dex
-XCONFIG += use_pdf
 XCONFIG += use_archive
 !contains(XCONFIG, no_xemulator) {
     XCONFIG += use_xemulator
@@ -36,7 +34,6 @@ HEADERS += \
     $$PWD/modules/ipa_script.h \
     $$PWD/modules/dex_script.h \
     $$PWD/modules/npm_script.h \
-    $$PWD/modules/rar_script.h \
     $$PWD/modules/iso9660_script.h \
     $$PWD/modules/machofat_script.h \
     $$PWD/modules/javaclass_script.h \
@@ -73,7 +70,6 @@ SOURCES += \
     $$PWD/modules/ipa_script.cpp \
     $$PWD/modules/dex_script.cpp \
     $$PWD/modules/npm_script.cpp \
-    $$PWD/modules/rar_script.cpp \
     $$PWD/modules/iso9660_script.cpp \
     $$PWD/modules/machofat_script.cpp \
     $$PWD/modules/javaclass_script.cpp \

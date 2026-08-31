@@ -24,12 +24,6 @@
 #ifndef USE_ARCHIVE
 #define USE_ARCHIVE
 #endif
-#ifndef USE_DEX
-#define USE_DEX
-#endif
-#ifndef USE_PDF
-#define USE_PDF
-#endif
 
 #include "binary_script.h"
 #include "com_script.h"
@@ -48,7 +42,6 @@
 #include "ipa_script.h"
 #include "dex_script.h"
 #include "npm_script.h"
-#include "rar_script.h"
 #include "iso9660_script.h"
 #include "machofat_script.h"
 #include "amiga_script.h"

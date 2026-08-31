@@ -82,8 +82,6 @@ set(XSCANENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/modules/dex_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/npm_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/npm_script.h
-    ${CMAKE_CURRENT_LIST_DIR}/modules/rar_script.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/modules/rar_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/iso9660_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/iso9660_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/machofat_script.cpp

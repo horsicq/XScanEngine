@@ -1074,6 +1074,7 @@ XOptions::CR XScanEngineConsole::showFileStruct(const QString &sFileName, XScanE
 int XScanEngineConsole::process()
 {
     qint32 nResult = XOptions::CR_SUCCESS;
+    bool bProbeTimeoutOccurred = false;
 
     // Text codecs (e.g. cp437 for DOS-era strings) are used by the format
     // parsers; register them once for every console front end.
@@ -1124,7 +1125,7 @@ int XScanEngineConsole::process()
     QCommandLineOption clShowStructs = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_SHOWSTRUCTS);
     QCommandLineOption clListArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_LISTARCHIVE);
     QCommandLineOption clExtractArchive = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_EXTRACTARCHIVE);
-    QCommandLineOption clStopOnError(QStringList() << "stoponerror", "Abort archive extraction when a member fails instead of skipping it.");
+    QCommandLineOption clStopOnError(QStringList() << "stoponerror", "Abort archive extraction and roll the destination back when a member fails.");
     QCommandLineOption clArchivePassword(QStringList() << QStringLiteral("password"),
                                          QStringLiteral("Archive password (use --password-stdin to read it from standard input instead)."), QStringLiteral("password"));
     QCommandLineOption clArchivePasswordStdin(QStringList() << QStringLiteral("password-stdin"),
@@ -1133,6 +1134,9 @@ int XScanEngineConsole::process()
                                             QStringLiteral("hex"));
     QCommandLineOption clArchiveCodePage(QStringList() << QStringLiteral("codepage"),
                                          QStringLiteral("Windows code page for legacy archive filenames and password bytes."), QStringLiteral("number"));
+    QCommandLineOption clProbeTimeout(QStringList() << QStringLiteral("probe-timeout"),
+                                      QStringLiteral("Maximum automatic archive-probe time per target in milliseconds (0 disables)."),
+                                      QStringLiteral("milliseconds"), QStringLiteral("20000"));
 
     QCommandLineOption clFileType = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FILETYPE);
     QCommandLineOption clFirstWrapperOnly = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FIRSTWRAPPERONLY);
@@ -1175,6 +1179,7 @@ int XScanEngineConsole::process()
     parser.addOption(clArchivePasswordStdin);
     parser.addOption(clArchivePasswordHex);
     parser.addOption(clArchiveCodePage);
+    parser.addOption(clProbeTimeout);
     parser.addOption(clNoColor);
 
     addEngineOptions(&parser);
@@ -1192,6 +1197,13 @@ int XScanEngineConsole::process()
 
     if (nNumberOfResultFormats > 1) {
         printf("Error: select only one result format\n");
+        return XOptions::CR_INVALIDPARAMETER;
+    }
+
+    bool bProbeTimeoutValid = false;
+    const qint64 nProbeTimeoutMs = parser.value(clProbeTimeout).toLongLong(&bProbeTimeoutValid);
+    if (!bProbeTimeoutValid || (nProbeTimeoutMs < 0)) {
+        printf("Error: --probe-timeout requires a non-negative number of milliseconds\n");
         return XOptions::CR_INVALIDPARAMETER;
     }
 
@@ -1365,12 +1377,19 @@ int XScanEngineConsole::process()
                     continue;
                 }
 
+                XBinary::PDSTRUCT archivePdStruct = XBinary::createPdStruct();
                 XBinary::FT fileType = scanOptions.fileType;
 
                 if (!XFormats::isStaticUnpacker(fileType)) {
+                    if (nProbeTimeoutMs == 0) {
+                        XBinary::disablePdStructDeadline(&archivePdStruct);
+                    } else {
+                        XBinary::setPdStructDeadline(&archivePdStruct, nProbeTimeoutMs);
+                    }
                     // A preliminary scan commonly reports a generic PE type. Probe the executable
                     // for a specific packer/installer before sending it to the archive backends.
-                    const XBinary::FT ftStatic = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
+                    const XBinary::FT ftStatic =
+                        XFormats::getPrefFileType(&file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &archivePdStruct);
 
                     if (XFormats::isStaticUnpacker(ftStatic)) {
                         fileType = ftStatic;
@@ -1381,13 +1400,25 @@ int XScanEngineConsole::process()
                         // also carries an ISO 9660 descriptor) is silently overwritten
                         // by auto-detection.  This mirrors the FT_UNKNOWN guard the
                         // --extractarchive path already applies to the same re-probe.
-                        const XBinary::FT ftArchive = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
+                        const XBinary::FT ftArchive =
+                            XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES | XBinary::FT_FLAG_STATICUNPACKERS, &archivePdStruct);
 
                         if (XFormats::isStaticUnpacker(ftArchive) || XArchives::getArchiveOpenValidFileTypes().contains(ftArchive)) {
                             fileType = ftArchive;
                         }
                     }
                 }
+
+                if (XBinary::isPdStructDeadlineExpired(&archivePdStruct)) {
+                    printf("Detection budget exceeded: %s\n", sFileName.toUtf8().data());
+                    bProbeTimeoutOccurred = true;
+                    nResult = XOptions::CR_PROBETIMEOUT;
+                    file.close();
+                    continue;
+                }
+                // The budget covers automatic format probing only. Enumeration
+                // and extraction retain their existing cancellation semantics.
+                XBinary::disablePdStructDeadline(&archivePdStruct);
 
                 QList<XBinary::ARCHIVERECORD> listRecords;
                 bool bListed = false;
@@ -1397,7 +1428,7 @@ int XScanEngineConsole::process()
                     pArchive = XFormats::createClass(fileType, &file);
                     if (pArchive) {
                         bool bComplete = false;
-                        listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &pdStruct, &bComplete);
+                        listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &archivePdStruct, &bComplete);
                         bListed = bComplete;
                     }
                 }
@@ -1412,7 +1443,7 @@ int XScanEngineConsole::process()
                     if (parser.isSet(clVerbose) && (fileType != XBinary::FT_UNKNOWN)) {
                         printf("  Detected: %s\n", XBinary::fileTypeIdToString(fileType).toUtf8().data());
                     }
-                    const QString sArchiveError = XBinary::getPdStructErrorString(&pdStruct);
+                    const QString sArchiveError = XBinary::getPdStructErrorString(&archivePdStruct);
                     if (parser.isSet(clVerbose) && !sArchiveError.isEmpty()) {
                         printf("  %s\n", sArchiveError.toUtf8().data());
                     }
@@ -1456,16 +1487,32 @@ int XScanEngineConsole::process()
                     continue;
                 }
 
+                XBinary::PDSTRUCT archivePdStruct = XBinary::createPdStruct();
                 XBinary::FT fileType = scanOptions.fileType;
 
                 if (!XFormats::isStaticUnpacker(fileType)) {
-                    const XBinary::FT staticType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &pdStruct);
+                    if (nProbeTimeoutMs == 0) {
+                        XBinary::disablePdStructDeadline(&archivePdStruct);
+                    } else {
+                        XBinary::setPdStructDeadline(&archivePdStruct, nProbeTimeoutMs);
+                    }
+                    const XBinary::FT staticType =
+                        XFormats::getPrefFileType(&file, XBinary::FT_FLAG_EXECUTABLES | XBinary::FT_FLAG_STATICUNPACKERS, &archivePdStruct);
                     if (XFormats::isStaticUnpacker(staticType)) {
                         fileType = staticType;
                     } else if (fileType == XBinary::FT_UNKNOWN) {
-                        fileType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES, &pdStruct);
+                        fileType = XFormats::getPrefFileType(&file, XBinary::FT_FLAG_ARCHIVES, &archivePdStruct);
                     }
                 }
+
+                if (XBinary::isPdStructDeadlineExpired(&archivePdStruct)) {
+                    printf("Detection budget exceeded: %s\n", sFileName.toUtf8().data());
+                    bProbeTimeoutOccurred = true;
+                    nResult = XOptions::CR_PROBETIMEOUT;
+                    file.close();
+                    continue;
+                }
+                XBinary::disablePdStructDeadline(&archivePdStruct);
 
                 qint32 nNumberOfFiles = 0;
                 qint64 nTotalSize = 0;
@@ -1476,7 +1523,7 @@ int XScanEngineConsole::process()
                 if (XFormats::isStaticUnpacker(fileType) || XFormats::isArchive(fileType)) {
                     pArchive = XFormats::createClass(fileType, &file);
                     if (pArchive) {
-                        listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &pdStruct);
+                        listRecords = collectArchiveRecords(pArchive, mapUnpackProperties, &archivePdStruct);
                     }
                 }
 
@@ -1497,30 +1544,32 @@ int XScanEngineConsole::process()
 
                 delete pArchive;
 
-                XBinary::setPdStructErrorString(&pdStruct, QString());
+                XBinary::setPdStructErrorString(&archivePdStruct, QString());
                 qint32 nSkippedEntries = 0;
-                const bool bExtracted = file.seek(0) && XArchives::decompressToFolder(&file, sResultDirectory, mapUnpackProperties, &pdStruct, &nSkippedEntries);
+                const bool bExtracted =
+                    file.seek(0) && XArchives::decompressToFolder(&file, sResultDirectory, mapUnpackProperties, &archivePdStruct, &nSkippedEntries);
                 file.close();
 
                 if (bExtracted) {
                     const QString sTotalSize = bTotalSizeComplete ? XBinary::bytesCountToString(nTotalSize, 1024) : QString("unknown");
                     if (nSkippedEntries > 0) {
                         const qint32 nExtractedFiles = qMax(0, nNumberOfFiles - nSkippedEntries);
-                        printf("Extracted %d of %d file(s), %s -> %s\n", nExtractedFiles, nNumberOfFiles, sTotalSize.toUtf8().data(),
+                        printf("Extracted %d of %d file(s) -> %s\n", nExtractedFiles, nNumberOfFiles,
                                QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
+                        nResult = XOptions::CR_PARTIALRESULT;
                     } else {
                         printf("Extracted %d file(s), %s -> %s\n", nNumberOfFiles, sTotalSize.toUtf8().data(), QDir().toNativeSeparators(sResultDirectory).toUtf8().data());
                     }
                     // Best-effort extraction commits with a skip tally in the
                     // progress error string; surface it so a partial result is
                     // never mistaken for a complete one.
-                    const QString sSkippedWarning = XBinary::getPdStructErrorString(&pdStruct);
+                    const QString sSkippedWarning = XBinary::getPdStructErrorString(&archivePdStruct);
                     if (!sSkippedWarning.isEmpty()) {
                         printf("  Warning: %s\n", sSkippedWarning.toUtf8().data());
                     }
                 } else {
                     printf("Cannot extract: %s\n", sFileName.toUtf8().data());
-                    const QString sExtractionError = XBinary::getPdStructErrorString(&pdStruct);
+                    const QString sExtractionError = XBinary::getPdStructErrorString(&archivePdStruct);
                     if (parser.isSet(clVerbose) && !sExtractionError.isEmpty()) {
                         printf("  %s\n", sExtractionError.toUtf8().data());
                     }
@@ -1580,6 +1629,10 @@ int XScanEngineConsole::process()
 
     if (bIsDbUsed && (!bDbLoaded)) {
         nResult = XOptions::CR_CANNOTFINDDATABASE;
+    }
+
+    if (bProbeTimeoutOccurred) {
+        nResult = XOptions::CR_PROBETIMEOUT;
     }
 
     return nResult;
