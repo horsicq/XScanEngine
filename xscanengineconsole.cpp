@@ -20,7 +20,6 @@
  */
 #include "xscanengineconsole.h"
 #include "xconsoloutput.h"
-#include "xarchiveconsole.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -30,25 +29,14 @@
 
 #include <cstdio>
 
-XScanEngineConsole::XScanEngineConsole(QCoreApplication &app, XScanEngine &scanEngine, const QString &sDescription, XArchiveConsole *pArchiveConsole, QObject *pParent)
-    : QObject(pParent), m_app(app), m_scanEngine(scanEngine), m_sDescription(sDescription),
-      m_pArchiveConsole(pArchiveConsole ? pArchiveConsole : new XArchiveConsole(this))
+XScanEngineConsole::XScanEngineConsole(QCoreApplication &app, XScanEngine &scanEngine, const QString &sDescription, QObject *pParent)
+    : QObject(pParent), m_app(app), m_scanEngine(scanEngine), m_sDescription(sDescription)
 {
-    // This console owns the command line: it defines -b/-F/-i/-e/-S/-w and the
-    // output-format letters itself. The archive front end must therefore
-    // contribute long options only, or its POSIX letters would collide with
-    // those and QCommandLineParser would silently drop whole options.
-    m_pArchiveConsole->setEmbedded(true);
 }
 
 XScanEngine *XScanEngineConsole::scanEngine()
 {
     return &m_scanEngine;
-}
-
-XArchiveConsole *XScanEngineConsole::archiveConsole()
-{
-    return m_pArchiveConsole;
 }
 
 void XScanEngineConsole::addEngineOptions(QCommandLineParser *pParser)
@@ -338,6 +326,9 @@ int XScanEngineConsole::process()
     QCommandLineOption clResultAsCSV = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_CSV);
     QCommandLineOption clResultAsTSV = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_TSV);
     QCommandLineOption clResultAsPlainText = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_PLAINTEXT);
+    // One option for the output layout; the five switches above stay as aliases
+    // so existing scripts keep working.
+    QCommandLineOption clFormat(QStringList() << "format", "Output format: text (default), json, xml, csv, or tsv.", "layout");
 
     QCommandLineOption clDatabaseMain = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_DATABASE);
     QCommandLineOption clDatabaseCustom = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_CUSTOMDATABASE);
@@ -367,6 +358,7 @@ int XScanEngineConsole::process()
     parser.addOption(clResultAsCSV);
     parser.addOption(clResultAsTSV);
     parser.addOption(clResultAsPlainText);
+    parser.addOption(clFormat);
     if (bHasMainDb) {
         parser.addOption(clDatabaseMain);
         parser.addOption(clShowDatabase);
@@ -380,7 +372,6 @@ int XScanEngineConsole::process()
     parser.addOption(clFileType);
     parser.addOption(clFirstWrapperOnly);
     parser.addOption(clShowStructs);
-    m_pArchiveConsole->addOptions(&parser);
     parser.addOption(clNoColor);
 
     addEngineOptions(&parser);
@@ -395,16 +386,19 @@ int XScanEngineConsole::process()
     nNumberOfResultFormats += parser.isSet(clResultAsCSV);
     nNumberOfResultFormats += parser.isSet(clResultAsTSV);
     nNumberOfResultFormats += parser.isSet(clResultAsPlainText);
+    nNumberOfResultFormats += parser.isSet(clFormat);
 
     if (nNumberOfResultFormats > 1) {
         printf("Error: select only one result format\n");
         return XOptions::CR_INVALIDPARAMETER;
     }
 
-    XOptions::CR crArchiveOptions = XOptions::CR_SUCCESS;
+    const QString sFormat = parser.value(clFormat);
 
-    if (!m_pArchiveConsole->applyOptions(&parser, &crArchiveOptions)) {
-        return crArchiveOptions;
+    if (parser.isSet(clFormat) && (sFormat != QLatin1String("text")) && (sFormat != QLatin1String("json")) && (sFormat != QLatin1String("xml")) &&
+        (sFormat != QLatin1String("csv")) && (sFormat != QLatin1String("tsv"))) {
+        printf("Error: --format requires text (default), json, xml, csv, or tsv\n");
+        return XOptions::CR_INVALIDPARAMETER;
     }
 
     XScanEngine::SCAN_OPTIONS scanOptions = {};
@@ -433,6 +427,15 @@ int XScanEngineConsole::process()
     scanOptions.bResultAsCSV = parser.isSet(clResultAsCSV);
     scanOptions.bResultAsTSV = parser.isSet(clResultAsTSV);
     scanOptions.bResultAsPlainText = parser.isSet(clResultAsPlainText);
+
+    if (parser.isSet(clFormat)) {
+        scanOptions.bResultAsXML = (sFormat == QLatin1String("xml"));
+        scanOptions.bResultAsJSON = (sFormat == QLatin1String("json"));
+        scanOptions.bResultAsCSV = (sFormat == QLatin1String("csv"));
+        scanOptions.bResultAsTSV = (sFormat == QLatin1String("tsv"));
+        scanOptions.bResultAsPlainText = false;
+        // "text" leaves every flag clear, which is the default output.
+    }
     scanOptions.bIsSort = true;
     scanOptions.fileType = parser.isSet(clFileType) ? XBinary::ftStringToFileTypeId(parser.value(clFileType)) : XBinary::FT_UNKNOWN;
 
@@ -455,7 +458,7 @@ int XScanEngineConsole::process()
         if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
             scanOptions.sMainDatabasePath = "$data/peid";
         } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
-            scanOptions.sMainDatabasePath = "$data/yara";
+            scanOptions.sMainDatabasePath = "$data/yara_rules";
         } else {
             scanOptions.sMainDatabasePath = "$data/db";
         }
@@ -491,13 +494,6 @@ int XScanEngineConsole::process()
             nResult = crDatabase;
         }
 
-        bProcessed = true;
-    }
-
-    // --listarchive / --extractarchive live in XArchiveConsole: they need no
-    // scan engine, and every archive front end (this one included) should share
-    // one implementation of the listing and extraction reports.
-    if (m_pArchiveConsole->processModes(&parser, listArgs, scanOptions.fileType, parser.isSet(clVerbose), &nResult)) {
         bProcessed = true;
     }
 
@@ -551,10 +547,6 @@ int XScanEngineConsole::process()
         nResult = XOptions::CR_CANNOTFINDDATABASE;
     }
 
-    if (m_pArchiveConsole->isProbeTimeoutOccurred()) {
-        nResult = XOptions::CR_PROBETIMEOUT;
-    }
-
     return nResult;
 }
 
@@ -566,7 +558,11 @@ XOptions::CR XScanEngineConsole::handleFiles(const QStringList &listArgs, XScanE
 
     for (const QString &sFileName : listArgs) {
         if (QFileInfo::exists(sFileName)) {
-            XBinary::findFiles(sFileName, &listFileNames, pPdStruct);
+            // Keep console traversal consistent with the documented -r /
+            // --recursivescan option.  The previous overload always walked
+            // subdirectories, so diec scanned a different corpus than cdie
+            // for the same command line.
+            XBinary::findFiles(sFileName, &listFileNames, pScanOptions->bIsRecursiveScan, 0, pPdStruct);
         } else {
             printf("Cannot find: %s\n", sFileName.toUtf8().data());
 

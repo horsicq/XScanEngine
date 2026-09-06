@@ -23,7 +23,6 @@
 
 #include "xscanengine.h"
 #include "scanitemmodel.h"
-#include "xarchiveconsole.h"
 #include "xformats.h"
 #include "xftree_model.h"
 #include "xfmodel_header.h"
@@ -37,12 +36,7 @@ class XScanEngineConsole : public QObject {
     Q_OBJECT
 
 public:
-    // pArchiveConsole (optional): the archive front end that implements
-    // --listarchive / --extractarchive.  Applications that are archive tools in
-    // their own right compose one and pass it here; when it is nullptr this
-    // object owns a default instance, so every existing front end is unchanged.
-    explicit XScanEngineConsole(QCoreApplication &app, XScanEngine &scanEngine, const QString &sDescription, XArchiveConsole *pArchiveConsole = nullptr,
-                                QObject *pParent = nullptr);
+    explicit XScanEngineConsole(QCoreApplication &app, XScanEngine &scanEngine, const QString &sDescription, QObject *pParent = nullptr);
 
 public slots:
     int process();
@@ -68,13 +62,11 @@ protected:
     virtual XOptions::CR showFileStruct(const QString &sFileName, XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct);
 
     XScanEngine *scanEngine();
-    XArchiveConsole *archiveConsole();
 
 private:
     QCoreApplication &m_app;
     XScanEngine &m_scanEngine;
     QString m_sDescription;
-    XArchiveConsole *m_pArchiveConsole;
 };
 
 #endif  // XSCANENGINECONSOLE_H

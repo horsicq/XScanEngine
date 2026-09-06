@@ -1679,7 +1679,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
             }
         }
 
-        if (!bResult) {
+        if (bResult) {
             std::sort(m_listSignatures.begin(), m_listSignatures.end(), sort_signature_prio);
         }
 
@@ -3306,28 +3306,34 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             }
         }
 
-        if (pScanOptions->sCollectionResultDirectory != "") {
-            if (!XBinary::isDirectoryExists(pScanOptions->sCollectionResultDirectory)) {
-                XBinary::createDirectory(pScanOptions->sCollectionResultDirectory);
-            }
+        // An empty result directory would make every path below start at the separator, i.e.
+        // the root of the current drive. XScanEngineProcess already defaults to "collection".
+        QString sResultDirectory = pScanOptions->sCollectionResultDirectory;
+
+        if (sResultDirectory.isEmpty()) {
+            sResultDirectory = "collection";
+        }
+
+        if (!XBinary::isDirectoryExists(sResultDirectory)) {
+            XBinary::createDirectory(sResultDirectory);
         }
 
         if (pScanOptions->bCollectionCopyFiles) {
-            sCopyDirectory = pScanOptions->sCollectionResultDirectory + QDir::separator() + "files";
+            sCopyDirectory = sResultDirectory + QDir::separator() + "files";
             if (!XBinary::isDirectoryExists(sCopyDirectory)) {
                 XBinary::createDirectory(sCopyDirectory);
             }
         }
 
         if (pScanOptions->bCollectionCreateCatalog) {
-            sCatalogDirectory = pScanOptions->sCollectionResultDirectory + QDir::separator() + "catalog";
+            sCatalogDirectory = sResultDirectory + QDir::separator() + "catalog";
             if (!XBinary::isDirectoryExists(sCatalogDirectory)) {
                 XBinary::createDirectory(sCatalogDirectory);
             }
         }
 
         if (pScanOptions->bCollectionLog) {
-            QString sLogFile = pScanOptions->sCollectionResultDirectory + QDir::separator() + "info.log";
+            QString sLogFile = sResultDirectory + QDir::separator() + "info.log";
             XBinary::appendToFile(sLogFile, sFileName.toUtf8());
             XBinary::appendToFile(sLogFile, "Original");
             XBinary::appendToFile(sLogFile, createResultString(pScanOptions, *pScanResult).toUtf8());
@@ -3336,7 +3342,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
         }
 
         if (pScanResult->listErrors.count()) {
-            QString sLogFile = pScanOptions->sCollectionResultDirectory + QDir::separator() + "error.log";
+            QString sLogFile = sResultDirectory + QDir::separator() + "error.log";
             QString sErrors = getErrorsString(pScanResult);
             XBinary::appendToFile(sLogFile, sFileName.toUtf8());
             XBinary::appendToFile(sLogFile, sErrors.toUtf8());
@@ -3477,7 +3483,7 @@ QString XScanEngine::convertPath(QIODevice *pDevice, const XScanEngine::SCANSTRU
 
         if (bOriginalExtension) {
             QString sExtension = QFileInfo(sOriginalFileName).completeSuffix();
-            sResult = sResult.replace("{original_filebasename}", XBinary::convertFileNameSymbols(sExtension, "_"));
+            sResult = sResult.replace("{original_fileextension}", XBinary::convertFileNameSymbols(sExtension, "_"));
         }
     }
 
@@ -3511,7 +3517,6 @@ QMap<quint64, QString> XScanEngine::getScanFlags()
     mapResult.insert(SF_RESOURCESSCAN, tr("Resource scan"));
     mapResult.insert(SF_ARCHIVESSCAN, tr("Archive scan"));
     mapResult.insert(SF_FIRSTWRAPPERONLY, tr("First Wrapper Only"));
-    mapResult.insert(SF_OVERLAYSCAN, tr("Overlay scan"));
     mapResult.insert(SF_DEEPSCAN, tr("Deep scan"));
     mapResult.insert(SF_HEURISTICSCAN, tr("Heuristic scan"));
 #ifdef QT_DEBUG
@@ -3659,6 +3664,10 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
         nResult |= SF_ALLTYPESSCAN;
     }
 
+    if (pGlobalOptions->getValue(XOptions::ID_SCAN_FLAG_FIRSTWRAPPERONLY).toBool()) {
+        nResult |= SF_FIRSTWRAPPERONLY;
+    }
+
     if (pGlobalOptions->getValue(XOptions::ID_SCAN_USECACHE).toBool()) {
         nResult |= SF_USECACHE;
     }
@@ -3678,6 +3687,24 @@ quint64 XScanEngine::getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions)
     return nResult;
 }
 
+void XScanEngine::addScanFlagIDs(XOptions *pGlobalOptions)
+{
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_RECURSIVE, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_OVERLAY, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_RESOURCES, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_ARCHIVES, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_DEEP, true);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_HEURISTIC, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_AGGRESSIVE, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_VERBOSE, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_ALLTYPES, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FLAG_FIRSTWRAPPERONLY, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_USECACHE, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_SORT, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_HIDEUNKNOWN, false);
+    pGlobalOptions->addID(XOptions::ID_SCAN_FORMATRESULT, false);
+}
+
 void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags)
 {
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_RECURSIVE, (bool)(nFlags & SF_RECURSIVESCAN));
@@ -3689,6 +3716,7 @@ void XScanEngine::setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_AGGRESSIVE, (bool)(nFlags & SF_AGGRESSIVESCAN));
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_VERBOSE, (bool)(nFlags & SF_VERBOSE));
     pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_ALLTYPES, (bool)(nFlags & SF_ALLTYPESSCAN));
+    pGlobalOptions->setValue(XOptions::ID_SCAN_FLAG_FIRSTWRAPPERONLY, (bool)(nFlags & SF_FIRSTWRAPPERONLY));
     pGlobalOptions->setValue(XOptions::ID_SCAN_USECACHE, (bool)(nFlags & SF_USECACHE));
     pGlobalOptions->setValue(XOptions::ID_SCAN_SORT, (bool)(nFlags & SF_SORT));
     pGlobalOptions->setValue(XOptions::ID_SCAN_HIDEUNKNOWN, (bool)(nFlags & SF_HIDEUNKNOWN));

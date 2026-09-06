@@ -24,6 +24,7 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QComboBox>
 #include <QLineEdit>
 #include <QVariant>
 
@@ -71,7 +72,7 @@ QVariant getOptionValue(XOptions *pOptions, XOptions::ID id, const QVariant &var
 
 void setDatabaseControlsVisible(Ui::XScanSortWidget *pUi, bool bMain, bool bCustom)
 {
-    pUi->checkBoxDatabaseMain->setVisible(bMain);
+    pUi->labelDatabaseMain->setVisible(bMain);
     pUi->lineEditDatabaseMain->setVisible(bMain);
     pUi->pushButtonDatabaseMain->setVisible(bMain);
 
@@ -88,6 +89,23 @@ void selectDatabaseDirectory(QWidget *pParent, QLineEdit *pLineEdit, const QStri
     if (!sDirectoryName.isEmpty()) {
         pLineEdit->setText(QDir().toNativeSeparators(sDirectoryName));
     }
+}
+
+qint32 getBufferSizeFromComboBox(QComboBox *pComboBox)
+{
+    // The buffer-size combos carry qint64 item data (up to 4 GiB). QVariant::toInt() would
+    // C-truncate 2 GiB to INT_MIN and 4 GiB to 0, and PDSTRUCT treats <= 0 as "use the default".
+    qint64 nResult = pComboBox->currentData().toLongLong();
+
+    if (nResult > 0x7FFFFFFF) {
+        nResult = 0x7FFFFFFF;
+    }
+
+    if (nResult < 0) {
+        nResult = 0;
+    }
+
+    return (qint32)nResult;
 }
 
 QString getNormalizedPath(const QString &sFileName)
@@ -187,6 +205,7 @@ void XScanSortWidget::saveOptions()
 
 void XScanSortWidget::adjustView()
 {
+    getGlobalOptions()->adjustWidget(this, XOptions::ID_VIEW_FONT_CONTROLS);
 }
 
 void XScanSortWidget::setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions)
@@ -212,15 +231,7 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
 
     m_sortOptions.setName(QString("collection_%1").arg(pScanEngine->getEngineName()));
 
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_AGGRESSIVE, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_ALLTYPES, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_ARCHIVES, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_DEEP, true);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_HEURISTIC, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_OVERLAY, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_RESOURCES, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_RECURSIVE, false);
-    m_sortOptions.addID(XOptions::ID_SCAN_FLAG_VERBOSE, false);
+    XScanEngine::addScanFlagIDs(&m_sortOptions);
 
     m_sortOptions.addID(XOptions::ID_SCAN_DIRECTORY_PATH, "");
     m_sortOptions.addID(XOptions::ID_SCAN_SUBDIRECTORIES, true);
@@ -253,10 +264,19 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
         m_sortOptions.addID(XOptions::ID_SCAN_PEID_DATABASE_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_PEID_DATABASE_PATH, "$data/peid"));
     } else if (m_engineType == XScanEngine::SCANENGINETYPE_YARA) {
-        m_sortOptions.addID(XOptions::ID_SCAN_YARA_DATABASE_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara"));
+        m_sortOptions.addID(XOptions::ID_SCAN_YARA_DATABASE_PATH, getOptionString(pGlobalOptions, XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara_rules"));
     }
 
     m_sortOptions.load();
+
+    // Without a minimum contents length a QComboBox reports its widest item as its minimum
+    // width, so the three flag/filter combos alone forced the form past 1000px.
+    XComboBoxEx *ppComboBoxes[] = {ui->comboBoxFlags, ui->comboBoxFileType, ui->comboBoxType};
+
+    for (qint32 i = 0; i < 3; i++) {
+        ppComboBoxes[i]->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+        ppComboBoxes[i]->setMinimumContentsLength(10);
+    }
 
     ui->comboBoxFlags->setData(XScanEngine::getScanFlags(), XComboBoxEx::CBTYPE_FLAGS, 0, tr("Flags"));
 
@@ -273,12 +293,11 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
             customFlag.bIsReadOnly = false;
 
             listCustomFlags.append(customFlag);
-
-            std::stable_sort(listCustomFlags.begin(), listCustomFlags.end(), XComboBoxEx::sortCustomFlagByValue);
-
-            ui->comboBoxFileType->addCustomFlags("", listCustomFlags);
         }
 
+        // addCustomFlags() rebuilds the whole model and sorts it, so it is called once
+        // with the complete list rather than once per file type.
+        ui->comboBoxFileType->addCustomFlags(tr("File types"), listCustomFlags);
         ui->comboBoxFileType->setCustomFlagsFromString(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_FILETYPES).toString());
     }
 
@@ -295,12 +314,9 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
             customFlag.bIsReadOnly = false;
 
             listCustomFlags.append(customFlag);
-
-            std::stable_sort(listCustomFlags.begin(), listCustomFlags.end(), XComboBoxEx::sortCustomFlagByValue);
-
-            ui->comboBoxType->addCustomFlags("", listCustomFlags);
         }
 
+        ui->comboBoxType->addCustomFlags(tr("Types"), listCustomFlags);
         ui->comboBoxType->setCustomFlagsFromString(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_TYPES).toString());
     }
 
@@ -316,8 +332,6 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
     ui->checkBoxAllFileTypes->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_ALLFILETYPES).toBool());
     ui->checkBoxAllTypes->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_ALLTYPES).toBool());
     ui->checkBoxUnknown->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_UNKNOWN).toBool());
-    ui->comboBoxFileType->setValue(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_FILETYPES));
-    ui->comboBoxType->setValue(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_TYPES));
 
     ui->groupBoxCatalog->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_CATALOG_ENABLED).toBool());
     ui->groupBoxCopy->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_COLLECTION_COPY_ENABLED).toBool());
@@ -348,23 +362,18 @@ void XScanSortWidget::setEngine(XScanEngine *pScanEngine)
 
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString());
         ui->lineEditDatabaseCustom->setText(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString());
-        ui->checkBoxDatabaseMain->setChecked(true);
         ui->checkBoxDatabaseCustom->setChecked(m_sortOptions.getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED).toBool());
     } else if (m_engineType == XScanEngine::SCANENGINETYPE_PEID) {
         ui->groupBoxDatabases->show();
         setDatabaseControlsVisible(ui, true, false);
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString());
-        ui->checkBoxDatabaseMain->setChecked(true);
     } else if (m_engineType == XScanEngine::SCANENGINETYPE_YARA) {
         ui->groupBoxDatabases->show();
         setDatabaseControlsVisible(ui, true, false);
         ui->lineEditDatabaseMain->setText(m_sortOptions.getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString());
-        ui->checkBoxDatabaseMain->setChecked(true);
     } else {
         ui->groupBoxDatabases->hide();
     }
-
-    ui->checkBoxDatabaseMain->setEnabled(false);
 
     on_checkBoxAllFileTypes_stateChanged(ui->checkBoxAllFileTypes->checkState());
     on_checkBoxAllTypes_stateChanged(ui->checkBoxAllTypes->checkState());
@@ -393,6 +402,18 @@ void XScanSortWidget::on_pushButtonScan_clicked()
         return;
     }
 
+    // An empty format collapses the destination onto the bare "files"/"catalog" directory,
+    // so it is rejected here rather than persisted by saveOptions() below.
+    if (ui->groupBoxCopy->isChecked() && ui->lineEditCopyFormat->text().trimmed().isEmpty()) {
+        QMessageBox::warning(this, tr("Warning"), tr("Please specify a copy format"));
+        return;
+    }
+
+    if (ui->groupBoxCatalog->isChecked() && ui->lineEditCatalogFormat->text().trimmed().isEmpty()) {
+        QMessageBox::warning(this, tr("Warning"), tr("Please specify a catalog format"));
+        return;
+    }
+
     saveOptions();
 
     m_scanOptions = {};
@@ -407,12 +428,20 @@ void XScanSortWidget::on_pushButtonScan_clicked()
     m_scanOptions.bCollectionCopyFiles = ui->groupBoxCopy->isChecked();
     m_scanOptions.bCollectionCopyRemove = ui->checkBoxCopyRemove->isChecked();
     m_scanOptions.bCollectionCopyMoveToFirst = ui->checkBoxCopyMoveToFirst->isChecked();
-    m_scanOptions.sCollectionCopyFormat = ui->lineEditCopyFormat->text();
+    m_scanOptions.sCollectionCopyFormat = ui->lineEditCopyFormat->text().trimmed();
     m_scanOptions.bCollectionCreateCatalog = ui->groupBoxCatalog->isChecked();
-    m_scanOptions.sCollectionCatalogFormat = ui->lineEditCatalogFormat->text();
-    m_scanOptions.sCollectionResultDirectory = ui->lineEditResult->text();
+    m_scanOptions.sCollectionCatalogFormat = ui->lineEditCatalogFormat->text().trimmed();
+    m_scanOptions.sCollectionResultDirectory = ui->lineEditResult->text().trimmed();
     m_scanOptions.bCollectionLog = ui->checkBoxScanLog->isChecked();
     XScanEngine::setScanFlags(&m_scanOptions, ui->comboBoxFlags->getValue().toULongLong());
+
+    if (m_scanOptions.bCollectionCopyFiles && m_scanOptions.bCollectionCopyRemove) {
+        if (QMessageBox::warning(this, tr("Warning"),
+                                 QString("%1\n\n%2").arg(tr("Source files will be removed after copying. Continue?"), QDir::toNativeSeparators(sDirectory)),
+                                 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes) {
+            return;
+        }
+    }
 
     QString sCurrentFileName = XScanEngineProcess::getCollectionCurrentFile(m_scanOptions.sCollectionResultDirectory);
 
@@ -463,32 +492,37 @@ void XScanSortWidget::on_pushButtonScan_clicked()
         }
 
         if (!m_pScanEngine->loadDatabase(&m_scanOptions, nullptr)) {
+            QMessageBox::critical(this, tr("Error"),
+                                  QString("%1: %2").arg(tr("Cannot load database"), QDir::toNativeSeparators(m_scanOptions.sMainDatabasePath)));
             return;
         }
     }
 
     XScanEngineProcess scanEngineProcess(m_pScanEngine);
-
-    XDialogProcess ds(this, &scanEngineProcess);
-    ds.setGlobal(getShortcuts(), getGlobalOptions());
-    XBinary::PDSTRUCT *pPdStruct = ds.getPdStruct();
-    pPdStruct->nBufferSize = ui->comboBoxReadBufferSize->currentData().toInt();
-    pPdStruct->nFileBufferSize = ui->comboBoxFileBufferSize->currentData().toInt();
-    scanEngineProcess.setData(sDirectory, &m_scanOptions, pPdStruct);
 #ifdef USE_XSIMD
     qint32 nOldSSE2 = xsimd_is_sse2_enabled();
     qint32 nOldAVX2 = xsimd_is_avx2_enabled();
-
-    if (xsimd_is_sse2_present()) {
-        xsimd_set_sse2(ui->checkBoxSSE2->isChecked());
-    }
-
-    if (xsimd_is_avx2_present()) {
-        xsimd_set_avx2(ui->checkBoxAVX2->isChecked());
-    }
 #endif
-    ds.start();
-    ds.exec();
+    {
+        XDialogProcess ds(this, &scanEngineProcess);
+        ds.setGlobal(getShortcuts(), getGlobalOptions());
+        XBinary::PDSTRUCT *pPdStruct = ds.getPdStruct();
+        pPdStruct->nBufferSize = getBufferSizeFromComboBox(ui->comboBoxReadBufferSize);
+        pPdStruct->nFileBufferSize = getBufferSizeFromComboBox(ui->comboBoxFileBufferSize);
+        scanEngineProcess.setData(sDirectory, &m_scanOptions, pPdStruct);
+#ifdef USE_XSIMD
+        if (xsimd_is_sse2_present()) {
+            xsimd_set_sse2(ui->checkBoxSSE2->isChecked());
+        }
+
+        if (xsimd_is_avx2_present()) {
+            xsimd_set_avx2(ui->checkBoxAVX2->isChecked());
+        }
+#endif
+        ds.start();
+        ds.exec();
+    }  // ~XDialogProcess stops the worker thread and waits for it, so the SIMD globals below
+       // are restored only once nothing is still scanning with them.
 #ifdef USE_XSIMD
     if (xsimd_is_sse2_present()) {
         xsimd_set_sse2(nOldSSE2);

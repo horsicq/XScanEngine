@@ -56,6 +56,16 @@ void XScanEngineOptionsWidget::setOptions(XOptions *pOptions)
 {
     m_pOptions = pOptions;
 
+    if (m_pOptions && m_pOptions->isIDPresent(XOptions::ID_SCAN_YARA_DATABASE_PATH)) {
+        // Older builds defaulted to "$data/yara" while the rules are installed to "$data/yara_rules":
+        // migrate the stale default when only the new directory exists.
+        if (m_pOptions->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString() == "$data/yara") {
+            if ((!XOptions::isPathExists(XOptions::convertPathName("$data/yara"))) && XOptions::isPathExists(XOptions::convertPathName("$data/yara_rules"))) {
+                m_pOptions->setValue(XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara_rules");
+            }
+        }
+    }
+
     reload();
 }
 
@@ -281,7 +291,7 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
     }
 
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
-        pOptions->addID(XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara");
+        pOptions->addID(XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara_rules");
         pOptions->addID(XOptions::ID_SCAN_YARA_DATABASE_UPDATE_URL, "https://github.com/horsicq/Detect-It-Easy/releases/tag/db");
     }
 }

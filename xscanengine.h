@@ -1359,6 +1359,9 @@ public:
     static void setScanFlags(SCAN_OPTIONS *pScanOptions, quint64 nFlags);
     static quint64 getScanFlagsFromGlobalOptions(XOptions *pGlobalOptions);
     static void setScanFlagsToGlobalOptions(XOptions *pGlobalOptions, quint64 nFlags);
+    // Registers every option ID the two functions above read and write. Keeping the list
+    // in one place is what stops a flag from being offered in the UI but never persisted.
+    static void addScanFlagIDs(XOptions *pGlobalOptions);
     static QString getJsonFromFlags(quint64 nFlags);
     static quint64 getFlagsFromJson(const QString &sJson);
     static SCAN_OPTIONS getDefaultOptions(quint64 nFlags);

@@ -55,6 +55,17 @@ bool isSameFileName(const QString &sFileName1, const QString &sFileName2)
     return bResult;
 }
 
+QString getCollectionDirectory(const QString &sCollectionResultDirectory)
+{
+    QString sResult = sCollectionResultDirectory;
+
+    if (sResult.isEmpty()) {
+        sResult = "collection";
+    }
+
+    return sResult;
+}
+
 QString getCollectionProgressFileNameByDirectory(const QString &sCollectionDirectory)
 {
     QString sResult = sCollectionDirectory;
@@ -247,11 +258,21 @@ void XScanEngineProcess::process()
                 qint32 nTotal = listFileNames.count();
 
                 if (!m_pScanOptions->sCollectionStartFile.isEmpty()) {
+                    bool bFound = false;
+
                     for (qint32 i = 0; i < nTotal; i++) {
                         if (isSameFileName(listFileNames.at(i), m_pScanOptions->sCollectionStartFile)) {
+                            nStartIndex = i;
+                            bFound = true;
                             break;
                         }
-                        nStartIndex++;
+                    }
+
+                    if (!bFound) {
+                        // The enumerator refuses symlinks and non-canonical paths that the
+                        // GUI-side resume prompt accepts, so the start file can be missing.
+                        nStartIndex = 0;
+                        emit warningMessage(tr("Cannot resume from the file, scanning all files"));
                     }
                 }
 
@@ -382,7 +403,7 @@ XScanEngine::SCAN_RESULT XScanEngineProcess::_scanDevice(QIODevice *pDevice, XSc
                 }
 
                 if (sError != "") {
-                    QString sLogFile = pScanOptions->sCollectionResultDirectory + QDir::separator() + "error.log";
+                    QString sLogFile = getCollectionDirectory(pScanOptions->sCollectionResultDirectory) + QDir::separator() + "error.log";
                     XBinary::appendToFile(sLogFile, XBinary::getDeviceFileName(pDevice));
                     XBinary::appendToFile(sLogFile, sError.toUtf8());
                 }
