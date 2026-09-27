@@ -24,6 +24,10 @@
 #include "xformats.h"
 #include "xdecompress.h"
 #include "xdisasmcore.h"
+#include <QCache>
+#if defined(QT_QML_LIB) && !defined(QT_SCRIPT_LIB)
+#include <QJSValue>
+#endif
 
 class Binary_Script : public QObject {
     Q_OBJECT
@@ -60,6 +64,13 @@ public slots:
     qint64 readSQword(qint64 nOffset);
     QString getString(qint64 nOffset, qint64 nMaxSize = 50);
     qint64 findSignature(qint64 nOffset, qint64 nSize, const QString &sSignature);
+    QVariantList findSignatures(double nOffset, double nSize, const QStringList &signatures);
+    QVariant findAnyBytes(const QVariant &nOffset, const QVariant &nSize, const QVariant &patterns);
+#if defined(QT_QML_LIB) && !defined(QT_SCRIPT_LIB)
+    QJSValue findByteRelationCandidates(const QVariant &nOffset, const QVariant &nSize, const QVariant &groups, const QVariant &tailBytes);
+#else
+    QVariant findByteRelationCandidates(const QVariant &nOffset, const QVariant &nSize, const QVariant &groups, const QVariant &tailBytes);
+#endif
     qint64 findString(qint64 nOffset, qint64 nSize, const QString &sString);
     qint64 findByte(qint64 nOffset, qint64 nSize, quint8 nValue);
     qint64 findWord(qint64 nOffset, qint64 nSize, quint16 nValue);
@@ -99,6 +110,7 @@ public slots:
     bool isUnicodeText();
     bool isText();
     QString getHeaderString();
+    QVariant getDisasmInfo(const QVariant &nAddress);
     qint32 getDisasmLength(qint64 nAddress);
     QString getDisasmString(qint64 nAddress);
     qint64 getDisasmNextAddress(qint64 nAddress);
@@ -256,6 +268,7 @@ public slots:
     // function X.c(a,b) { return File.compare(a,b) }
 
 private:
+    bool _findByteRelationCandidates(const QVariant &nOffset, const QVariant &nSize, const QVariant &groups, const QVariant &tailBytes, QVector<quint32> *result);
     void _fixOffsetAndSize(qint64 *pnOffset, qint64 *pnSize);
     QElapsedTimer *_startProfiling();
     void _finishProfiling(QElapsedTimer *pElapsedTimer, const QString &sInfo);
@@ -281,6 +294,9 @@ private:
     XADDR m_nBaseAddress;
     XDisasmAbstract::DISASM_OPTIONS m_disasmOptions;
     XDisasmCore m_disasmCore;
+    QCache<qint64, QVariantMap> m_disasmInfoCache;
+    XBinary::DM m_disasmInfoMode;
+    quint64 m_nPrimitiveDeviceGeneration;
     qint64 m_nSize;
     qint64 m_nEntryPointOffset;
     qint64 m_nEntryPointAddress;

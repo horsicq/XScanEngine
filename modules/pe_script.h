@@ -33,6 +33,7 @@ public:
     ~PE_Script();
 
 public slots:
+    QVariant mapVirtualRange(const QVariant &nAddress, const QVariant &nSize, const QVariant &requiredFlags, const QVariant &fileBacked);
     quint16 getNumberOfSections();
     QString getSectionName(quint32 nNumber);
     quint32 getSectionVirtualSize(quint32 nNumber);
@@ -128,6 +129,7 @@ public slots:
 
 private:
     XPE *m_pPE;
+    quint64 m_nMapDeviceGeneration;
     // Obsolete: backing for the compatibility .NET functions
     XCLIAssembly *m_pCliAssembly;
     XCLIAssembly::CLI_INFO m_cliInfo;

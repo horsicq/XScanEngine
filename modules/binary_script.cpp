@@ -19,6 +19,10 @@
  * SOFTWARE.
  */
 #include "binary_script.h"
+#include "native_scan_helpers.h"
+#if defined(QT_QML_LIB) && !defined(QT_SCRIPT_LIB)
+#include <QJSEngine>
+#endif
 
 Binary_Script::Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
 {
@@ -81,6 +85,9 @@ Binary_Script::Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, const
     m_disasmOptions = {};
     m_disasmOptions.bIsUppercase = true;
     m_disasmCore.setMode(XBinary::getDisasmMode(&m_memoryMap));
+    m_disasmInfoCache.setMaxCost(256);
+    m_disasmInfoMode = m_disasmCore.getDisasmMode();
+    m_nPrimitiveDeviceGeneration = m_pBinary->getDeviceGeneration();
 }
 
 Binary_Script::~Binary_Script()
@@ -172,6 +179,99 @@ QString Binary_Script::getString(qint64 nOffset, qint64 nMaxSize)
 {
     return m_pBinary->read_ansiString(nOffset, nMaxSize);
 }
+
+QVariantList Binary_Script::findSignatures(double offset, double size, const QStringList &signatures)
+{
+    QVariantList result;
+    const double maxSafe = 9007199254740991.0;
+    if (!(offset >= -maxSafe && offset <= maxSafe && size >= -maxSafe && size <= maxSafe)) return result;
+    qint64 nOffset = (qint64)offset, nSize = (qint64)size;
+    if ((double)nOffset != offset || (double)nSize != size) return result;
+    _fixOffsetAndSize(&nOffset, &nSize);
+    const QList<qint64> offsets = m_pBinary->find_signatures(&m_memoryMap, nOffset, nSize, signatures, m_pPdStruct);
+    for (qint64 found : offsets) {
+        if (found > Q_INT64_C(9007199254740991)) return QVariantList();
+        result.append(QVariant((double)found));
+    }
+    return result;
+}
+
+QVariant Binary_Script::findAnyBytes(const QVariant &offset, const QVariant &size, const QVariant &sourcePatterns)
+{
+    qint64 start, length;
+    const QVariant patternInput = XScanNative::plainValue(sourcePatterns);
+    QVector<QByteArray> patterns;
+    if (m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration ||
+        !XScanNative::strictRange(offset, size, m_nSize, &start, &length) ||
+        patternInput.type() != QVariant::List || !XScanNative::bytePatterns(patternInput.toList(), &patterns) || patterns.isEmpty() || !length) return XScanNative::nullResult();
+    const XBinary::PDSTRUCTLIFETIME lifetime = XBinary::retainPdStructLifetime(m_pPdStruct);
+    const auto alive = [&]() { return (!m_pPdStruct || XBinary::isPdStructLifetimeAlive(lifetime)) &&
+        XBinary::isPdStructNotCanceled(m_pPdStruct) && m_pBinary->getDeviceGeneration() == m_nPrimitiveDeviceGeneration; };
+    int overlap = 0;
+    for (const QByteArray &pattern : patterns) overlap = qMax(overlap, pattern.size() - 1);
+    for (qint64 cursor = 0; cursor < length; ) {
+        if (!alive()) return XScanNative::nullResult();
+        const int candidates = (int)qMin(Q_INT64_C(65536), length - cursor);
+        const int readSize = (int)qMin((qint64)candidates + overlap, length - cursor);
+        const QByteArray data = m_pBinary->read_array_process(start + cursor, readSize, m_pPdStruct);
+        if (!alive() || data.size() != readSize) return XScanNative::nullResult();
+        const XScanNative::ByteHit found = XScanNative::findAny(data, candidates, patterns);
+        if (found.offset >= 0) {
+            const qint64 absolute = start + cursor + found.offset;
+            if ((quint64)absolute > XScanNative::MaxSafeInteger) return XScanNative::nullResult();
+            QVariantMap result; result.insert(QStringLiteral("offset"), (double)absolute);
+            result.insert(QStringLiteral("patternIndex"), found.patternIndex);
+            return result;
+        }
+        cursor += candidates;
+    }
+    return XScanNative::nullResult();
+}
+
+bool Binary_Script::_findByteRelationCandidates(const QVariant &offset, const QVariant &size, const QVariant &sourceGroups, const QVariant &tail,
+                                                 QVector<quint32> *result)
+{
+    qint64 start, length; quint64 tailBytes;
+    if (m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration ||
+        !XScanNative::strictRange(offset, size, m_nSize, &start, &length) ||
+        (quint64)length > XScanNative::MaxRelationBytes || !XScanNative::unsignedValue(tail, &tailBytes, 0xffffffffu)) return false;
+    const QVariant groupInput = XScanNative::plainValue(sourceGroups);
+    QVector<XScanNative::RelationGroup> groups;
+    if (groupInput.type() != QVariant::List || !XScanNative::relationGroups(groupInput.toList(), (quint32)tailBytes, &groups)) return false;
+    const XBinary::PDSTRUCTLIFETIME lifetime = XBinary::retainPdStructLifetime(m_pPdStruct);
+    const auto alive = [&]() { return (!m_pPdStruct || XBinary::isPdStructLifetimeAlive(lifetime)) &&
+        XBinary::isPdStructNotCanceled(m_pPdStruct) && m_pBinary->getDeviceGeneration() == m_nPrimitiveDeviceGeneration; };
+    if (!alive()) return false;
+    if (groups.isEmpty() || tailBytes >= (quint64)length) return true;
+    const QByteArray data = m_pBinary->read_array_process(start, length, m_pPdStruct);
+    if (!alive() || data.size() != length) return false;
+    bool completed = false;
+    *result = XScanNative::relations(data, groups, (quint32)tailBytes, &completed, alive);
+    return completed && alive();
+}
+
+#if defined(QT_QML_LIB) && !defined(QT_SCRIPT_LIB)
+QJSValue Binary_Script::findByteRelationCandidates(const QVariant &offset, const QVariant &size, const QVariant &groups, const QVariant &tailBytes)
+{
+    QJSEngine *engine = qjsEngine(this);
+    QVector<quint32> values;
+    if (!engine || !_findByteRelationCandidates(offset, size, groups, tailBytes, &values)) return QJSValue(QJSValue::NullValue);
+    QJSValue result = engine->globalObject().property(QStringLiteral("Uint32Array")).callAsConstructor({QJSValue(values.size())});
+    if (result.isError() || result.property(QStringLiteral("length")).toUInt() != (uint)values.size()) return QJSValue(QJSValue::NullValue);
+    for (int i = 0; i < values.size(); ++i) result.setProperty((quint32)i, QJSValue((double)values[i]));
+    return result;
+}
+#else
+QVariant Binary_Script::findByteRelationCandidates(const QVariant &offset, const QVariant &size, const QVariant &groups, const QVariant &tailBytes)
+{
+    QVector<quint32> values;
+    if (!_findByteRelationCandidates(offset, size, groups, tailBytes, &values)) return XScanNative::nullResult();
+    // QtScript implements ES3 and has no typed arrays. Keep the same flat uint32 sequence.
+    QVariantList result; result.reserve(values.size());
+    for (quint32 value : values) result.append((double)value);
+    return result;
+}
+#endif
 
 qint64 Binary_Script::findSignature(qint64 nOffset, qint64 nSize, const QString &sSignature)
 {
@@ -486,6 +586,37 @@ bool Binary_Script::isText()
 QString Binary_Script::getHeaderString()
 {
     return m_sHeaderString;
+}
+
+QVariant Binary_Script::getDisasmInfo(const QVariant &address)
+{
+    quint64 va;
+    if (!XScanNative::unsignedValue(address, &va, XScanNative::MaxSafeInteger) || !XBinary::isPdStructNotCanceled(m_pPdStruct) ||
+        m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration) {
+        m_disasmInfoCache.clear();
+        return XScanNative::nullResult();
+    }
+    const XBinary::DM mode = XBinary::getDisasmMode(&m_memoryMap);
+    if (mode != m_disasmInfoMode) {
+        m_disasmInfoCache.clear();
+        m_disasmCore.setMode(mode);
+        m_disasmInfoMode = mode;
+    }
+    if (mode != XBinary::DM_8086 && mode != XBinary::DM_X86_32 && mode != XBinary::DM_X86_64) return XScanNative::nullResult();
+    const qint64 offset = XBinary::addressToOffset(&m_memoryMap, (qint64)va);
+    if (offset < 0 || offset >= m_nSize) return XScanNative::nullResult();
+    if (QVariantMap *cached = m_disasmInfoCache.object((qint64)va)) return *cached;
+    const XDisasmAbstract::DISASM_RESULT decoded = m_disasmCore.disAsm(m_pBinary->getDevice(), offset, va, m_disasmOptions);
+    if (!decoded.bIsValid || decoded.bMemError || decoded.nSize < 1 || decoded.nSize > 15 ||
+        decoded.nSize > m_nSize - offset || decoded.nNextAddress > XScanNative::MaxSafeInteger ||
+        m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration) return XScanNative::nullResult();
+    QString text = decoded.sMnemonic;
+    if (!decoded.sOperands.isEmpty()) text += " " + decoded.sOperands;
+    QVariantMap result; result.insert(QStringLiteral("text"), text);
+    result.insert(QStringLiteral("length"), decoded.nSize);
+    result.insert(QStringLiteral("nextAddress"), (double)decoded.nNextAddress);
+    m_disasmInfoCache.insert((qint64)va, new QVariantMap(result));
+    return result;
 }
 
 qint32 Binary_Script::getDisasmLength(qint64 nAddress)

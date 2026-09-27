@@ -17,6 +17,7 @@ HEADERS += \
     $$PWD/modules/atarist_script.h \
     $$PWD/modules/archive_script.h \
     $$PWD/modules/binary_script.h \
+    $$PWD/modules/native_scan_helpers.h \
     $$PWD/modules/com_script.h \
     $$PWD/modules/dos16m_script.h \
     $$PWD/modules/dos4g_script.h \

@@ -48,6 +48,7 @@ set(XSCANENGINE_SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/modules/archive_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/binary_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/binary_script.h
+    ${CMAKE_CURRENT_LIST_DIR}/modules/native_scan_helpers.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/com_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/modules/com_script.h
     ${CMAKE_CURRENT_LIST_DIR}/modules/dos16m_script.cpp

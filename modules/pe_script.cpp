@@ -19,10 +19,12 @@
  * SOFTWARE.
  */
 #include "pe_script.h"
+#include "native_scan_helpers.h"
 
 PE_Script::PE_Script(XPE *pPE, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : MSDOS_Script(pPE, filePart, scanOptions, pPdStruct)
 {
     m_pPE = pPE;
+    m_nMapDeviceGeneration = pPE->getDeviceGeneration();
 
     m_nNumberOfSections = m_pPE->getFileHeader_NumberOfSections();
     m_listSectionHeaders = m_pPE->getSectionHeaders(getPdStruct());
@@ -184,6 +186,23 @@ QString PE_Script::getNETVersion()
 bool PE_Script::compareEP_NET(const QString &sSignature, qint64 nOffset)
 {
     return m_pPE->compareSignatureOnAddress(getMemoryMap(), sSignature, getBaseAddress() + m_cliInfo.metaData.nEntryPoint + nOffset);
+}
+
+QVariant PE_Script::mapVirtualRange(const QVariant &address, const QVariant &size, const QVariant &requiredFlags, const QVariant &fileBacked)
+{
+    const QVariant vaInput = XScanNative::plainValue(address), sizeInput = XScanNative::plainValue(size),
+        flagInput = XScanNative::plainValue(requiredFlags), backedInput = XScanNative::plainValue(fileBacked);
+    if (!XBinary::isPdStructNotCanceled(getPdStruct()) || !XScanNative::numeric(vaInput) ||
+        !XScanNative::numeric(sizeInput) || !XScanNative::numeric(flagInput) || backedInput.type() != QVariant::Bool ||
+        m_pPE->getDeviceGeneration() != m_nMapDeviceGeneration) return XScanNative::nullResult();
+    QVector<XScanNative::Section> sections;
+    sections.reserve(m_listSectionHeaders.size());
+    for (int i = 0; i < m_listSectionHeaders.size(); ++i) {
+        sections.append({getSectionVirtualAddress(i), getSectionVirtualSize(i), getSectionFileSize(i),
+                         getSectionFileOffset(i), getSectionCharacteristics(i)});
+    }
+    return XScanNative::mapRange(vaInput.toDouble(), sizeInput.toDouble(), flagInput.toDouble(), backedInput.toBool(), (quint64)getImageBase(), getSize(), sections,
+                                [&](quint64 va) { return VAToOffset((qint64)va); });
 }
 
 quint16 PE_Script::getNumberOfSections()
