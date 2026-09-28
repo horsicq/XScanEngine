@@ -256,7 +256,7 @@ QJSValue Binary_Script::findByteRelationCandidates(const QVariant &offset, const
     QJSEngine *engine = qjsEngine(this);
     QVector<quint32> values;
     if (!engine || !_findByteRelationCandidates(offset, size, groups, tailBytes, &values)) return QJSValue(QJSValue::NullValue);
-    QJSValue result = engine->globalObject().property(QStringLiteral("Uint32Array")).callAsConstructor({QJSValue(values.size())});
+    QJSValue result = engine->globalObject().property(QStringLiteral("Uint32Array")).callAsConstructor({QJSValue(static_cast<double>(values.size()))});
     if (result.isError() || result.property(QStringLiteral("length")).toUInt() != (uint)values.size()) return QJSValue(QJSValue::NullValue);
     for (int i = 0; i < values.size(); ++i) result.setProperty((quint32)i, QJSValue((double)values[i]));
     return result;
