@@ -501,6 +501,39 @@ bool Binary_Script::isZeroFilled(qint64 nOffset, qint64 nSize)
     return m_pBinary->isZeroFilled(nOffset, nSize, m_pPdStruct);
 }
 
+QString Binary_Script::scanBufferForEncryptedPe(const QVariant &varData, qint64 nSize)
+{
+    if (varData.type() == QVariant::ByteArray) {
+        QByteArray ba = varData.toByteArray();
+        qint64 sz = (nSize >= 0 && nSize <= ba.size()) ? nSize : ba.size();
+        return XBinary::scanBufferForEncryptedPe(ba.constData(), sz);
+    } else if (varData.canConvert<QVariantList>()) {
+        QVariantList list = varData.toList();
+        qint32 count = (nSize >= 0 && nSize <= list.size()) ? (qint32)nSize : list.size();
+        QByteArray ba;
+        ba.resize(count);
+        char *pData = ba.data();
+        for (qint32 i = 0; i < count; i++) {
+            pData[i] = (char)(list.at(i).toUInt() & 0xFF);
+        }
+        return XBinary::scanBufferForEncryptedPe(ba.constData(), count);
+    } else if (varData.canConvert<qint64>() && (nSize > 0)) {
+        qint64 nOffset = varData.toLongLong();
+        return scanBufferForEncryptedPe(nOffset, nSize);
+    }
+
+    return QString();
+}
+
+QString Binary_Script::scanBufferForEncryptedPe(qint64 nOffset, qint64 nSize)
+{
+    if (nSize <= 0) {
+        return QString();
+    }
+
+    return m_pBinary->scanBufferForEncryptedPe(nOffset, nSize, m_pPdStruct);
+}
+
 QString Binary_Script::calculateMD5(qint64 nOffset, qint64 nSize)
 {
     return m_pBinary->getHash(XBinary::HASH_MD5, nOffset, nSize, m_pPdStruct);

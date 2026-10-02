@@ -95,6 +95,8 @@ public slots:
     QString getSignature(qint64 nOffset, qint64 nSize);
     double calculateEntropy(qint64 nOffset, qint64 nSize);
     bool isZeroFilled(qint64 nOffset, qint64 nSize);
+    QString scanBufferForEncryptedPe(const QVariant &varData, qint64 nSize = -1);
+    QString scanBufferForEncryptedPe(qint64 nOffset, qint64 nSize);
     QString calculateMD5(qint64 nOffset, qint64 nSize);
     quint32 calculateCRC32(qint64 nOffset, qint64 nSize);
     quint16 crc16(qint64 nOffset, qint64 nSize, quint16 nInit = 0);
