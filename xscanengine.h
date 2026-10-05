@@ -1386,11 +1386,17 @@ public:
     virtual QString getEngineName();
     virtual SCANENGINETYPE getEngineType();
     virtual bool isSignatureFileValid(const QString &sSignatureFilePath);
+    // Same test as isSignatureFileValid, on a name alone: TAR entries are not files.
+    virtual bool isSignatureNameValid(const QString &sSignatureName);
     virtual bool isDatabaseUsing();
     virtual QList<SIGNATURE_RECORD> getSignaturesFromData(const QString &sData, const QString &sSignatureFilePath, XBinary::FT fileType, XBinary::PDSTRUCT *pPdStruct);
 
     bool loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pPdStruct);
     bool _loadDatabase(const QString &sDatabasePath, DT databaseType);
+    // Packs a database directory into one TAR file that loadDatabase accepts in
+    // place of the directory. Same layout as cdie --createtar, so either tool
+    // reads the other's archive. Precompiled (cdie bytecode) archives are cdie-only.
+    bool createDatabaseTar(const QString &sDatabasePath, const QString &sTarPath, XBinary::PDSTRUCT *pPdStruct = nullptr);
 
 private:
     void initDatabase();
@@ -1399,6 +1405,22 @@ private:
     QList<SIGNATURE_RECORD> _loadDatabaseFromArchive(XArchive *pArchive, QList<XArchive::RECORD> *pListRecords, DT databaseType, const QString &sPrefix,
                                                      XBinary::FT fileType);  // TODO pdStruct
     static QMap<QString, XBinary::FT> _getDatabaseFileTypeMap();
+
+    struct DATABASE_DIRECTORY {
+        QString sDirectory;  // relative to the database root; "" is the root itself
+        XBinary::FT fileType;
+    };
+
+    struct DATABASE_TAR_ENTRY {
+        QString sPath;  // normalized: '/' separators, no "./" and no top-level wrapper directory
+        QByteArray baData;
+    };
+
+    static QList<DATABASE_DIRECTORY> _getDatabaseDirectories();
+    static bool _compareDatabaseTarEntries(const DATABASE_TAR_ENTRY &entry1, const DATABASE_TAR_ENTRY &entry2);
+    static bool _readDatabaseTar(QIODevice *pDevice, QList<DATABASE_TAR_ENTRY> *pListEntries, XBinary::PDSTRUCT *pPdStruct);
+    static bool _writeDatabaseTarEntry(QIODevice *pDevice, const QString &sPath, const QByteArray &baData);
+    bool _loadDatabaseFromTar(const QString &sTarPath, DT databaseType, XBinary::PDSTRUCT *pPdStruct);
     QList<METADATA_RECORD> _parseMetadata(const QString &sData, XBinary::FT fileType);
     static QString _getDatabaseCachePath(const QString &sDatabasePath);
     static void _getDatabaseStats(const QString &sDatabasePath, quint32 *pnFileCount, quint64 *pnTotalSize, qint64 *pnNewestMtime);

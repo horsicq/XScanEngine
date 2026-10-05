@@ -20,6 +20,8 @@
  */
 #include "xscanengine.h"
 #include <QCryptographicHash>
+#include <algorithm>
+#include <limits>
 #include <QFileInfo>
 #include <QDir>
 #include <QDirIterator>
@@ -29,7 +31,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QCryptographicHash>
 #include <QFileInfo>
 
 bool sort_signature_prio(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEngine::SIGNATURE_RECORD &sr2)
@@ -1544,11 +1545,22 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
         QScopedPointer<QElapsedTimer> pElapsedTimer(new QElapsedTimer);
         pElapsedTimer->start();
 #endif
+        QString sUnresolvedPath = _sDatabasePath;
         _sDatabasePath = XOptions::convertPathName(_sDatabasePath);
 
+        // Like cdie: a default database that is missing may ship as <name>.tar.
+        // "$data" is resolved by searching for an existing path, so the archive
+        // name goes through that search itself.
+        if (sUnresolvedPath.startsWith("$data") && (!XBinary::isFileExists(_sDatabasePath)) && (!XBinary::isDirectoryExists(_sDatabasePath))) {
+            QString sTarPath = XOptions::convertPathName(sUnresolvedPath + ".tar");
+
+            if (XBinary::isFileExists(sTarPath)) {
+                _sDatabasePath = sTarPath;
+            }
+        }
+
         if (XBinary::isFileExists(_sDatabasePath)) {
-            // Load from zip
-            // TODO load from tar(cache)
+            // Load from zip, else from a TAR database (cdie --createtar)
             QFile file;
             file.setFileName(_sDatabasePath);
 
@@ -1596,6 +1608,10 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                 }
 
                 file.close();
+            }
+
+            if (!bResult) {
+                bResult = _loadDatabaseFromTar(_sDatabasePath, databaseType, pPdStruct);
             }
         } else if (XBinary::isDirectoryExists(_sDatabasePath)) {
             // Load from directory with optional cache optimization
@@ -1788,7 +1804,8 @@ bool XScanEngine::updateSignature(const QString &sSignatureFilePath, const QStri
 
     for (qint32 i = 0; i < nNumberOfSignatures; i++) {
         if (m_listSignatures.at(i).sFilePath == sSignatureFilePath) {
-            if (XBinary::writeToFile(sSignatureFilePath, QByteArray().append(sText.toUtf8()))) {
+            // Records from a ZIP or TAR database have no file of their own.
+            if ((!m_listSignatures.at(i).bReadOnly) && XBinary::writeToFile(sSignatureFilePath, QByteArray().append(sText.toUtf8()))) {
                 m_listSignatures[i].sText = sText;
                 bResult = true;
             }
@@ -1891,6 +1908,598 @@ QList<XScanEngine::SIGNATURE_RECORD> XScanEngine::_loadDatabaseFromArchive(XArch
     }
 
     return listResult;
+}
+
+QList<XScanEngine::DATABASE_DIRECTORY> XScanEngine::_getDatabaseDirectories()
+{
+    // The directories loadDatabase reads, in the order it reads them.
+    struct DIRECTORY_RECORD {
+        const char *pszDirectory;
+        XBinary::FT fileType;
+    };
+
+    static const DIRECTORY_RECORD records[] = {
+        {"", XBinary::FT_UNKNOWN},          {"Binary", XBinary::FT_BINARY},        {"COM", XBinary::FT_COM},
+        {"Archive", XBinary::FT_ARCHIVE},   {"ZIP", XBinary::FT_ZIP},              {"JAR", XBinary::FT_JAR},
+        {"APK", XBinary::FT_APK},           {"IPA", XBinary::FT_IPA},              {"NPM", XBinary::FT_NPM},
+        {"MACHOFAT", XBinary::FT_MACHOFAT}, {"DEB", XBinary::FT_DEB},              {"DEX", XBinary::FT_DEX},
+        {"MSDOS", XBinary::FT_MSDOS},       {"LE", XBinary::FT_LE},                {"LX", XBinary::FT_LX},
+        {"NE", XBinary::FT_NE},             {"PE", XBinary::FT_PE},                {"PE/DOTNET", XBinary::FT_CLI_ASSEMBLY},
+        {"ELF", XBinary::FT_ELF},           {"MACH", XBinary::FT_MACHO},           {"DOS16M", XBinary::FT_DOS16M},
+        {"DOS4G", XBinary::FT_DOS4G},       {"Amiga", XBinary::FT_AMIGAHUNK},      {"AtariST", XBinary::FT_ATARIST},
+        {"JavaClass", XBinary::FT_JAVACLASS}, {"PYC", XBinary::FT_PYC},            {"PDF", XBinary::FT_PDF},
+        {"CFBF", XBinary::FT_CFBF},         {"Image", XBinary::FT_IMAGE},          {"JPEG", XBinary::FT_JPEG},
+        {"PNG", XBinary::FT_PNG},           {"RAR", XBinary::FT_RAR},              {"ISO9660", XBinary::FT_ISO9660},
+    };
+
+    QList<DATABASE_DIRECTORY> listResult;
+
+    qint32 nNumberOfRecords = (qint32)(sizeof(records) / sizeof(records[0]));
+
+    for (qint32 i = 0; i < nNumberOfRecords; i++) {
+        DATABASE_DIRECTORY record = {};
+        record.sDirectory = QString::fromLatin1(records[i].pszDirectory);
+        record.fileType = records[i].fileType;
+
+        listResult.append(record);
+    }
+
+    return listResult;
+}
+
+bool XScanEngine::_compareDatabaseTarEntries(const DATABASE_TAR_ENTRY &entry1, const DATABASE_TAR_ENTRY &entry2)
+{
+    // QDir's default order (Name | IgnoreCase), which is the order the
+    // directory loader hands records to the sort. Keeping it makes a TAR
+    // database load into exactly the list the directory would.
+    return entry1.sPath.compare(entry2.sPath, Qt::CaseInsensitive) < 0;
+}
+
+static bool _parseDatabaseTarNumber(const char *pData, qint32 nSize, qint64 *pnValue)
+{
+    qint64 nValue = 0;
+    qint32 i = 0;
+
+    if ((unsigned char)pData[0] & 0x80) {
+        // GNU base-256: big-endian, top bit of the first byte is the marker.
+        nValue = (unsigned char)pData[0] & 0x7F;
+
+        for (i = 1; i < nSize; i++) {
+            if (nValue > (std::numeric_limits<qint64>::max() >> 8)) {
+                return false;
+            }
+
+            nValue = (nValue << 8) | (unsigned char)pData[i];
+        }
+
+        *pnValue = nValue;
+
+        return true;
+    }
+
+    while ((i < nSize) && ((pData[i] == ' ') || (pData[i] == '\0'))) {
+        i++;
+    }
+
+    bool bDigits = false;
+
+    while ((i < nSize) && (pData[i] >= '0') && (pData[i] <= '7')) {
+        if (nValue > (std::numeric_limits<qint64>::max() >> 3)) {
+            return false;
+        }
+
+        nValue = (nValue << 3) + (pData[i] - '0');
+        bDigits = true;
+        i++;
+    }
+
+    while (i < nSize) {
+        if ((pData[i] != ' ') && (pData[i] != '\0')) {
+            return false;
+        }
+
+        i++;
+    }
+
+    *pnValue = nValue;
+
+    return bDigits;
+}
+
+bool XScanEngine::_readDatabaseTar(QIODevice *pDevice, QList<DATABASE_TAR_ENTRY> *pListEntries, XBinary::PDSTRUCT *pPdStruct)
+{
+    // A signature archive is a few thousand small scripts, so this reads only
+    // what a database needs: regular files, ustar prefixes, GNU long names and
+    // pax "path" records. Anything else (directories, links) is skipped.
+    const qint64 nMaxEntrySize = 256 * 1024 * 1024;
+
+    QList<DATABASE_TAR_ENTRY> listEntries;
+    QString sNextPath;
+    bool bResult = false;
+    bool bAnyHeader = false;
+
+    while (XBinary::isPdStructNotCanceled(pPdStruct)) {
+        char header[512];
+
+        qint64 nRead = pDevice->read(header, sizeof(header));
+
+        if (nRead == 0) {
+            // Some writers omit the closing zero blocks.
+            bResult = bAnyHeader;
+            break;
+        }
+
+        if (nRead != (qint64)sizeof(header)) {
+            break;
+        }
+
+        bool bZeroBlock = true;
+
+        for (qint32 i = 0; i < (qint32)sizeof(header); i++) {
+            if (header[i] != 0) {
+                bZeroBlock = false;
+                break;
+            }
+        }
+
+        if (bZeroBlock) {
+            // A file that merely starts with zeros (an ISO image, say) is not
+            // an empty archive.
+            bResult = bAnyHeader;
+            break;
+        }
+
+        qint64 nStoredChecksum = 0;
+
+        if (!_parseDatabaseTarNumber(&header[148], 8, &nStoredChecksum)) {
+            break;
+        }
+
+        qint64 nUnsignedSum = 0;
+        qint64 nSignedSum = 0;
+
+        for (qint32 i = 0; i < (qint32)sizeof(header); i++) {
+            char cByte = ((i >= 148) && (i < 156)) ? ' ' : header[i];
+            nUnsignedSum += (unsigned char)cByte;
+            nSignedSum += (signed char)cByte;
+        }
+
+        if ((nStoredChecksum != nUnsignedSum) && (nStoredChecksum != nSignedSum)) {
+            break;
+        }
+
+        bAnyHeader = true;
+
+        qint64 nSize = 0;
+
+        if ((!_parseDatabaseTarNumber(&header[124], 12, &nSize)) || (nSize < 0)) {
+            break;
+        }
+
+        qint64 nPadding = (512 - (nSize % 512)) % 512;
+        char cType = header[156];
+        bool bRegular = (cType == '0') || (cType == '\0') || (cType == '7');
+
+        if ((!bRegular) && (cType != 'L') && (cType != 'x')) {
+            // Directories, links, devices: step over whatever payload they have
+            // without reading it.
+            qint64 nRemaining = pDevice->size() - pDevice->pos();
+
+            if ((nSize > nRemaining) || (nPadding > (nRemaining - nSize)) || (!pDevice->seek(pDevice->pos() + nSize + nPadding))) {
+                bAnyHeader = false;
+                break;
+            }
+
+            sNextPath.clear();
+            continue;
+        }
+
+        if (nSize > nMaxEntrySize) {
+            break;
+        }
+
+        QByteArray baData = pDevice->read(nSize);
+
+        if (baData.size() != nSize) {
+            break;
+        }
+
+        if ((nPadding > 0) && (pDevice->read(nPadding).size() != nPadding)) {
+            break;
+        }
+
+        if (cType == 'L') {
+            // GNU long name for the next header.
+            qint32 nLength = baData.indexOf('\0');
+            sNextPath = QString::fromUtf8(baData.left((nLength >= 0) ? nLength : baData.size()));
+            continue;
+        }
+
+        if (cType == 'x') {
+            // pax extended header: "<length> <key>=<value>\n" records.
+            qint32 nOffset = 0;
+
+            while (nOffset < baData.size()) {
+                qint32 nSpace = baData.indexOf(' ', nOffset);
+
+                if (nSpace < 0) {
+                    break;
+                }
+
+                bool bNumber = false;
+                qint32 nRecordSize = baData.mid(nOffset, nSpace - nOffset).toInt(&bNumber);
+
+                if ((!bNumber) || (nRecordSize <= (nSpace - nOffset + 1)) || (nRecordSize > (baData.size() - nOffset))) {
+                    break;
+                }
+
+                QByteArray baRecord = baData.mid(nSpace + 1, nRecordSize - (nSpace - nOffset) - 2);
+
+                if (baRecord.startsWith("path=")) {
+                    sNextPath = QString::fromUtf8(baRecord.mid(5));
+                }
+
+                nOffset += nRecordSize;
+            }
+
+            continue;
+        }
+
+        QString sPath = sNextPath;
+        sNextPath.clear();
+
+        if (sPath.isEmpty()) {
+            QByteArray baName(header, (qint32)qstrnlen(header, 100));
+
+            // The prefix field is only a prefix in POSIX ustar; GNU headers use
+            // those bytes for other fields.
+            if ((memcmp(&header[257], "ustar\0", 6) == 0) && (header[345] != '\0')) {
+                QByteArray baPrefix(&header[345], (qint32)qstrnlen(&header[345], 155));
+                baName = baPrefix + "/" + baName;
+            }
+
+            sPath = QString::fromUtf8(baName);
+        }
+
+        sPath.replace(QChar('\\'), QChar('/'));
+
+        while (sPath.startsWith("./") || sPath.startsWith("/")) {
+            sPath.remove(0, sPath.startsWith("./") ? 2 : 1);
+        }
+
+        // Old (V7) writers store directories as regular entries named "dir/".
+        if ((!sPath.isEmpty()) && (!sPath.endsWith(QChar('/')))) {
+            DATABASE_TAR_ENTRY entry = {};
+            entry.sPath = sPath;
+            entry.baData = baData;
+
+            listEntries.append(entry);
+        }
+    }
+
+    if (bResult) {
+        // "tar cf db.tar db" wraps everything in one top-level directory. Drop
+        // it when every file in a subdirectory sits under the same first
+        // component and that component is not itself a database directory.
+        // Loose top-level files (a README next to db/) do not decide it.
+        qint32 nNumberOfEntries = listEntries.count();
+        QString sWrapper;
+        bool bWrapped = false;
+
+        for (qint32 i = 0; i < nNumberOfEntries; i++) {
+            qint32 nSlash = listEntries.at(i).sPath.indexOf(QChar('/'));
+
+            if (nSlash <= 0) {
+                continue;
+            }
+
+            if (sWrapper.isEmpty()) {
+                sWrapper = listEntries.at(i).sPath.left(nSlash);
+                bWrapped = true;
+            } else if (listEntries.at(i).sPath.left(nSlash).compare(sWrapper, Qt::CaseInsensitive) != 0) {
+                bWrapped = false;
+                break;
+            }
+        }
+
+        if (bWrapped) {
+            QList<DATABASE_DIRECTORY> listDirectories = _getDatabaseDirectories();
+            qint32 nNumberOfDirectories = listDirectories.count();
+
+            for (qint32 i = 0; i < nNumberOfDirectories; i++) {
+                if (listDirectories.at(i).sDirectory.section(QChar('/'), 0, 0).compare(sWrapper, Qt::CaseInsensitive) == 0) {
+                    bWrapped = false;
+                    break;
+                }
+            }
+        }
+
+        if (bWrapped) {
+            for (qint32 i = 0; i < nNumberOfEntries; i++) {
+                if (listEntries.at(i).sPath.indexOf(QChar('/')) > 0) {
+                    listEntries[i].sPath.remove(0, sWrapper.size() + 1);
+                }
+            }
+        }
+
+        *pListEntries = listEntries;
+    }
+
+    return bResult;
+}
+
+bool XScanEngine::_writeDatabaseTarEntry(QIODevice *pDevice, const QString &sPath, const QByteArray &baData)
+{
+    // The header cdie writes: mode 0644, owner 0, mtime 0, ustar magic. Names
+    // longer than the 100-byte field are split into the ustar prefix.
+    char header[512];
+    memset(header, 0, sizeof(header));
+
+    QByteArray baPath = sPath.toUtf8();
+    QByteArray baName = baPath;
+    QByteArray baPrefix;
+
+    if (baPath.size() > 100) {
+        qint32 nSlash = baPath.lastIndexOf('/');
+
+        while ((nSlash > 0) && ((nSlash > 155) || ((baPath.size() - nSlash - 1) > 100))) {
+            if ((baPath.size() - nSlash - 1) > 100) {
+                return false;
+            }
+
+            nSlash = baPath.lastIndexOf('/', nSlash - 1);
+        }
+
+        if (nSlash <= 0) {
+            return false;
+        }
+
+        baPrefix = baPath.left(nSlash);
+        baName = baPath.mid(nSlash + 1);
+    }
+
+    QByteArray baSize = QByteArray::number((qulonglong)baData.size(), 8).rightJustified(11, '0');
+
+    if (baSize.size() > 11) {
+        return false;
+    }
+
+    memcpy(&header[0], baName.constData(), baName.size());
+    memcpy(&header[100], "0000644", 7);
+    memcpy(&header[108], "0000000", 7);
+    memcpy(&header[116], "0000000", 7);
+    memcpy(&header[124], baSize.constData(), 11);
+    memcpy(&header[136], "00000000000", 11);
+    memset(&header[148], ' ', 8);
+    header[156] = '0';
+    memcpy(&header[257], "ustar\0", 6);
+    memcpy(&header[263], "00", 2);
+
+    if (!baPrefix.isEmpty()) {
+        memcpy(&header[345], baPrefix.constData(), baPrefix.size());
+    }
+
+    quint32 nChecksum = 0;
+
+    for (qint32 i = 0; i < (qint32)sizeof(header); i++) {
+        nChecksum += (unsigned char)header[i];
+    }
+
+    QByteArray baChecksum = QByteArray::number(nChecksum, 8).rightJustified(6, '0');
+    memcpy(&header[148], baChecksum.constData(), 6);
+    header[154] = '\0';
+    header[155] = ' ';
+
+    qint64 nPadding = (512 - (baData.size() % 512)) % 512;
+
+    return (pDevice->write(header, sizeof(header)) == (qint64)sizeof(header)) && (pDevice->write(baData) == baData.size()) &&
+           (pDevice->write(QByteArray((qint32)nPadding, '\0')) == nPadding);
+}
+
+bool XScanEngine::_loadDatabaseFromTar(const QString &sTarPath, DT databaseType, XBinary::PDSTRUCT *pPdStruct)
+{
+    bool bResult = false;
+    bool bPrecompiled = false;
+
+    QFile file(sTarPath);
+    QList<DATABASE_TAR_ENTRY> listEntries;
+
+    if (file.open(QIODevice::ReadOnly)) {
+        bResult = _readDatabaseTar(&file, &listEntries, pPdStruct);
+        file.close();
+    }
+
+    if (bResult) {
+        QList<DATABASE_DIRECTORY> listDirectories = _getDatabaseDirectories();
+        QList<SIGNATURE_RECORD> listNewRecords;
+        // Unique per archive, so main and custom records never share a path.
+        QString sArchivePath = QFileInfo(sTarPath).absoluteFilePath();
+
+        qint32 nNumberOfDirectories = listDirectories.count();
+        qint32 nNumberOfEntries = listEntries.count();
+
+        for (qint32 i = 0; (i < nNumberOfDirectories) && (!bPrecompiled) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+            // The entries directly inside this directory, as QDir would list them.
+            QList<DATABASE_TAR_ENTRY> listDirectoryEntries;
+
+            for (qint32 j = 0; j < nNumberOfEntries; j++) {
+                const DATABASE_TAR_ENTRY &entry = listEntries.at(j);
+                qint32 nSlash = entry.sPath.lastIndexOf(QChar('/'));
+                QString sDirectory = (nSlash >= 0) ? entry.sPath.left(nSlash) : QString();
+                QString sName = entry.sPath.mid(nSlash + 1);
+
+                // Dot names are hidden files, which the directory loader does not list.
+                if ((sDirectory.compare(listDirectories.at(i).sDirectory, Qt::CaseInsensitive) == 0) && (!sName.startsWith(QChar('.'))) &&
+                    isSignatureNameValid(sName)) {
+                    listDirectoryEntries.append(entry);
+                }
+            }
+
+            std::stable_sort(listDirectoryEntries.begin(), listDirectoryEntries.end(), _compareDatabaseTarEntries);
+
+            qint32 nNumberOfDirectoryEntries = listDirectoryEntries.count();
+
+            for (qint32 j = 0; j < nNumberOfDirectoryEntries; j++) {
+                const DATABASE_TAR_ENTRY &entry = listDirectoryEntries.at(j);
+
+                // cdie --createprecompiledtar stores its own bytecode, which
+                // this script engine cannot run.
+                if (entry.baData.startsWith("\x1B" "DIE")) {
+                    bPrecompiled = true;
+                    break;
+                }
+
+                QList<SIGNATURE_RECORD> listRecords =
+                    getSignaturesFromData(QString::fromUtf8(entry.baData), sArchivePath + "/" + entry.sPath, listDirectories.at(i).fileType, pPdStruct);
+
+                qint32 nNumberOfRecords = listRecords.count();
+
+                for (qint32 k = 0; k < nNumberOfRecords; k++) {
+                    SIGNATURE_RECORD record = listRecords.at(k);
+                    record.databaseType = databaseType;
+                    record.bReadOnly = true;
+
+                    listNewRecords.append(record);
+                }
+            }
+        }
+
+        // Like cdie: an archive that yields no signatures is not a database.
+        if (bPrecompiled || (!XBinary::isPdStructNotCanceled(pPdStruct)) || listNewRecords.isEmpty()) {
+            bResult = false;
+        } else {
+            std::sort(listNewRecords.begin(), listNewRecords.end(), sort_signature_prio);
+
+            m_listSignatures.append(listNewRecords);
+        }
+    }
+
+    if ((!bResult) && (databaseType == DT_MAIN)) {
+        QString sErrorString = QString("%1: %2").arg(tr("Cannot load database"), sTarPath);
+
+        if (bPrecompiled) {
+            sErrorString += QString(" (%1)").arg(tr("precompiled for cdie, create it with --createtar"));
+        }
+
+        emit errorMessage(sErrorString);
+    }
+
+    return bResult;
+}
+
+bool XScanEngine::createDatabaseTar(const QString &sDatabasePath, const QString &sTarPath, XBinary::PDSTRUCT *pPdStruct)
+{
+    XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();
+
+    if (pPdStruct == nullptr) {
+        pPdStruct = &pdStructEmpty;
+    }
+
+    QString _sDatabasePath = XOptions::convertPathName(sDatabasePath);
+
+    if ((!XBinary::isDirectoryExists(_sDatabasePath)) || sTarPath.isEmpty()) {
+        return false;
+    }
+
+    QFile file(sTarPath);
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return false;
+    }
+
+    // cdie writes PE/DOTNET after all the other directories. Following its
+    // order makes both tools produce the same archive from the same database.
+    QList<DATABASE_DIRECTORY> listDirectories;
+    QList<DATABASE_DIRECTORY> listLoadOrder = _getDatabaseDirectories();
+    qint32 nNumberOfDirectories = listLoadOrder.count();
+
+    for (qint32 i = 0; i < nNumberOfDirectories; i++) {
+        if (listLoadOrder.at(i).fileType != XBinary::FT_CLI_ASSEMBLY) {
+            listDirectories.append(listLoadOrder.at(i));
+        }
+    }
+
+    for (qint32 i = 0; i < nNumberOfDirectories; i++) {
+        if (listLoadOrder.at(i).fileType == XBinary::FT_CLI_ASSEMBLY) {
+            listDirectories.append(listLoadOrder.at(i));
+        }
+    }
+
+    bool bResult = true;
+
+    for (qint32 i = 0; (i < nNumberOfDirectories) && bResult && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+        QString sDirectory = listDirectories.at(i).sDirectory;
+        QString sDirectoryPath = sDirectory.isEmpty() ? _sDatabasePath : (_sDatabasePath + QDir::separator() + sDirectory);
+
+        QDir dir(sDirectoryPath);
+
+        if (!dir.exists()) {
+            continue;
+        }
+
+        // The files the directory loader would load (no hidden ones), in
+        // cdie's order: by the UTF-8 bytes of the name.
+        QStringList listNames = dir.entryList(QDir::Files, QDir::NoSort);
+        QList<QByteArray> listUtf8Names;
+
+        qint32 nNumberOfNames = listNames.count();
+
+        for (qint32 j = 0; j < nNumberOfNames; j++) {
+            listUtf8Names.append(listNames.at(j).toUtf8());
+        }
+
+        std::sort(listUtf8Names.begin(), listUtf8Names.end());
+
+        for (qint32 j = 0; (j < nNumberOfNames) && bResult && XBinary::isPdStructNotCanceled(pPdStruct); j++) {
+            QString sName = QString::fromUtf8(listUtf8Names.at(j));
+            QString sFilePath = dir.absoluteFilePath(sName);
+
+            if (sName.startsWith(QChar('.')) || (!isSignatureFileValid(sFilePath))) {
+                continue;
+            }
+
+            QFile signatureFile(sFilePath);
+
+            if (!signatureFile.open(QIODevice::ReadOnly)) {
+                emit errorMessage(QString("%1: %2").arg(tr("Cannot read file"), sFilePath));
+                bResult = false;
+                break;
+            }
+
+            QByteArray baData = signatureFile.readAll();
+            bool bReadAll = (baData.size() == signatureFile.size());
+            signatureFile.close();
+
+            if (!bReadAll) {
+                emit errorMessage(QString("%1: %2").arg(tr("Cannot read file"), sFilePath));
+            }
+
+            QString sEntryPath = sDirectory.isEmpty() ? sName : (sDirectory + "/" + sName);
+
+            bResult = bReadAll && _writeDatabaseTarEntry(&file, sEntryPath, baData);
+        }
+    }
+
+    if (bResult && XBinary::isPdStructNotCanceled(pPdStruct)) {
+        bResult = (file.write(QByteArray(1024, '\0')) == 1024);
+    } else {
+        bResult = false;
+    }
+
+    file.close();
+
+    if (!bResult) {
+        file.remove();
+    }
+
+    return bResult;
+}
+
+bool XScanEngine::isSignatureNameValid(const QString &sSignatureName)
+{
+    Q_UNUSED(sSignatureName)
+
+    return true;
 }
 
 QString XScanEngine::_getDatabaseCachePath(const QString &sDatabasePath)

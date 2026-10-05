@@ -98,6 +98,8 @@ public slots:
     bool isTLSPresent();
     bool isImportPresent();
     bool isResourcesPresent();
+    bool isAmd64UnwindMetadataValid();
+    QString getAmd64UnwindError();
     quint32 getImportHash32();
     quint64 getImportHash64();
     bool isImportPositionHashPresent(qint32 nIndex, quint32 nHash);
@@ -184,6 +186,7 @@ private:
     XPE_DEF::IMAGE_OPTIONAL_HEADER32 m_imageOptionalHeader32;
     XPE_DEF::IMAGE_OPTIONAL_HEADER64 m_imageOptionalHeader64;
     QList<XPE_DEF::S_IMAGE_DEBUG_DIRECTORY> m_listDebugRecords;
+    QString m_sAmd64UnwindError;
 };
 
 #endif  // PE_SCRIPT_H

@@ -482,7 +482,13 @@ int XScanEngineConsole::process()
     bool bDbLoaded = false;
     bool bProcessed = false;
 
-    if (bHasMainDb && parser.isSet(clShowDatabase)) {
+    // Engine modes (diec --createtar, --test, ...) take precedence, as cdie's
+    // --createtar does over --showdatabase.
+    if (processEngineModes(&parser, listArgs, &scanOptions, &pdStruct, &nResult)) {
+        bProcessed = true;
+    }
+
+    if (!bProcessed && bHasMainDb && parser.isSet(clShowDatabase)) {
         if (!bIsDbUsed) {
             bDbLoaded = m_scanEngine.loadDatabase(&scanOptions, &pdStruct);
             bIsDbUsed = true;
@@ -497,7 +503,7 @@ int XScanEngineConsole::process()
         bProcessed = true;
     }
 
-    if (parser.isSet(clShowStructs)) {
+    if (!bProcessed && parser.isSet(clShowStructs)) {
         XOptions::CR crStructs = showStructsOverview(listArgs, &scanOptions, &pdStruct);
 
         if (crStructs != XOptions::CR_SUCCESS) {
@@ -505,12 +511,6 @@ int XScanEngineConsole::process()
         }
 
         bProcessed = true;
-    }
-
-    if (!bProcessed) {
-        if (processEngineModes(&parser, listArgs, &scanOptions, &pdStruct, &nResult)) {
-            bProcessed = true;
-        }
     }
 
     if (!bProcessed && !scanOptions.sStruct.isEmpty() && listArgs.isEmpty()) {

@@ -612,3 +612,14 @@ qint64 PE_Script::getDebugDataSize(quint32 nNumber)
 
     return nResult;
 }
+
+bool PE_Script::isAmd64UnwindMetadataValid()
+{
+    return m_pPE->isAmd64UnwindMetadataValid(&m_sAmd64UnwindError);
+}
+
+QString PE_Script::getAmd64UnwindError()
+{
+    return m_sAmd64UnwindError;
+}
+
