@@ -1919,17 +1919,39 @@ QList<XScanEngine::DATABASE_DIRECTORY> XScanEngine::_getDatabaseDirectories()
     };
 
     static const DIRECTORY_RECORD records[] = {
-        {"", XBinary::FT_UNKNOWN},          {"Binary", XBinary::FT_BINARY},        {"COM", XBinary::FT_COM},
-        {"Archive", XBinary::FT_ARCHIVE},   {"ZIP", XBinary::FT_ZIP},              {"JAR", XBinary::FT_JAR},
-        {"APK", XBinary::FT_APK},           {"IPA", XBinary::FT_IPA},              {"NPM", XBinary::FT_NPM},
-        {"MACHOFAT", XBinary::FT_MACHOFAT}, {"DEB", XBinary::FT_DEB},              {"DEX", XBinary::FT_DEX},
-        {"MSDOS", XBinary::FT_MSDOS},       {"LE", XBinary::FT_LE},                {"LX", XBinary::FT_LX},
-        {"NE", XBinary::FT_NE},             {"PE", XBinary::FT_PE},                {"PE/DOTNET", XBinary::FT_CLI_ASSEMBLY},
-        {"ELF", XBinary::FT_ELF},           {"MACH", XBinary::FT_MACHO},           {"DOS16M", XBinary::FT_DOS16M},
-        {"DOS4G", XBinary::FT_DOS4G},       {"Amiga", XBinary::FT_AMIGAHUNK},      {"AtariST", XBinary::FT_ATARIST},
-        {"JavaClass", XBinary::FT_JAVACLASS}, {"PYC", XBinary::FT_PYC},            {"PDF", XBinary::FT_PDF},
-        {"CFBF", XBinary::FT_CFBF},         {"Image", XBinary::FT_IMAGE},          {"JPEG", XBinary::FT_JPEG},
-        {"PNG", XBinary::FT_PNG},           {"RAR", XBinary::FT_RAR},              {"ISO9660", XBinary::FT_ISO9660},
+        {"", XBinary::FT_UNKNOWN},
+        {"Binary", XBinary::FT_BINARY},
+        {"COM", XBinary::FT_COM},
+        {"Archive", XBinary::FT_ARCHIVE},
+        {"ZIP", XBinary::FT_ZIP},
+        {"JAR", XBinary::FT_JAR},
+        {"APK", XBinary::FT_APK},
+        {"IPA", XBinary::FT_IPA},
+        {"NPM", XBinary::FT_NPM},
+        {"MACHOFAT", XBinary::FT_MACHOFAT},
+        {"DEB", XBinary::FT_DEB},
+        {"DEX", XBinary::FT_DEX},
+        {"MSDOS", XBinary::FT_MSDOS},
+        {"LE", XBinary::FT_LE},
+        {"LX", XBinary::FT_LX},
+        {"NE", XBinary::FT_NE},
+        {"PE", XBinary::FT_PE},
+        {"PE/DOTNET", XBinary::FT_CLI_ASSEMBLY},
+        {"ELF", XBinary::FT_ELF},
+        {"MACH", XBinary::FT_MACHO},
+        {"DOS16M", XBinary::FT_DOS16M},
+        {"DOS4G", XBinary::FT_DOS4G},
+        {"Amiga", XBinary::FT_AMIGAHUNK},
+        {"AtariST", XBinary::FT_ATARIST},
+        {"JavaClass", XBinary::FT_JAVACLASS},
+        {"PYC", XBinary::FT_PYC},
+        {"PDF", XBinary::FT_PDF},
+        {"CFBF", XBinary::FT_CFBF},
+        {"Image", XBinary::FT_IMAGE},
+        {"JPEG", XBinary::FT_JPEG},
+        {"PNG", XBinary::FT_PNG},
+        {"RAR", XBinary::FT_RAR},
+        {"ISO9660", XBinary::FT_ISO9660},
     };
 
     QList<DATABASE_DIRECTORY> listResult;
@@ -2329,8 +2351,7 @@ bool XScanEngine::_loadDatabaseFromTar(const QString &sTarPath, DT databaseType,
                 QString sName = entry.sPath.mid(nSlash + 1);
 
                 // Dot names are hidden files, which the directory loader does not list.
-                if ((sDirectory.compare(listDirectories.at(i).sDirectory, Qt::CaseInsensitive) == 0) && (!sName.startsWith(QChar('.'))) &&
-                    isSignatureNameValid(sName)) {
+                if ((sDirectory.compare(listDirectories.at(i).sDirectory, Qt::CaseInsensitive) == 0) && (!sName.startsWith(QChar('.'))) && isSignatureNameValid(sName)) {
                     listDirectoryEntries.append(entry);
                 }
             }
@@ -2344,7 +2365,8 @@ bool XScanEngine::_loadDatabaseFromTar(const QString &sTarPath, DT databaseType,
 
                 // cdie --createprecompiledtar stores its own bytecode, which
                 // this script engine cannot run.
-                if (entry.baData.startsWith("\x1B" "DIE")) {
+                if (entry.baData.startsWith("\x1B"
+                                            "DIE")) {
                     bPrecompiled = true;
                     break;
                 }

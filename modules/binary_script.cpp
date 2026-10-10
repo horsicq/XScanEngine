@@ -201,15 +201,17 @@ QVariant Binary_Script::findAnyBytes(const QVariant &offset, const QVariant &siz
     qint64 start, length;
     const QVariant patternInput = XScanNative::plainValue(sourcePatterns);
     QVector<QByteArray> patterns;
-    if (m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration ||
-        !XScanNative::strictRange(offset, size, m_nSize, &start, &length) ||
-        patternInput.type() != QVariant::List || !XScanNative::bytePatterns(patternInput.toList(), &patterns) || patterns.isEmpty() || !length) return XScanNative::nullResult();
+    if (m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration || !XScanNative::strictRange(offset, size, m_nSize, &start, &length) ||
+        patternInput.type() != QVariant::List || !XScanNative::bytePatterns(patternInput.toList(), &patterns) || patterns.isEmpty() || !length)
+        return XScanNative::nullResult();
     const XBinary::PDSTRUCTLIFETIME lifetime = XBinary::retainPdStructLifetime(m_pPdStruct);
-    const auto alive = [&]() { return (!m_pPdStruct || XBinary::isPdStructLifetimeAlive(lifetime)) &&
-        XBinary::isPdStructNotCanceled(m_pPdStruct) && m_pBinary->getDeviceGeneration() == m_nPrimitiveDeviceGeneration; };
+    const auto alive = [&]() {
+        return (!m_pPdStruct || XBinary::isPdStructLifetimeAlive(lifetime)) && XBinary::isPdStructNotCanceled(m_pPdStruct) &&
+               m_pBinary->getDeviceGeneration() == m_nPrimitiveDeviceGeneration;
+    };
     int overlap = 0;
     for (const QByteArray &pattern : patterns) overlap = qMax(overlap, pattern.size() - 1);
-    for (qint64 cursor = 0; cursor < length; ) {
+    for (qint64 cursor = 0; cursor < length;) {
         if (!alive()) return XScanNative::nullResult();
         const int candidates = (int)qMin(Q_INT64_C(65536), length - cursor);
         const int readSize = (int)qMin((qint64)candidates + overlap, length - cursor);
@@ -219,7 +221,8 @@ QVariant Binary_Script::findAnyBytes(const QVariant &offset, const QVariant &siz
         if (found.offset >= 0) {
             const qint64 absolute = start + cursor + found.offset;
             if ((quint64)absolute > XScanNative::MaxSafeInteger) return XScanNative::nullResult();
-            QVariantMap result; result.insert(QStringLiteral("offset"), (double)absolute);
+            QVariantMap result;
+            result.insert(QStringLiteral("offset"), (double)absolute);
             result.insert(QStringLiteral("patternIndex"), found.patternIndex);
             return result;
         }
@@ -229,18 +232,21 @@ QVariant Binary_Script::findAnyBytes(const QVariant &offset, const QVariant &siz
 }
 
 bool Binary_Script::_findByteRelationCandidates(const QVariant &offset, const QVariant &size, const QVariant &sourceGroups, const QVariant &tail,
-                                                 QVector<quint32> *result)
+                                                QVector<quint32> *result)
 {
-    qint64 start, length; quint64 tailBytes;
-    if (m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration ||
-        !XScanNative::strictRange(offset, size, m_nSize, &start, &length) ||
-        (quint64)length > XScanNative::MaxRelationBytes || !XScanNative::unsignedValue(tail, &tailBytes, 0xffffffffu)) return false;
+    qint64 start, length;
+    quint64 tailBytes;
+    if (m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration || !XScanNative::strictRange(offset, size, m_nSize, &start, &length) ||
+        (quint64)length > XScanNative::MaxRelationBytes || !XScanNative::unsignedValue(tail, &tailBytes, 0xffffffffu))
+        return false;
     const QVariant groupInput = XScanNative::plainValue(sourceGroups);
     QVector<XScanNative::RelationGroup> groups;
     if (groupInput.type() != QVariant::List || !XScanNative::relationGroups(groupInput.toList(), (quint32)tailBytes, &groups)) return false;
     const XBinary::PDSTRUCTLIFETIME lifetime = XBinary::retainPdStructLifetime(m_pPdStruct);
-    const auto alive = [&]() { return (!m_pPdStruct || XBinary::isPdStructLifetimeAlive(lifetime)) &&
-        XBinary::isPdStructNotCanceled(m_pPdStruct) && m_pBinary->getDeviceGeneration() == m_nPrimitiveDeviceGeneration; };
+    const auto alive = [&]() {
+        return (!m_pPdStruct || XBinary::isPdStructLifetimeAlive(lifetime)) && XBinary::isPdStructNotCanceled(m_pPdStruct) &&
+               m_pBinary->getDeviceGeneration() == m_nPrimitiveDeviceGeneration;
+    };
     if (!alive()) return false;
     if (groups.isEmpty() || tailBytes >= (quint64)length) return true;
     const QByteArray data = m_pBinary->read_array_process(start, length, m_pPdStruct);
@@ -267,7 +273,8 @@ QVariant Binary_Script::findByteRelationCandidates(const QVariant &offset, const
     QVector<quint32> values;
     if (!_findByteRelationCandidates(offset, size, groups, tailBytes, &values)) return XScanNative::nullResult();
     // QtScript implements ES3 and has no typed arrays. Keep the same flat uint32 sequence.
-    QVariantList result; result.reserve(values.size());
+    QVariantList result;
+    result.reserve(values.size());
     for (quint32 value : values) result.append((double)value);
     return result;
 }
@@ -640,12 +647,13 @@ QVariant Binary_Script::getDisasmInfo(const QVariant &address)
     if (offset < 0 || offset >= m_nSize) return XScanNative::nullResult();
     if (QVariantMap *cached = m_disasmInfoCache.object((qint64)va)) return *cached;
     const XDisasmAbstract::DISASM_RESULT decoded = m_disasmCore.disAsm(m_pBinary->getDevice(), offset, va, m_disasmOptions);
-    if (!decoded.bIsValid || decoded.bMemError || decoded.nSize < 1 || decoded.nSize > 15 ||
-        decoded.nSize > m_nSize - offset || decoded.nNextAddress > XScanNative::MaxSafeInteger ||
-        m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration) return XScanNative::nullResult();
+    if (!decoded.bIsValid || decoded.bMemError || decoded.nSize < 1 || decoded.nSize > 15 || decoded.nSize > m_nSize - offset ||
+        decoded.nNextAddress > XScanNative::MaxSafeInteger || m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration)
+        return XScanNative::nullResult();
     QString text = decoded.sMnemonic;
     if (!decoded.sOperands.isEmpty()) text += " " + decoded.sOperands;
-    QVariantMap result; result.insert(QStringLiteral("text"), text);
+    QVariantMap result;
+    result.insert(QStringLiteral("text"), text);
     result.insert(QStringLiteral("length"), decoded.nSize);
     result.insert(QStringLiteral("nextAddress"), (double)decoded.nNextAddress);
     m_disasmInfoCache.insert((qint64)va, new QVariantMap(result));

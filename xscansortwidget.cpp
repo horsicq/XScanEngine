@@ -492,8 +492,7 @@ void XScanSortWidget::on_pushButtonScan_clicked()
         }
 
         if (!m_pScanEngine->loadDatabase(&m_scanOptions, nullptr)) {
-            QMessageBox::critical(this, tr("Error"),
-                                  QString("%1: %2").arg(tr("Cannot load database"), QDir::toNativeSeparators(m_scanOptions.sMainDatabasePath)));
+            QMessageBox::critical(this, tr("Error"), QString("%1: %2").arg(tr("Cannot load database"), QDir::toNativeSeparators(m_scanOptions.sMainDatabasePath)));
             return;
         }
     }
