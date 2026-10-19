@@ -24,6 +24,397 @@
 #include <QJSEngine>
 #endif
 
+#include <limits>
+
+namespace {
+const quint64 JAVASCRIPT_HISTORY_MASK = Q_UINT64_C(0x00FFFFFFFFFFFFFF);
+
+enum JAVASCRIPT_LEX_STATE {
+    JS_CODE = 0,
+    JS_TOP_SINGLE,
+    JS_TOP_DOUBLE,
+    JS_TOP_TEMPLATE,
+    JS_TOP_EXPRESSION,
+    JS_TOP_EXPRESSION_SINGLE,
+    JS_TOP_EXPRESSION_DOUBLE,
+    JS_NESTED_TEMPLATE,
+    JS_NESTED_EXPRESSION,
+    JS_NESTED_EXPRESSION_SINGLE,
+    JS_NESTED_EXPRESSION_DOUBLE
+};
+
+struct JAVASCRIPT_SEGMENT {
+    quint64 nHistory = 0;
+    quint32 nHistoryLength = 0;
+    quint32 nPatternAState = 0;
+    quint32 nPatternAPairs = 0;
+    bool bHasBytes = false;
+    bool bInvalidSpacing = false;
+    bool bPatternAFound = false;
+    bool bPatternBFound = false;
+};
+
+struct JAVASCRIPT_SCANNER {
+    JAVASCRIPT_LEX_STATE state = JS_CODE;
+    JAVASCRIPT_SEGMENT segment;
+    quint64 nTopBraceDepth = 0;
+    quint64 nNestedTemplateDepth = 0;
+    bool bSkipNext = false;
+    bool bTemplateDollar = false;
+};
+
+inline bool javascriptAsciiAlpha(quint8 nValue)
+{
+    return ((nValue >= (quint8)'A') && (nValue <= (quint8)'Z')) || ((nValue >= (quint8)'a') && (nValue <= (quint8)'z'));
+}
+
+inline bool javascriptAsciiWord(quint8 nValue)
+{
+    return javascriptAsciiAlpha(nValue) || ((nValue >= (quint8)'0') && (nValue <= (quint8)'9')) || (nValue == (quint8)'_');
+}
+
+inline quint8 javascriptHistoryByte(const JAVASCRIPT_SEGMENT &segment, quint32 nBack)
+{
+    return (quint8)(segment.nHistory >> (nBack * 8U));
+}
+
+bool javascriptHistoryIsKeyword(const JAVASCRIPT_SEGMENT &segment)
+{
+    if (segment.nHistoryLength >= 3U) {
+        const quint8 a = javascriptHistoryByte(segment, 2U);
+        const quint8 b = javascriptHistoryByte(segment, 1U);
+        const quint8 c = javascriptHistoryByte(segment, 0U);
+        if (((a == (quint8)'v') && (b == (quint8)'a') && (c == (quint8)'r')) ||
+            ((a == (quint8)'l') && (b == (quint8)'e') && (c == (quint8)'t'))) {
+            return true;
+        }
+    }
+
+    return (segment.nHistoryLength >= 5U) && (javascriptHistoryByte(segment, 4U) == (quint8)'c') &&
+           (javascriptHistoryByte(segment, 3U) == (quint8)'o') && (javascriptHistoryByte(segment, 2U) == (quint8)'n') &&
+           (javascriptHistoryByte(segment, 1U) == (quint8)'s') && (javascriptHistoryByte(segment, 0U) == (quint8)'t');
+}
+
+inline void javascriptHistoryPush(JAVASCRIPT_SEGMENT *pSegment, quint8 nValue)
+{
+    pSegment->nHistory = ((pSegment->nHistory << 8U) | nValue) & JAVASCRIPT_HISTORY_MASK;
+    if (pSegment->nHistoryLength < 7U) {
+        pSegment->nHistoryLength++;
+    }
+}
+
+bool javascriptPatternBEndsHere(const JAVASCRIPT_SEGMENT &segment)
+{
+    if (segment.nHistoryLength < 5U) {
+        return false;
+    }
+
+    const quint8 nEnd = javascriptHistoryByte(segment, 0U);
+    const quint8 nBit = javascriptHistoryByte(segment, 1U);
+    if (((nEnd != (quint8)';') && (nEnd != (quint8)',') && (nEnd != (quint8)'}') && (nEnd != (quint8)')')) ||
+        ((nBit != (quint8)'0') && (nBit != (quint8)'1')) || (javascriptHistoryByte(segment, 2U) != (quint8)'!')) {
+        return false;
+    }
+
+    if ((javascriptHistoryByte(segment, 3U) == (quint8)'=') && javascriptAsciiAlpha(javascriptHistoryByte(segment, 4U))) {
+        return true;
+    }
+    if ((segment.nHistoryLength >= 6U) && (javascriptHistoryByte(segment, 3U) == (quint8)'=') &&
+        ((javascriptHistoryByte(segment, 4U) == (quint8)'!') || (javascriptHistoryByte(segment, 4U) == (quint8)'=')) &&
+        javascriptAsciiAlpha(javascriptHistoryByte(segment, 5U))) {
+        return true;
+    }
+
+    return (segment.nHistoryLength >= 7U) && (javascriptHistoryByte(segment, 3U) == (quint8)'=') &&
+           (javascriptHistoryByte(segment, 4U) == (quint8)'=') &&
+           ((javascriptHistoryByte(segment, 5U) == (quint8)'!') || (javascriptHistoryByte(segment, 5U) == (quint8)'=')) &&
+           javascriptAsciiAlpha(javascriptHistoryByte(segment, 6U));
+}
+
+void javascriptSegmentFeed(JAVASCRIPT_SEGMENT *pSegment, quint8 nValue)
+{
+    pSegment->bHasBytes = true;
+
+    if ((nValue == (quint8)'\t') ||
+        ((nValue == (quint8)' ') && pSegment->nHistoryLength && (javascriptHistoryByte(*pSegment, 0U) == (quint8)' '))) {
+        pSegment->bInvalidSpacing = true;
+        return;
+    }
+    if (pSegment->bInvalidSpacing) {
+        return;
+    }
+
+    switch (pSegment->nPatternAState) {
+        case 1U:
+            if (javascriptAsciiAlpha(nValue)) {
+                pSegment->nPatternAState = 2U;
+                pSegment->nPatternAPairs = 0U;
+            } else {
+                pSegment->nPatternAState = 0U;
+            }
+            break;
+        case 2U:
+            if (nValue == (quint8)',') {
+                if (pSegment->nPatternAPairs >= 3U) {
+                    pSegment->bPatternAFound = true;
+                }
+                pSegment->nPatternAState = 3U;
+            } else {
+                if ((pSegment->nPatternAPairs >= 3U) && !javascriptAsciiWord(nValue)) {
+                    pSegment->bPatternAFound = true;
+                }
+                pSegment->nPatternAState = 0U;
+            }
+            break;
+        case 3U:
+            if (javascriptAsciiAlpha(nValue)) {
+                pSegment->nPatternAPairs++;
+                pSegment->nPatternAState = 2U;
+            } else {
+                pSegment->nPatternAState = 0U;
+            }
+            break;
+        default: break;
+    }
+
+    const bool bStartsPatternA = (nValue == (quint8)'(') ||
+                                 (((nValue == (quint8)' ') || (nValue == (quint8)'\t')) && javascriptHistoryIsKeyword(*pSegment));
+    if (bStartsPatternA) {
+        pSegment->nPatternAState = 1U;
+        pSegment->nPatternAPairs = 0U;
+    }
+
+    javascriptHistoryPush(pSegment, nValue);
+    if (javascriptPatternBEndsHere(*pSegment)) {
+        pSegment->bPatternBFound = true;
+    }
+}
+
+bool javascriptSegmentFinish(JAVASCRIPT_SEGMENT *pSegment)
+{
+    if (!pSegment->bInvalidSpacing && (pSegment->nPatternAState == 2U) && (pSegment->nPatternAPairs >= 3U)) {
+        pSegment->bPatternAFound = true;
+    }
+
+    const bool bResult = pSegment->bHasBytes && !pSegment->bInvalidSpacing && (pSegment->bPatternAFound || pSegment->bPatternBFound);
+    *pSegment = JAVASCRIPT_SEGMENT();
+    return bResult;
+}
+
+// Returns 1 for a completed matching segment, 0 to continue, and -1 on depth overflow.
+int javascriptScanByte(JAVASCRIPT_SCANNER *pScanner, quint8 nValue)
+{
+    if (pScanner->bSkipNext) {
+        pScanner->bSkipNext = false;
+        return 0;
+    }
+
+    if (pScanner->bTemplateDollar) {
+        pScanner->bTemplateDollar = false;
+        if (nValue == (quint8)'{') {
+            if (pScanner->state == JS_TOP_TEMPLATE) {
+                pScanner->nTopBraceDepth = 1U;
+                pScanner->state = JS_TOP_EXPRESSION;
+            } else {
+                pScanner->state = JS_NESTED_EXPRESSION;
+            }
+            return 0;
+        }
+    }
+
+    switch (pScanner->state) {
+        case JS_CODE:
+            if ((nValue == (quint8)'\'') || (nValue == (quint8)'"') || (nValue == (quint8)'`')) {
+                const bool bResult = javascriptSegmentFinish(&pScanner->segment);
+                pScanner->state = (nValue == (quint8)'\'') ? JS_TOP_SINGLE : ((nValue == (quint8)'"') ? JS_TOP_DOUBLE : JS_TOP_TEMPLATE);
+                return bResult ? 1 : 0;
+            }
+            javascriptSegmentFeed(&pScanner->segment, nValue);
+            return 0;
+
+        case JS_TOP_SINGLE:
+        case JS_TOP_DOUBLE:
+            if (nValue == (quint8)'\\') {
+                pScanner->bSkipNext = true;
+            } else if (((pScanner->state == JS_TOP_SINGLE) && (nValue == (quint8)'\'')) ||
+                       ((pScanner->state == JS_TOP_DOUBLE) && (nValue == (quint8)'"'))) {
+                pScanner->state = JS_CODE;
+            }
+            return 0;
+
+        case JS_TOP_TEMPLATE:
+            if (nValue == (quint8)'\\') {
+                pScanner->bSkipNext = true;
+            } else if (nValue == (quint8)'`') {
+                pScanner->state = JS_CODE;
+            } else if (nValue == (quint8)'$') {
+                pScanner->bTemplateDollar = true;
+            }
+            return 0;
+
+        case JS_TOP_EXPRESSION:
+            if (nValue == (quint8)'\\') {
+                pScanner->bSkipNext = true;
+            } else if (nValue == (quint8)'\'') {
+                pScanner->state = JS_TOP_EXPRESSION_SINGLE;
+            } else if (nValue == (quint8)'"') {
+                pScanner->state = JS_TOP_EXPRESSION_DOUBLE;
+            } else if (nValue == (quint8)'`') {
+                pScanner->nNestedTemplateDepth = 1U;
+                pScanner->state = JS_NESTED_TEMPLATE;
+            } else if (nValue == (quint8)'{') {
+                if (pScanner->nTopBraceDepth == (std::numeric_limits<quint64>::max)()) {
+                    return -1;
+                }
+                pScanner->nTopBraceDepth++;
+                javascriptSegmentFeed(&pScanner->segment, nValue);
+            } else if (nValue == (quint8)'}') {
+                if (pScanner->nTopBraceDepth > 1U) {
+                    pScanner->nTopBraceDepth--;
+                    javascriptSegmentFeed(&pScanner->segment, nValue);
+                } else {
+                    pScanner->nTopBraceDepth = 0U;
+                    pScanner->state = JS_TOP_TEMPLATE;
+                }
+            } else {
+                javascriptSegmentFeed(&pScanner->segment, nValue);
+            }
+            return 0;
+
+        case JS_TOP_EXPRESSION_SINGLE:
+        case JS_TOP_EXPRESSION_DOUBLE:
+            if (nValue == (quint8)'\\') {
+                pScanner->bSkipNext = true;
+            } else if (((pScanner->state == JS_TOP_EXPRESSION_SINGLE) && (nValue == (quint8)'\'')) ||
+                       ((pScanner->state == JS_TOP_EXPRESSION_DOUBLE) && (nValue == (quint8)'"'))) {
+                pScanner->state = JS_TOP_EXPRESSION;
+            }
+            return 0;
+
+        case JS_NESTED_TEMPLATE:
+            if (nValue == (quint8)'\\') {
+                pScanner->bSkipNext = true;
+            } else if (nValue == (quint8)'`') {
+                if (!pScanner->nNestedTemplateDepth) {
+                    return -1;
+                }
+                pScanner->nNestedTemplateDepth--;
+                pScanner->state = pScanner->nNestedTemplateDepth ? JS_NESTED_EXPRESSION : JS_TOP_EXPRESSION;
+            } else if (nValue == (quint8)'$') {
+                pScanner->bTemplateDollar = true;
+            }
+            return 0;
+
+        case JS_NESTED_EXPRESSION:
+            if (nValue == (quint8)'\\') {
+                pScanner->bSkipNext = true;
+            } else if (nValue == (quint8)'\'') {
+                pScanner->state = JS_NESTED_EXPRESSION_SINGLE;
+            } else if (nValue == (quint8)'"') {
+                pScanner->state = JS_NESTED_EXPRESSION_DOUBLE;
+            } else if (nValue == (quint8)'`') {
+                if (pScanner->nNestedTemplateDepth == (std::numeric_limits<quint64>::max)()) {
+                    return -1;
+                }
+                pScanner->nNestedTemplateDepth++;
+                pScanner->state = JS_NESTED_TEMPLATE;
+            } else if (nValue == (quint8)'}') {
+                pScanner->state = JS_NESTED_TEMPLATE;
+            }
+            return 0;
+
+        case JS_NESTED_EXPRESSION_SINGLE:
+        case JS_NESTED_EXPRESSION_DOUBLE:
+            if (nValue == (quint8)'\\') {
+                pScanner->bSkipNext = true;
+            } else if (((pScanner->state == JS_NESTED_EXPRESSION_SINGLE) && (nValue == (quint8)'\'')) ||
+                       ((pScanner->state == JS_NESTED_EXPRESSION_DOUBLE) && (nValue == (quint8)'"'))) {
+                pScanner->state = JS_NESTED_EXPRESSION;
+            }
+            return 0;
+    }
+
+    return -1;
+}
+
+bool javascriptIsMinified(XBinary *pBinary, qint64 nOffset, qint64 nSize, XBinary::PDSTRUCT *pPdStruct, quint64 nExpectedDeviceGeneration)
+{
+    if (!pBinary || (nOffset < 0)) {
+        return false;
+    }
+
+    const qint64 nTotalSize = pBinary->getSize();
+    if ((nTotalSize < 0) || (nOffset >= nTotalSize)) {
+        return false;
+    }
+    if ((nSize < 0) || (nSize > (nTotalSize - nOffset))) {
+        nSize = nTotalSize - nOffset;
+    }
+    if (nSize <= 0) {
+        return false;
+    }
+
+    const XBinary::PDSTRUCTLIFETIME progressLifetime = pPdStruct ? XBinary::retainPdStructLifetime(pPdStruct) : XBinary::PDSTRUCTLIFETIME();
+    const auto isOperationAlive = [&]() {
+        return (!pPdStruct || XBinary::isPdStructLifetimeAlive(progressLifetime)) && XBinary::isPdStructNotCanceled(pPdStruct) &&
+               (pBinary->getDeviceGeneration() == nExpectedDeviceGeneration);
+    };
+    if (!isOperationAlive()) {
+        return false;
+    }
+
+    const qint32 nRequestedBufferSize = XBinary::getBufferSize(pPdStruct);
+    if (nRequestedBufferSize <= 0) {
+        return false;
+    }
+    const qint32 nBufferSize = qBound((qint32)0x1000, nRequestedBufferSize, (qint32)0x100000);
+
+    QByteArray baBuffer;
+    baBuffer.resize((qint32)qMin<qint64>(nSize, nBufferSize));
+    if (baBuffer.isEmpty()) {
+        return false;
+    }
+
+    JAVASCRIPT_SCANNER scanner;
+    qint64 nDone = 0;
+    while (nDone < nSize) {
+        if (!isOperationAlive()) {
+            return false;
+        }
+
+        const qint32 nChunkSize = (qint32)qMin<qint64>(nSize - nDone, baBuffer.size());
+        const qint64 nRead = pBinary->read_array_process(nOffset + nDone, baBuffer.data(), nChunkSize, pPdStruct);
+        if ((nRead != nChunkSize) || !isOperationAlive()) {
+            return false;
+        }
+
+        const quint8 *pBytes = reinterpret_cast<const quint8 *>(baBuffer.constData());
+        for (qint32 i = 0; i < nChunkSize; i++) {
+            if (((i & 0xffff) == 0) && !isOperationAlive()) {
+                return false;
+            }
+            if (!pBytes[i]) {
+                const bool bResult = javascriptSegmentFinish(&scanner.segment);
+                return bResult && isOperationAlive();
+            }
+
+            const int nStatus = javascriptScanByte(&scanner, pBytes[i]);
+            if (nStatus > 0) {
+                return isOperationAlive();
+            }
+            if (nStatus < 0) {
+                return false;
+            }
+        }
+
+        nDone += nChunkSize;
+    }
+
+    const bool bResult = javascriptSegmentFinish(&scanner.segment);
+    return bResult && isOperationAlive();
+}
+}  // namespace
+
 Binary_Script::Binary_Script(XBinary *pBinary, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct)
 {
     this->m_pBinary = pBinary;
@@ -499,6 +890,18 @@ double Binary_Script::calculateEntropy(qint64 nOffset, qint64 nSize)
     return m_pBinary->getBinaryStatus(XBinary::BSTATUS_ENTROPY, nOffset, nSize, m_pPdStruct);
 }
 
+bool Binary_Script::isJavaScriptMinified()
+{
+    QElapsedTimer *pTimer = _startProfiling();
+    const bool bResult = javascriptIsMinified(m_pBinary, 0, m_nSize, m_pPdStruct, m_nPrimitiveDeviceGeneration);
+
+    if (pTimer) {
+        _finishProfiling(pTimer, QStringLiteral("isJavaScriptMinified"));
+    }
+
+    return bResult;
+}
+
 bool Binary_Script::isZeroFilled(qint64 nOffset, qint64 nSize)
 {
     if (nSize <= 0) {
@@ -585,6 +988,51 @@ bool Binary_Script::isSignatureInSectionPresent(quint32 nNumber, const QString &
         _finishProfiling(pTimer, QString("isSignatureInSectionPresent[%1]: %2 ").arg(sSignature, QString::number(nNumber)));
     }
 
+    return bResult;
+}
+
+#if defined(QT_SCRIPT_LIB)
+bool Binary_Script::isAnySignatureInSectionPresent(quint32 nNumber, const QScriptValue &sourceSignatures)
+#elif defined(QT_QML_LIB)
+bool Binary_Script::isAnySignatureInSectionPresent(quint32 nNumber, const QJSValue &sourceSignatures)
+#else
+bool Binary_Script::isAnySignatureInSectionPresent(quint32 nNumber, const QVariantList &sourceSignatures)
+#endif
+{
+    QStringList signatures;
+#if defined(QT_SCRIPT_LIB) || defined(QT_QML_LIB)
+    if (!sourceSignatures.isArray()) return false;
+    const quint32 nCount = (quint32)sourceSignatures.property(QStringLiteral("length")).toNumber();
+    if (!nCount || nCount > 0x7fffffffu) return false;
+    signatures.reserve((int)nCount);
+    for (quint32 i = 0; i < nCount; ++i) {
+        const auto signature = sourceSignatures.property(i);
+        if (!signature.isString()) return false;
+        signatures.append(signature.toString());
+    }
+#else
+    if (sourceSignatures.isEmpty() || sourceSignatures.size() > 0x7fffffff) return false;
+    signatures.reserve(sourceSignatures.size());
+    for (const QVariant &signature : sourceSignatures) {
+        if (signature.type() != QVariant::String) return false;
+        signatures.append(signature.toString());
+    }
+#endif
+    return _isAnySignatureInSectionPresent(nNumber, signatures);
+}
+
+bool Binary_Script::_isAnySignatureInSectionPresent(quint32 nNumber, const QStringList &signatures)
+{
+    if (m_pBinary->getDeviceGeneration() != m_nPrimitiveDeviceGeneration) return false;
+    qint64 nFilePartNumber = nNumber;
+    if (QString::fromLatin1(metaObject()->className()) == QLatin1String("PE_Script")) ++nFilePartNumber;
+    if (nFilePartNumber > 0x7fffffff) return false;
+
+    QElapsedTimer *pTimer = _startProfiling();
+    const bool bResult = m_pBinary->isAnySignatureInFilePartPresent(&m_memoryMap, (qint32)nFilePartNumber, signatures, m_pPdStruct);
+    if (pTimer) {
+        _finishProfiling(pTimer, QString("isAnySignatureInSectionPresent[%1 patterns]: %2").arg(signatures.size()).arg(nNumber));
+    }
     return bResult;
 }
 
@@ -1099,7 +1547,7 @@ void Binary_Script::_finishProfiling(QElapsedTimer *pElapsedTimer, const QString
         qint64 nElapsed = pElapsedTimer->elapsed();
         delete pElapsedTimer;
 
-        emit warningMessage(QString("%1 [%2 ms]").arg(sInfo).arg(QString::number(nElapsed)));
+        emit warningMessage(QString("%1 [%2 ms]").arg(sInfo, QString::number(nElapsed)));
     }
 }
 

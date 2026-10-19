@@ -25,7 +25,9 @@
 #include "xdecompress.h"
 #include "xdisasmcore.h"
 #include <QCache>
-#if defined(QT_QML_LIB) && !defined(QT_SCRIPT_LIB)
+#if defined(QT_SCRIPT_LIB)
+#include <QScriptValue>
+#elif defined(QT_QML_LIB)
 #include <QJSValue>
 #endif
 
@@ -94,6 +96,7 @@ public slots:
     QString getFileSuffix();
     QString getSignature(qint64 nOffset, qint64 nSize);
     double calculateEntropy(qint64 nOffset, qint64 nSize);
+    bool isJavaScriptMinified();
     bool isZeroFilled(qint64 nOffset, qint64 nSize);
     QString scanBufferForEncryptedPe(const QVariant &varData, qint64 nSize = -1);
     QString scanBufferForEncryptedPe(qint64 nOffset, qint64 nSize);
@@ -104,6 +107,13 @@ public slots:
     quint32 adler32(qint64 nOffset, qint64 nSize);
 
     bool isSignatureInSectionPresent(quint32 nNumber, const QString &sSignature);
+#if defined(QT_SCRIPT_LIB)
+    bool isAnySignatureInSectionPresent(quint32 nNumber, const QScriptValue &signatures);
+#elif defined(QT_QML_LIB)
+    bool isAnySignatureInSectionPresent(quint32 nNumber, const QJSValue &signatures);
+#else
+    bool isAnySignatureInSectionPresent(quint32 nNumber, const QVariantList &signatures);
+#endif
     qint64 getImageBase();  // Check mb quint64
     QString upperCase(const QString &sString);
     QString lowerCase(const QString &sString);
@@ -270,6 +280,7 @@ public slots:
     // function X.c(a,b) { return File.compare(a,b) }
 
 private:
+    bool _isAnySignatureInSectionPresent(quint32 nNumber, const QStringList &signatures);
     bool _findByteRelationCandidates(const QVariant &nOffset, const QVariant &nSize, const QVariant &groups, const QVariant &tailBytes, QVector<quint32> *result);
     void _fixOffsetAndSize(qint64 *pnOffset, qint64 *pnSize);
     QElapsedTimer *_startProfiling();
