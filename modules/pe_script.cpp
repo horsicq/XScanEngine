@@ -21,6 +21,23 @@
 #include "pe_script.h"
 #include "native_scan_helpers.h"
 
+namespace {
+class DevicePositionGuard {
+public:
+    explicit DevicePositionGuard(QIODevice *device) : m_device(device), m_position(device ? device->pos() : -1) {}
+    ~DevicePositionGuard()
+    {
+        if (m_device && m_position >= 0) m_device->seek(m_position);
+    }
+
+    bool isValid() const { return m_device && !m_device->isSequential() && m_position >= 0; }
+
+private:
+    QIODevice *m_device;
+    qint64 m_position;
+};
+}  // namespace
+
 PE_Script::PE_Script(XPE *pPE, XBinary::FILEPART filePart, const OPTIONS &scanOptions, XBinary::PDSTRUCT *pPdStruct) : MSDOS_Script(pPE, filePart, scanOptions, pPdStruct)
 {
     m_pPE = pPE;
@@ -495,6 +512,10 @@ qint64 PE_Script::calculateSizeOfHeaders()
 
 bool PE_Script::isExportFunctionPresent(const QString &sFunctionName)
 {
+    if (sFunctionName.isEmpty()) {
+        return false;
+    }
+
     return XBinary::isStringInListPresent(&m_listExportFunctionNameStrings, sFunctionName, getPdStruct());
 }
 
@@ -521,6 +542,27 @@ QString PE_Script::getExportFunctionName(quint32 nNumber)
 QString PE_Script::getExportNameByNumber(quint32 nNumber)
 {
     return getExportFunctionName(nNumber);
+}
+
+qint32 PE_Script::getNextNamedExportFunctionIndex(qint32 nPrevious)
+{
+    const qint32 nCount = m_listExportFunctionNameStrings.count();
+
+    if (nPrevious < -1) {
+        nPrevious = -1;
+    }
+
+    if (nPrevious >= nCount - 1) {
+        return -1;
+    }
+
+    for (qint32 i = nPrevious + 1; i < nCount; i++) {
+        if (!m_listExportFunctionNameStrings.at(i).isEmpty()) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 bool PE_Script::isExportPresent()
@@ -620,4 +662,91 @@ bool PE_Script::isAmd64UnwindMetadataValid()
 QString PE_Script::getAmd64UnwindError()
 {
     return m_sAmd64UnwindError;
+}
+
+QVariant PE_Script::validateGuardCfFunctionTable(const QVariant &tableRvaInput, const QVariant &entryCountInput, const QVariant &entrySizeInput)
+{
+    const QVariant tableValue = XScanNative::plainValue(tableRvaInput), countValue = XScanNative::plainValue(entryCountInput),
+                   sizeValue = XScanNative::plainValue(entrySizeInput);
+    quint64 tableRva, entryCount, entrySize;
+    const quint64 imageBase = (quint64)getImageBase();
+    const qint64 fileSize = getSize();
+    QVector<XScanNative::Section> sections;
+    QVariant tableMapping;
+    qint64 tableOffset;
+    quint64 entryIndex = 0;
+    quint32 previousRva = 0;
+    bool havePrevious = false;
+
+    if (!XBinary::isPdStructNotCanceled(getPdStruct()) || m_pPE->getDeviceGeneration() != m_nMapDeviceGeneration ||
+        !XScanNative::numeric(tableValue) || !XScanNative::numeric(countValue) || !XScanNative::numeric(sizeValue) ||
+        !XScanNative::safeUnsigned(tableValue.toDouble(), &tableRva, Q_UINT64_C(0xffffffff)) ||
+        !XScanNative::safeUnsigned(countValue.toDouble(), &entryCount, Q_UINT64_C(0xffffffff)) || !entryCount ||
+        !XScanNative::safeUnsigned(sizeValue.toDouble(), &entrySize, 19) || entrySize < 4 ||
+        imageBase > XScanNative::MaxSafeInteger - Q_UINT64_C(0xffffffff) || fileSize < 0 ||
+        entryCount > XScanNative::MaxSafeInteger / entrySize)
+        return XScanNative::nullResult();
+
+    sections.reserve(m_listSectionHeaders.size());
+    for (int i = 0; i < m_listSectionHeaders.size(); ++i) {
+        sections.append({getSectionVirtualAddress(i), getSectionVirtualSize(i), getSectionFileSize(i), getSectionFileOffset(i), getSectionCharacteristics(i)});
+    }
+    tableMapping = XScanNative::mapRange((double)(imageBase + tableRva), (double)(entryCount * entrySize), 0, true, imageBase, fileSize, sections,
+                                         [&](quint64 va) { return VAToOffset((qint64)va); });
+    if (tableMapping.type() != QVariant::Map) return XScanNative::nullResult();
+    tableOffset = (qint64)tableMapping.toMap().value(QStringLiteral("fileOffset")).toDouble();
+
+    DevicePositionGuard devicePosition(m_pPE->getDevice());
+    if (!devicePosition.isValid()) return XScanNative::nullResult();
+    const quint64 entriesPerChunk = 49152 / entrySize;
+    while (entryIndex < entryCount) {
+        const quint64 chunkEntries = qMin(entryCount - entryIndex, entriesPerChunk);
+        const qint64 chunkSize = (qint64)(chunkEntries * entrySize);
+        const QByteArray data = m_pPE->read_array_process(tableOffset + (qint64)(entryIndex * entrySize), chunkSize, getPdStruct());
+        if (data.size() != chunkSize || !XBinary::isPdStructNotCanceled(getPdStruct()) || m_pPE->getDeviceGeneration() != m_nMapDeviceGeneration)
+            return XScanNative::nullResult();
+
+        const unsigned char *bytes = reinterpret_cast<const unsigned char *>(data.constData());
+        for (quint64 localIndex = 0; localIndex < chunkEntries; ++localIndex) {
+            const unsigned char *entry = bytes + localIndex * entrySize;
+            const quint32 functionRva = (quint32)entry[0] | ((quint32)entry[1] << 8) | ((quint32)entry[2] << 16) | ((quint32)entry[3] << 24);
+            const quint64 absoluteIndex = entryIndex + localIndex;
+
+            if ((absoluteIndex & 4095) == 0 && !XBinary::isPdStructNotCanceled(getPdStruct())) return XScanNative::nullResult();
+            if (havePrevious && functionRva < previousRva) {
+                QVariantMap result;
+                result.insert(QStringLiteral("status"), 1);
+                result.insert(QStringLiteral("entryIndex"), (double)absoluteIndex);
+                result.insert(QStringLiteral("functionRva"), (double)functionRva);
+                return result;
+            }
+
+            bool fileBackedExecutable = false;
+            for (const XScanNative::Section &section : sections) {
+                if ((section.flags & quint32(0x20000000u)) == 0 || functionRva < section.rva) continue;
+                const quint64 relative = (quint64)functionRva - section.rva;
+                if (relative >= section.rawSize) continue;
+                const quint64 fileOffset = (quint64)section.rawOffset + relative;
+                fileBackedExecutable = fileOffset < (quint64)fileSize && fileOffset <= XScanNative::MaxSafeInteger &&
+                                       VAToOffset((qint64)(imageBase + functionRva)) == (qint64)fileOffset;
+                break;
+            }
+            if (!fileBackedExecutable) {
+                QVariantMap result;
+                result.insert(QStringLiteral("status"), 2);
+                result.insert(QStringLiteral("entryIndex"), (double)absoluteIndex);
+                result.insert(QStringLiteral("functionRva"), (double)functionRva);
+                return result;
+            }
+            previousRva = functionRva;
+            havePrevious = true;
+        }
+        entryIndex += chunkEntries;
+    }
+
+    QVariantMap result;
+    result.insert(QStringLiteral("status"), 0);
+    result.insert(QStringLiteral("entryIndex"), 0);
+    result.insert(QStringLiteral("functionRva"), 0);
+    return result;
 }

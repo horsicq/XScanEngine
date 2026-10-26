@@ -94,12 +94,14 @@ public slots:
     qint32 getNumberOfExports();
     QString getExportFunctionName(quint32 nNumber);
     QString getExportNameByNumber(quint32 nNumber);
+    qint32 getNextNamedExportFunctionIndex(qint32 nPrevious);
     bool isExportPresent();
     bool isTLSPresent();
     bool isImportPresent();
     bool isResourcesPresent();
     bool isAmd64UnwindMetadataValid();
     QString getAmd64UnwindError();
+    QVariant validateGuardCfFunctionTable(const QVariant &tableRva, const QVariant &entryCount, const QVariant &entrySize);
     quint32 getImportHash32();
     quint64 getImportHash64();
     bool isImportPositionHashPresent(qint32 nIndex, quint32 nHash);

@@ -32,6 +32,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFileInfo>
+#include <QHash>
 
 bool sort_signature_prio(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEngine::SIGNATURE_RECORD &sr2)
 {
@@ -1347,18 +1348,33 @@ bool XScanEngine::loadDatabase(SCAN_OPTIONS *pScanOptions, XBinary::PDSTRUCT *pP
 
     bResult = loadDatabase(pScanOptions->sMainDatabasePath, DT_MAIN, pScanOptions->bUseCache, pPdStruct);
 
-    if (pScanOptions->bUseCustomDatabase) {
-        loadDatabase(pScanOptions->sCustomDatabasePath, DT_CUSTOM, pScanOptions->bUseCache, pPdStruct);
+    if (bResult) {
+        _loadMetadata(pScanOptions->sMainDatabasePath, DT_MAIN, pPdStruct);
+        _applyMetadata(DT_MAIN);
     }
 
-    loadMetadata(pScanOptions->sMainDatabasePath, pPdStruct);
+    if (pScanOptions->bUseCustomDatabase) {
+        bool bCustomResult = loadDatabase(pScanOptions->sCustomDatabasePath, DT_CUSTOM, pScanOptions->bUseCache, pPdStruct);
+
+        if (bCustomResult) {
+            _loadMetadata(pScanOptions->sCustomDatabasePath, DT_CUSTOM, pPdStruct);
+            _applyMetadata(DT_CUSTOM);
+        }
+    }
 
     return bResult;
 }
 
 bool XScanEngine::_loadDatabase(const QString &sDatabasePath, DT databaseType)
 {
-    return loadDatabase(sDatabasePath, databaseType, false, nullptr);
+    bool bResult = loadDatabase(sDatabasePath, databaseType, false, nullptr);
+
+    if (bResult) {
+        _loadMetadata(sDatabasePath, databaseType, nullptr);
+        _applyMetadata(databaseType);
+    }
+
+    return bResult;
 }
 
 void XScanEngine::initDatabase()
@@ -1370,11 +1386,51 @@ void XScanEngine::initDatabase()
 void XScanEngine::initMetadata()
 {
     m_listMetadata.clear();
+
+    for (qint32 i = 0; i < m_listSignatures.count(); i++) {
+        m_listSignatures[i].listTags.clear();
+    }
 }
 
 QList<XScanEngine::METADATA_RECORD> *XScanEngine::getMetadata()
 {
     return &m_listMetadata;
+}
+
+QString XScanEngine::getUsedTags() const
+{
+    QHash<QString, QString> mapTags;
+
+    const auto appendTags = [&mapTags](const QStringList &listTags) {
+        for (qint32 i = 0; i < listTags.count(); i++) {
+            const QString sTag = listTags.at(i).trimmed();
+            const QString sKey = sTag.toCaseFolded();
+
+            // Retain the spelling from the first occurrence while using the
+            // folded form solely for case-insensitive identity.
+            if ((!sKey.isEmpty()) && (!mapTags.contains(sKey))) {
+                mapTags.insert(sKey, sTag);
+            }
+        }
+    };
+
+    for (qint32 i = 0; i < m_listSignatures.count(); i++) {
+        appendTags(m_listSignatures.at(i).listTags);
+    }
+
+    QStringList listResult = mapTags.values();
+
+    std::sort(listResult.begin(), listResult.end(), [](const QString &sString1, const QString &sString2) {
+        qint32 nResult = QString::compare(sString1, sString2, Qt::CaseInsensitive);
+
+        if (nResult == 0) {
+            nResult = QString::compare(sString1, sString2, Qt::CaseSensitive);
+        }
+
+        return nResult < 0;
+    });
+
+    return listResult.join(QChar(';'));
 }
 
 QMap<QString, XBinary::FT> XScanEngine::_getDatabaseFileTypeMap()
@@ -1416,7 +1472,7 @@ QMap<QString, XBinary::FT> XScanEngine::_getDatabaseFileTypeMap()
     return mapResult;
 }
 
-QList<XScanEngine::METADATA_RECORD> XScanEngine::_parseMetadata(const QString &sData, XBinary::FT fileType)
+QList<XScanEngine::METADATA_RECORD> XScanEngine::_parseMetadata(const QString &sData, XBinary::FT fileType, DT databaseType)
 {
     QList<METADATA_RECORD> listResult;
 
@@ -1432,8 +1488,11 @@ QList<XScanEngine::METADATA_RECORD> XScanEngine::_parseMetadata(const QString &s
 
         METADATA_RECORD record = {};
         record.fileType = fileType;
+        record.databaseType = databaseType;
 
-        qint32 nPos = sLine.indexOf(QChar('#'));
+        // A signature filename may itself contain '#', for example
+        // "protector_CC#3.2.sg". The metadata separator is the final '#'.
+        qint32 nPos = sLine.lastIndexOf(QChar('#'));
 
         if (nPos != -1) {
             record.sName = sLine.left(nPos).trimmed();
@@ -1441,19 +1500,42 @@ QList<XScanEngine::METADATA_RECORD> XScanEngine::_parseMetadata(const QString &s
             QString sTags = sLine.mid(nPos + 1).trimmed();
 
             if (!sTags.isEmpty()) {
-                QStringList listTags = sTags.split(QChar(','));
+                // The database uses semicolon-separated tags. Accept comma as
+                // well so older/generated metadata remains readable.
+                sTags.replace(QChar(','), QChar(';'));
+                QStringList listTags = sTags.split(QChar(';'), Qt::SkipEmptyParts);
                 qint32 nNumberOfTags = listTags.count();
 
                 for (qint32 j = 0; j < nNumberOfTags; j++) {
                     QString sTag = listTags.at(j).trimmed();
 
-                    if (!sTag.isEmpty()) {
+                    bool bPresent = false;
+
+                    for (qint32 k = 0; k < record.listTags.count(); k++) {
+                        if (record.listTags.at(k).compare(sTag, Qt::CaseInsensitive) == 0) {
+                            bPresent = true;
+                            break;
+                        }
+                    }
+
+                    if ((!sTag.isEmpty()) && (!bPresent)) {
                         record.listTags.append(sTag);
                     }
                 }
             }
         } else {
             record.sName = sLine;
+        }
+
+        // PE metadata also indexes managed signatures as DOTNET/<name>. Those
+        // scripts are loaded as FT_CLI_ASSEMBLY, so normalize both parts of
+        // the identity before attaching their tags.
+        QString sNormalizedName = record.sName;
+        sNormalizedName.replace(QChar('\\'), QChar('/'));
+
+        if ((record.fileType == XBinary::FT_PE) && sNormalizedName.startsWith(QLatin1String("DOTNET/"), Qt::CaseInsensitive)) {
+            record.fileType = XBinary::FT_CLI_ASSEMBLY;
+            record.sName = QFileInfo(sNormalizedName).fileName();
         }
 
         if (!record.sName.isEmpty()) {
@@ -1466,6 +1548,13 @@ QList<XScanEngine::METADATA_RECORD> XScanEngine::_parseMetadata(const QString &s
 
 void XScanEngine::loadMetadata(const QString &sDatabasePath, XBinary::PDSTRUCT *pPdStruct)
 {
+    _loadMetadata(sDatabasePath, DT_MAIN, pPdStruct);
+    _applyMetadata(DT_MAIN);
+    _applyMetadata(DT_CUSTOM);
+}
+
+void XScanEngine::_loadMetadata(const QString &sDatabasePath, DT databaseType, XBinary::PDSTRUCT *pPdStruct)
+{
     XBinary::PDSTRUCT pdStructEmpty = XBinary::createPdStruct();
 
     if (pPdStruct == nullptr) {
@@ -1475,22 +1564,33 @@ void XScanEngine::loadMetadata(const QString &sDatabasePath, XBinary::PDSTRUCT *
     QString _sDatabasePath = sDatabasePath;
 
     if (_sDatabasePath == "") {
-        _sDatabasePath = "$data/db";
+        _sDatabasePath = (databaseType == DT_MAIN) ? "$data/db" : "$data/db_custom";
     }
 
+    QString sUnresolvedPath = _sDatabasePath;
     _sDatabasePath = XOptions::convertPathName(_sDatabasePath);
+
+    if (sUnresolvedPath.startsWith("$data") && (!XBinary::isFileExists(_sDatabasePath)) && (!XBinary::isDirectoryExists(_sDatabasePath))) {
+        QString sTarPath = XOptions::convertPathName(sUnresolvedPath + ".tar");
+
+        if (XBinary::isFileExists(sTarPath)) {
+            _sDatabasePath = sTarPath;
+        }
+    }
 
     QMap<QString, XBinary::FT> mapFileTypes = _getDatabaseFileTypeMap();
 
     if (XBinary::isFileExists(_sDatabasePath)) {
-        // Load metadata from db.zip (any "_metadata/<FileType>.txt" record)
+        // Load metadata from ZIP or TAR (any "_metadata/<FileType>.txt" record).
         QFile file;
         file.setFileName(_sDatabasePath);
 
         if (file.open(QIODevice::ReadOnly)) {
             XZip zip(&file);
+            bool bLoadedZip = false;
 
             if (zip.isValid(pPdStruct)) {
+                bLoadedZip = true;
                 QList<XArchive::RECORD> listRecords = zip.getRecords(-1, pPdStruct);
                 qint32 nNumberOfRecords = listRecords.count();
 
@@ -1501,7 +1601,25 @@ void XScanEngine::loadMetadata(const QString &sDatabasePath, XBinary::PDSTRUCT *
                     if ((fi.suffix().toLower() == "txt") && (fi.dir().dirName() == "_metadata")) {
                         XBinary::FT fileType = mapFileTypes.value(fi.completeBaseName(), XBinary::FT_UNKNOWN);
                         QString sData = zip.decompress(&_record, pPdStruct);
-                        m_listMetadata.append(_parseMetadata(sData, fileType));
+                        m_listMetadata.append(_parseMetadata(sData, fileType, databaseType));
+                    }
+                }
+            }
+
+            if ((!bLoadedZip) && file.seek(0)) {
+                QList<DATABASE_TAR_ENTRY> listEntries;
+
+                if (_readDatabaseTar(&file, &listEntries, pPdStruct)) {
+                    qint32 nNumberOfEntries = listEntries.count();
+
+                    for (qint32 i = 0; (i < nNumberOfEntries) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+                        const DATABASE_TAR_ENTRY &entry = listEntries.at(i);
+                        QFileInfo fi(entry.sPath);
+
+                        if ((fi.suffix().toLower() == "txt") && (fi.dir().dirName() == "_metadata")) {
+                            XBinary::FT fileType = mapFileTypes.value(fi.completeBaseName(), XBinary::FT_UNKNOWN);
+                            m_listMetadata.append(_parseMetadata(QString::fromUtf8(entry.baData), fileType, databaseType));
+                        }
                     }
                 }
             }
@@ -1520,8 +1638,61 @@ void XScanEngine::loadMetadata(const QString &sDatabasePath, XBinary::PDSTRUCT *
             for (qint32 i = 0; (i < nNumberOfFiles) && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
                 XBinary::FT fileType = mapFileTypes.value(eil.at(i).completeBaseName(), XBinary::FT_UNKNOWN);
                 QString sData = XBinary::readFile(eil.at(i).absoluteFilePath(), pPdStruct);
-                m_listMetadata.append(_parseMetadata(sData, fileType));
+                m_listMetadata.append(_parseMetadata(sData, fileType, databaseType));
             }
+        }
+    }
+}
+
+void XScanEngine::_applyMetadata(DT databaseType)
+{
+    QHash<QString, QStringList> mapMainTags;
+    QHash<QString, QStringList> mapLocalTags;
+
+    for (qint32 i = 0; i < m_listMetadata.count(); i++) {
+        const METADATA_RECORD &metadataRecord = m_listMetadata.at(i);
+
+        // The main database metadata is authoritative for the full signature
+        // collection, including matching custom signatures. A custom database
+        // can supply its own row to replace that fallback for a custom record.
+        if ((metadataRecord.databaseType != DT_MAIN) && !((databaseType == DT_CUSTOM) && (metadataRecord.databaseType == DT_CUSTOM))) {
+            continue;
+        }
+
+        QString sKey = QString::number((qint32)metadataRecord.fileType) + QChar('\n') + QFileInfo(metadataRecord.sName).fileName().toCaseFolded();
+        QHash<QString, QStringList> &mapTags = (metadataRecord.databaseType == DT_CUSTOM) ? mapLocalTags : mapMainTags;
+        QStringList &listTags = mapTags[sKey];
+
+        for (qint32 j = 0; j < metadataRecord.listTags.count(); j++) {
+            const QString &sTag = metadataRecord.listTags.at(j);
+            bool bPresent = false;
+
+            for (qint32 k = 0; k < listTags.count(); k++) {
+                if (listTags.at(k).compare(sTag, Qt::CaseInsensitive) == 0) {
+                    bPresent = true;
+                    break;
+                }
+            }
+
+            if (!bPresent) {
+                listTags.append(sTag);
+            }
+        }
+    }
+
+    for (qint32 i = 0; i < m_listSignatures.count(); i++) {
+        SIGNATURE_RECORD &signatureRecord = m_listSignatures[i];
+
+        if (signatureRecord.databaseType != databaseType) {
+            continue;
+        }
+
+        QString sKey = QString::number((qint32)signatureRecord.fileType) + QChar('\n') + QFileInfo(signatureRecord.sName).fileName().toCaseFolded();
+
+        if ((databaseType == DT_CUSTOM) && mapLocalTags.contains(sKey)) {
+            signatureRecord.listTags = mapLocalTags.value(sKey);
+        } else {
+            signatureRecord.listTags = mapMainTags.value(sKey);
         }
     }
 }
@@ -1885,21 +2056,40 @@ QList<XScanEngine::SIGNATURE_RECORD> XScanEngine::_loadDatabaseFromArchive(XArch
     QList<SIGNATURE_RECORD> listResult;
 
     qint32 nNumberOfRecords = pListRecords->count();
+    QString sNormalizedPrefix = sPrefix;
+    sNormalizedPrefix.replace(QChar('\\'), QChar('/'));
+
+    while (sNormalizedPrefix.endsWith(QChar('/'))) {
+        sNormalizedPrefix.chop(1);
+    }
 
     for (qint32 i = 0; i < nNumberOfRecords; i++) {
         XArchive::RECORD _record = pListRecords->at(i);
+        QString sRecordPath = _record.spInfo.sRecordName;
+        sRecordPath.replace(QChar('\\'), QChar('/'));
 
-        if (((sPrefix == "") && (!_record.spInfo.sRecordName.contains("/"))) ||
-            ((_record.spInfo.sRecordName.contains("/")) && (_record.spInfo.sRecordName.section("/", 0, 0) == sPrefix) &&
-             (_record.spInfo.sRecordName.section("/", 1, 1) != ""))) {
-            QFileInfo fi(_record.spInfo.sRecordName);
+        while (sRecordPath.startsWith(QLatin1String("./"))) {
+            sRecordPath.remove(0, 2);
+        }
+
+        while (sRecordPath.startsWith(QChar('/'))) {
+            sRecordPath.remove(0, 1);
+        }
+
+        qint32 nSeparator = sRecordPath.lastIndexOf(QChar('/'));
+        QString sParentPath = (nSeparator == -1) ? QString() : sRecordPath.left(nSeparator);
+        QString sFileName = (nSeparator == -1) ? sRecordPath : sRecordPath.mid(nSeparator + 1);
+
+        // Match the complete parent path. Prefix-only matching lets PE consume
+        // PE/DOTNET records before the managed-signature pass can load them.
+        if ((!sFileName.isEmpty()) && (!sFileName.startsWith(QChar('.'))) && (sParentPath == sNormalizedPrefix) && isSignatureNameValid(sFileName)) {
 
             SIGNATURE_RECORD record = {};
 
             record.fileType = fileType;
-            record.sName = fi.fileName();
+            record.sName = sFileName;
             record.sText = pArchive->decompress(&_record, nullptr);
-            record.sFilePath = _record.spInfo.sRecordName;
+            record.sFilePath = sRecordPath;
             record.databaseType = databaseType;
             record.bReadOnly = true;
 
@@ -2499,6 +2689,45 @@ bool XScanEngine::createDatabaseTar(const QString &sDatabasePath, const QString 
             QString sEntryPath = sDirectory.isEmpty() ? sName : (sDirectory + "/" + sName);
 
             bResult = bReadAll && _writeDatabaseTarEntry(&file, sEntryPath, baData);
+        }
+    }
+
+    // Keep signature tags with the database so directory, ZIP and TAR scans
+    // apply the same include/exclude filters.
+    if (bResult && XBinary::isPdStructNotCanceled(pPdStruct)) {
+        QString sMetadataPath = _sDatabasePath + QDir::separator() + "_metadata";
+        QDir metadataDir(sMetadataPath);
+
+        if (metadataDir.exists()) {
+            QStringList listNames = metadataDir.entryList(QStringList() << "*.txt", QDir::Files, QDir::NoSort);
+            QList<QByteArray> listUtf8Names;
+
+            for (qint32 i = 0; i < listNames.count(); i++) {
+                listUtf8Names.append(listNames.at(i).toUtf8());
+            }
+
+            std::sort(listUtf8Names.begin(), listUtf8Names.end());
+
+            for (qint32 i = 0; (i < listUtf8Names.count()) && bResult && XBinary::isPdStructNotCanceled(pPdStruct); i++) {
+                QString sName = QString::fromUtf8(listUtf8Names.at(i));
+                QFile metadataFile(metadataDir.absoluteFilePath(sName));
+
+                if (!metadataFile.open(QIODevice::ReadOnly)) {
+                    emit errorMessage(QString("%1: %2").arg(tr("Cannot read file"), metadataFile.fileName()));
+                    bResult = false;
+                    break;
+                }
+
+                QByteArray baData = metadataFile.readAll();
+                bool bReadAll = (baData.size() == metadataFile.size());
+                metadataFile.close();
+
+                if (!bReadAll) {
+                    emit errorMessage(QString("%1: %2").arg(tr("Cannot read file"), metadataFile.fileName()));
+                }
+
+                bResult = bReadAll && _writeDatabaseTarEntry(&file, "_metadata/" + sName, baData);
+            }
         }
     }
 
@@ -4562,6 +4791,57 @@ XScanEngine::SCAN_OPTIONS XScanEngine::getDefaultOptions(quint64 nFlags)
     setScanFlags(&result, nFlags);
 
     return result;
+}
+
+XScanEngine::TAG_FILTER XScanEngine::createTagFilter(const SCAN_OPTIONS *pScanOptions)
+{
+    TAG_FILTER result;
+
+    if (pScanOptions == nullptr) {
+        return result;
+    }
+
+    const auto appendTags = [](const QString &sTags, QSet<QString> *pResult) {
+        const QStringList listTags = sTags.split(QChar(';'), Qt::SkipEmptyParts);
+
+        for (qint32 i = 0; i < listTags.count(); i++) {
+            const QString sTag = listTags.at(i).trimmed().toCaseFolded();
+
+            if (!sTag.isEmpty()) {
+                pResult->insert(sTag);
+            }
+        }
+    };
+
+    appendTags(pScanOptions->sIncludeTags, &result.stIncludeTags);
+    appendTags(pScanOptions->sExcludeTags, &result.stExcludeTags);
+
+    return result;
+}
+
+bool XScanEngine::isSignatureTagAllowed(const SIGNATURE_RECORD &signatureRecord, const TAG_FILTER &tagFilter)
+{
+    if (tagFilter.stIncludeTags.isEmpty() && tagFilter.stExcludeTags.isEmpty()) {
+        return true;
+    }
+
+    bool bIncluded = tagFilter.stIncludeTags.isEmpty();
+
+    for (qint32 i = 0; i < signatureRecord.listTags.count(); i++) {
+        const QString sTag = signatureRecord.listTags.at(i).toCaseFolded();
+
+        // Exclusion has precedence when the same tag appears in both filters.
+        if (tagFilter.stExcludeTags.contains(sTag)) {
+            return false;
+        }
+
+        if (tagFilter.stIncludeTags.contains(sTag)) {
+            bIncluded = true;
+        }
+    }
+
+    // An untagged signature remains eligible unless an include filter exists.
+    return bIncluded;
 }
 
 QMap<quint64, QString> XScanEngine::getDatabases()

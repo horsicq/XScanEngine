@@ -87,6 +87,7 @@ public:
         QString sText;
         QString sInfo;
         QString sVersion;
+        QStringList listTags;
         bool bIsEP;
         bool bReadOnly;
     };
@@ -1207,6 +1208,8 @@ public:
         QString sStruct;
         QString sSpecial;        // Special info
         QString sSignatureName;  // Optional
+        QString sIncludeTags;    // Optional, semicolon-separated; any matching tag includes the signature
+        QString sExcludeTags;    // Optional, semicolon-separated; any matching tag excludes the signature
         QString sDetectFunction;
         bool bIsSort;
         QString sMainDatabasePath;
@@ -1231,6 +1234,13 @@ public:
         QString sCollectionCatalogFormat;
         QString sCollectionStartFile;  // Optional
         QString sScanID;               // Optional
+    };
+
+    // Parsed once per scan and shared by signature-based engines. Tags are
+    // stored case-folded so matching remains exact and case-insensitive.
+    struct TAG_FILTER {
+        QSet<QString> stIncludeTags;
+        QSet<QString> stExcludeTags;
     };
 
     struct SCAN_DATA {
@@ -1279,9 +1289,10 @@ public:
         QList<DATABASE_STATE_RECORD> listRecords;
     };
 
-    // Signature metadata loaded from db/_metadata/<FileType>.txt (lines: "<signature-file>#<tag1,tag2,...>")
+    // Signature metadata loaded from db/_metadata/<FileType>.txt (lines: "<signature-file>#<tag1;tag2;...>")
     struct METADATA_RECORD {
         XBinary::FT fileType;
+        DT databaseType;
         QString sName;  // Signature file name, e.g. "protector_UPX.3.sg"
         QStringList listTags;
     };
@@ -1301,6 +1312,10 @@ public:
     void initMetadata();
     void loadMetadata(const QString &sDatabasePath, XBinary::PDSTRUCT *pPdStruct = nullptr);
     QList<METADATA_RECORD> *getMetadata();
+    // Returns every tag attached to a loaded signature. Tags are unique and
+    // sorted case-insensitively, preserve their first spelling, and are
+    // separated by ';' without a trailing separator.
+    QString getUsedTags() const;
 
     SIGNATURE_RECORD getSignatureByFilePath(const QString &sSignatureFilePath);
     bool updateSignature(const QString &sSignatureFilePath, const QString &sText);
@@ -1365,6 +1380,8 @@ public:
     static QString getJsonFromFlags(quint64 nFlags);
     static quint64 getFlagsFromJson(const QString &sJson);
     static SCAN_OPTIONS getDefaultOptions(quint64 nFlags);
+    static TAG_FILTER createTagFilter(const SCAN_OPTIONS *pScanOptions);
+    static bool isSignatureTagAllowed(const SIGNATURE_RECORD &signatureRecord, const TAG_FILTER &tagFilter);
 
     static QMap<quint64, QString> getDatabases();
     static quint64 getDatabases(SCAN_OPTIONS *pScanOptions);
@@ -1421,7 +1438,9 @@ private:
     static bool _readDatabaseTar(QIODevice *pDevice, QList<DATABASE_TAR_ENTRY> *pListEntries, XBinary::PDSTRUCT *pPdStruct);
     static bool _writeDatabaseTarEntry(QIODevice *pDevice, const QString &sPath, const QByteArray &baData);
     bool _loadDatabaseFromTar(const QString &sTarPath, DT databaseType, XBinary::PDSTRUCT *pPdStruct);
-    QList<METADATA_RECORD> _parseMetadata(const QString &sData, XBinary::FT fileType);
+    QList<METADATA_RECORD> _parseMetadata(const QString &sData, XBinary::FT fileType, DT databaseType);
+    void _loadMetadata(const QString &sDatabasePath, DT databaseType, XBinary::PDSTRUCT *pPdStruct);
+    void _applyMetadata(DT databaseType);
     static QString _getDatabaseCachePath(const QString &sDatabasePath);
     static void _getDatabaseStats(const QString &sDatabasePath, quint32 *pnFileCount, quint64 *pnTotalSize, qint64 *pnNewestMtime);
     bool _loadDatabaseCache(const QString &sCachePath, quint32 nFileCount, quint64 nTotalSize, qint64 nNewestMtime, XBinary::PDSTRUCT *pPdStruct);

@@ -340,6 +340,8 @@ int XScanEngineConsole::process()
     QCommandLineOption clFileType = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FILETYPE);
     QCommandLineOption clFirstWrapperOnly = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_FIRSTWRAPPERONLY);
     QCommandLineOption clNoColor = XOptions::getCommandLineOption(XOptions::CONSOLE_OPTION_ID_NOCOLOR);
+    QCommandLineOption clIncludeTags(QStringList() << "includetags" << "include-tags", "Run signatures matching any semicolon-separated tag.", "TAG1;TAG2");
+    QCommandLineOption clExcludeTags(QStringList() << "excludetags" << "exclude-tags", "Skip signatures matching any semicolon-separated tag.", "TAG1;TAG2");
 
     parser.addOption(clRecursiveScan);
     parser.addOption(clDeepScan);
@@ -373,6 +375,8 @@ int XScanEngineConsole::process()
     parser.addOption(clFirstWrapperOnly);
     parser.addOption(clShowStructs);
     parser.addOption(clNoColor);
+    parser.addOption(clIncludeTags);
+    parser.addOption(clExcludeTags);
 
     addEngineOptions(&parser);
 
@@ -444,6 +448,8 @@ int XScanEngineConsole::process()
     }
 
     scanOptions.sStruct = parser.value(clStruct);
+    scanOptions.sIncludeTags = parser.value(clIncludeTags);
+    scanOptions.sExcludeTags = parser.value(clExcludeTags);
 
     applyEngineOptions(&parser, &scanOptions);
 
