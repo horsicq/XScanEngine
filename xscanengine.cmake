@@ -1,5 +1,6 @@
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${CMAKE_CURRENT_LIST_DIR}/modules)
+include(${CMAKE_CURRENT_LIST_DIR}/modules/native_dotnet.cmake)
 
 if (NOT DEFINED XFORMATS_SOURCES)
     include(${CMAKE_CURRENT_LIST_DIR}/../Formats/xformats.cmake)
@@ -32,6 +33,7 @@ endif()
 
 set(XSCANENGINE_SOURCES
     ${XSCANENGINE_SOURCES}
+    ${XSCAN_DOTNET_SOURCES}
     ${CMAKE_CURRENT_LIST_DIR}/xscanengine.cpp
     ${CMAKE_CURRENT_LIST_DIR}/xscanengine.h
     ${CMAKE_CURRENT_LIST_DIR}/xscanengineprocess.cpp

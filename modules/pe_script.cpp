@@ -20,6 +20,7 @@
  */
 #include "pe_script.h"
 #include "native_scan_helpers.h"
+#include "native_dotnet_helpers.h"
 
 namespace {
 class DevicePositionGuard {
@@ -153,6 +154,55 @@ bool PE_Script::isNETUnicodeStringPresent(const QString &sString)
 bool PE_Script::isNetUStringPresent(const QString &sString)
 {
     return XBinary::isStringInListPresent(&m_listNetUnicodeStrings, sString, getPdStruct());
+}
+
+namespace {
+std::function<bool()> netQueryAlive(XPE *pe, quint64 generation, XBinary::PDSTRUCT *progress)
+{
+    const QPointer<XPE> guarded(pe);
+    const QPointer<QIODevice> device(pe ? pe->getDevice() : nullptr);
+    const XBinary::PDSTRUCTLIFETIME lifetime = XBinary::retainPdStructLifetime(progress);
+    return [guarded, device, generation, progress, lifetime]() {
+        return guarded && device && guarded->getDevice() == device && guarded->getDeviceGeneration() == generation &&
+            (!progress || XBinary::isPdStructLifetimeAlive(lifetime)) && XBinary::isPdStructNotCanceled(progress);
+    };
+}
+}
+
+quint32 PE_Script::getNumberOfNetMethods()
+{
+    if (!m_bIsNETPresent || m_pPE->isImage()) return 0;
+    XScanNative::DotNetQueries query(m_cliInfo, m_pPE->getDevice(), getSize(), m_bIs64 ? m_imageOptionalHeader64.SizeOfHeaders : m_imageOptionalHeader32.SizeOfHeaders, m_listSectionHeaders,
+                                    netQueryAlive(m_pPE, m_nMapDeviceGeneration, getPdStruct()));
+    return query.methodCount();
+}
+
+QVariant PE_Script::getNetMethodInfo(const QVariant &ridInput)
+{
+    quint64 rid;
+    if (!m_bIsNETPresent || m_pPE->isImage() || !XScanNative::unsignedValue(ridInput, &rid, 0xffffff) || !rid) return XScanNative::nullResult();
+    XScanNative::DotNetQueries query(m_cliInfo, m_pPE->getDevice(), getSize(), m_bIs64 ? m_imageOptionalHeader64.SizeOfHeaders : m_imageOptionalHeader32.SizeOfHeaders, m_listSectionHeaders,
+                                    netQueryAlive(m_pPE, m_nMapDeviceGeneration, getPdStruct()));
+    return query.methodInfo(quint32(rid));
+}
+
+QVariant PE_Script::getNetUserString(const QVariant &tokenInput)
+{
+    quint64 token;
+    if (!m_bIsNETPresent || m_pPE->isImage() || !XScanNative::unsignedValue(tokenInput, &token, 0xffffffffu) || !token) return XScanNative::nullResult();
+    XScanNative::DotNetQueries query(m_cliInfo, m_pPE->getDevice(), getSize(), m_bIs64 ? m_imageOptionalHeader64.SizeOfHeaders : m_imageOptionalHeader32.SizeOfHeaders, m_listSectionHeaders,
+                                    netQueryAlive(m_pPE, m_nMapDeviceGeneration, getPdStruct()));
+    return query.userString(quint32(token));
+}
+
+bool PE_Script::isNetMethodCalledBy(const QVariant &calleeInput, const QVariant &callerInput)
+{
+    quint64 callee, caller;
+    if (!m_bIsNETPresent || m_pPE->isImage() || !XScanNative::unsignedValue(calleeInput, &callee, 0xffffff) || !callee ||
+        !XScanNative::unsignedValue(callerInput, &caller, 0xffffff) || !caller) return false;
+    XScanNative::DotNetQueries query(m_cliInfo, m_pPE->getDevice(), getSize(), m_bIs64 ? m_imageOptionalHeader64.SizeOfHeaders : m_imageOptionalHeader32.SizeOfHeaders, m_listSectionHeaders,
+                                    netQueryAlive(m_pPE, m_nMapDeviceGeneration, getPdStruct()));
+    return query.calledBy(quint32(callee), quint32(caller));
 }
 
 qint64 PE_Script::findSignatureInBlob_NET(const QString &sSignature)

@@ -123,6 +123,10 @@ public slots:
     qint64 findSignatureInBlob_NET(const QString &sSignature);
     bool isSignatureInBlobPresent_NET(const QString &sSignature);
     bool isNetGlobalCctorPresent();
+    quint32 getNumberOfNetMethods();
+    QVariant getNetMethodInfo(const QVariant &rid = QVariant());
+    QVariant getNetUserString(const QVariant &token = QVariant());
+    bool isNetMethodCalledBy(const QVariant &callee = QVariant(), const QVariant &caller = QVariant());
     bool isNetTypePresent(const QString &sTypeNamespace, const QString &sTypeName);
     bool isNetMethodPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sMethodName);
     bool isNetFieldPresent(const QString &sTypeNamespace, const QString &sTypeName, const QString &sFieldName);

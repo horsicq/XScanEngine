@@ -2,6 +2,7 @@ INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
 INCLUDEPATH += $$PWD/modules
 DEPENDPATH += $$PWD/modules
+include($$PWD/modules/native_dotnet.pri)
 
 XCONFIG += use_archive
 !contains(XCONFIG, no_xemulator) {

@@ -87,6 +87,30 @@ bool sort_signature_name(const XScanEngine::SIGNATURE_RECORD &sr1, const XScanEn
     return (sr1.sName < sr2.sName);
 }
 
+static bool sortTagName(const QString &sString1, const QString &sString2)
+{
+    qint32 nResult = QString::compare(sString1, sString2, Qt::CaseInsensitive);
+
+    if (nResult == 0) {
+        nResult = QString::compare(sString1, sString2, Qt::CaseSensitive);
+    }
+
+    return nResult < 0;
+}
+
+static void appendTagFilter(const QString &sTags, QSet<QString> *pResult)
+{
+    const QStringList listTags = sTags.split(QChar(';'), Qt::SkipEmptyParts);
+
+    for (qint32 i = 0; i < listTags.count(); i++) {
+        const QString sTag = listTags.at(i).trimmed().toCaseFolded();
+
+        if (!sTag.isEmpty()) {
+            pResult->insert(sTag);
+        }
+    }
+}
+
 static bool isCollectionFileTypeAllowed(const XScanEngine::SCAN_OPTIONS *pScanOptions, XBinary::FT fileType)
 {
     bool bResult = pScanOptions->bCollectionAllFileTypes || pScanOptions->stCollectionFileTypes.isEmpty();
@@ -1401,9 +1425,11 @@ QString XScanEngine::getUsedTags() const
 {
     QHash<QString, QString> mapTags;
 
-    const auto appendTags = [&mapTags](const QStringList &listTags) {
-        for (qint32 i = 0; i < listTags.count(); i++) {
-            const QString sTag = listTags.at(i).trimmed();
+    for (qint32 i = 0; i < m_listSignatures.count(); i++) {
+        const QStringList &listTags = m_listSignatures.at(i).listTags;
+
+        for (qint32 j = 0; j < listTags.count(); j++) {
+            const QString sTag = listTags.at(j).trimmed();
             const QString sKey = sTag.toCaseFolded();
 
             // Retain the spelling from the first occurrence while using the
@@ -1412,23 +1438,10 @@ QString XScanEngine::getUsedTags() const
                 mapTags.insert(sKey, sTag);
             }
         }
-    };
-
-    for (qint32 i = 0; i < m_listSignatures.count(); i++) {
-        appendTags(m_listSignatures.at(i).listTags);
     }
 
     QStringList listResult = mapTags.values();
-
-    std::sort(listResult.begin(), listResult.end(), [](const QString &sString1, const QString &sString2) {
-        qint32 nResult = QString::compare(sString1, sString2, Qt::CaseInsensitive);
-
-        if (nResult == 0) {
-            nResult = QString::compare(sString1, sString2, Qt::CaseSensitive);
-        }
-
-        return nResult < 0;
-    });
+    std::sort(listResult.begin(), listResult.end(), sortTagName);
 
     return listResult.join(QChar(';'));
 }
@@ -4801,20 +4814,8 @@ XScanEngine::TAG_FILTER XScanEngine::createTagFilter(const SCAN_OPTIONS *pScanOp
         return result;
     }
 
-    const auto appendTags = [](const QString &sTags, QSet<QString> *pResult) {
-        const QStringList listTags = sTags.split(QChar(';'), Qt::SkipEmptyParts);
-
-        for (qint32 i = 0; i < listTags.count(); i++) {
-            const QString sTag = listTags.at(i).trimmed().toCaseFolded();
-
-            if (!sTag.isEmpty()) {
-                pResult->insert(sTag);
-            }
-        }
-    };
-
-    appendTags(pScanOptions->sIncludeTags, &result.stIncludeTags);
-    appendTags(pScanOptions->sExcludeTags, &result.stExcludeTags);
+    appendTagFilter(pScanOptions->sIncludeTags, &result.stIncludeTags);
+    appendTagFilter(pScanOptions->sExcludeTags, &result.stExcludeTags);
 
     return result;
 }

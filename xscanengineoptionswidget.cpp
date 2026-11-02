@@ -195,6 +195,8 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
     pOptions->addID(XOptions::ID_SCAN_HIGHLIGHT, true);
     pOptions->addID(XOptions::ID_SCAN_SORT, true);
     pOptions->addID(XOptions::ID_SCAN_HIDEUNKNOWN, false);
+    pOptions->addID(XOptions::ID_SCAN_INCLUDE_TAGS, "");
+    pOptions->addID(XOptions::ID_SCAN_EXCLUDE_TAGS, "");
     pOptions->addID(XOptions::ID_SCAN_USECACHE, false);
     pOptions->addID(XOptions::ID_SCAN_DIRECTORY_PATH, "");
     pOptions->addID(XOptions::ID_SCAN_SUBDIRECTORIES, true);
