@@ -7,7 +7,6 @@
 #include "xcliassembly.h"
 #include "xpe.h"
 #include <QPointer>
-#include "xxfclib/formats/executable/dotnet/xx_dotnet_cil.h"
 
 namespace XScanNative {
 // Queries borrow the existing CLI snapshot. Device reads preserve its cursor;
@@ -82,17 +81,56 @@ public:
             !method.rva || !methodBody(method.rva, &body) || !body.codeSize || !read(body.codeOffset, body.codeSize, &code)) return false;
         bool found = false;
         quint32 at = 0, steps = 0;
+        const uchar *bytes = reinterpret_cast<const uchar *>(code.constData());
         while (at < body.codeSize) {
             if (!(steps++ & 0x3ff) && !valid()) return false;
-            xx_dotnet_cil_instruction instruction;
-            if (xx_dotnet_cil_decode(reinterpret_cast<const uint8_t *>(code.constData()), size_t(code.size()), at, &instruction) != XX_DOTNET_CIL_OK) return false;
-            if ((instruction.opcode == 0x28 || instruction.opcode == 0x6f) && instruction.value == 0x06000000u + callee) found = true;
-            at += instruction.width;
+            quint16 opcode = bytes[at++];
+            if (opcode == 0xfe) {
+                if (at == body.codeSize) return false;
+                opcode = 0xfe00 | bytes[at++];
+            }
+            int operandSize = cilOperandSize(opcode);
+            if (operandSize == -1) return false;
+            if (operandSize == -2) {
+                if (body.codeSize - at < 4) return false;
+                const quint32 count = u32(bytes + at);
+                if (count > 0x10000) return false;
+                operandSize = 4 + int(count) * 4;
+            }
+            if (quint32(operandSize) > body.codeSize - at) return false;
+            if ((opcode == 0x28 || opcode == 0x6f) && u32(bytes + at) == 0x06000000u + callee) found = true;
+            at += quint32(operandSize);
         }
         return valid() && found;
     }
 
 private:
+    // ECMA-335 CIL operand sizes. Reserved opcodes are invalid; switch has a
+    // variable-sized operand. This reader belongs to the Qt scan engine.
+    static int cilOperandSize(quint16 opcode)
+    {
+        if (opcode >= 0xfe00) {
+            const quint16 op = opcode & 0xff;
+            if (op <= 0x05 || op == 0x0f || op == 0x11 || op == 0x13 || op == 0x14 ||
+                op == 0x17 || op == 0x18 || op == 0x1a || op == 0x1d || op == 0x1e) return 0;
+            if (op == 0x06 || op == 0x07 || op == 0x15 || op == 0x16 || op == 0x1c) return 4;
+            if (op >= 0x09 && op <= 0x0e) return 2;
+            if (op == 0x12 || op == 0x19) return 1;
+            return -1;
+        }
+        if (opcode <= 0x0d || (opcode >= 0x14 && opcode <= 0x1e) || opcode == 0x25 || opcode == 0x26 || opcode == 0x2a ||
+            (opcode >= 0x46 && opcode <= 0x6e) || opcode == 0x76 || opcode == 0x7a ||
+            (opcode >= 0x82 && opcode <= 0x8b) || opcode == 0x8e || (opcode >= 0x90 && opcode <= 0xa2) ||
+            (opcode >= 0xb3 && opcode <= 0xba) || opcode == 0xc3 || (opcode >= 0xd1 && opcode <= 0xdc) || opcode == 0xdf || opcode == 0xe0) return 0;
+        if ((opcode >= 0x0e && opcode <= 0x13) || opcode == 0x1f || (opcode >= 0x2b && opcode <= 0x37) || opcode == 0xde) return 1;
+        if (opcode == 0x20 || opcode == 0x22 || (opcode >= 0x27 && opcode <= 0x29) || (opcode >= 0x38 && opcode <= 0x44) ||
+            (opcode >= 0x6f && opcode <= 0x75) || opcode == 0x79 || (opcode >= 0x7b && opcode <= 0x81) ||
+            opcode == 0x8c || opcode == 0x8d || opcode == 0x8f || (opcode >= 0xa3 && opcode <= 0xa5) ||
+            opcode == 0xc2 || opcode == 0xc6 || opcode == 0xd0 || opcode == 0xdd) return 4;
+        if (opcode == 0x21 || opcode == 0x23) return 8;
+        if (opcode == 0x45) return -2;
+        return -1;
+    }
     struct Method { quint32 rva, name, signature; quint16 impl, flags; };
     struct Body { qint64 codeOffset = 0; quint32 codeSize = 0, localToken = 0; bool hasEH = false; };
     static quint16 u16(const uchar *p) { return quint16(p[0]) | quint16(p[1]) << 8; }
