@@ -105,8 +105,10 @@ void DialogXScanEngineDirectory::scanDirectory(const QString &sDirectoryName)
             if (type == XScanEngine::SCANENGINETYPE_DIE) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_MAIN_PATH).toString();
                 m_scanOptions.sCustomDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH).toString();
+#ifdef USE_PEID
             } else if (type == XScanEngine::SCANENGINETYPE_PEID) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_PEID_DATABASE_PATH).toString();
+#endif
             } else if (type == XScanEngine::SCANENGINETYPE_YARA) {
                 m_scanOptions.sMainDatabasePath = getGlobalOptions()->getValue(XOptions::ID_SCAN_YARA_DATABASE_PATH).toString();
             }

@@ -52,9 +52,13 @@ private slots:
     void on_toolButtonDIEDatabase_clicked();
     void on_toolButtonDIEDatabaseCustom_clicked();
     void on_toolButtonYaraRules_clicked();
+#ifdef USE_PEID
     void on_toolButtonPeidDatabase_clicked();
+#endif
     void on_pushButtonUpdateDIEDatabase_clicked();
+#ifdef USE_PEID
     void on_pushButtonUpdatePEIDDatabase_clicked();
+#endif
     void on_pushButtonUpdateYARADatabase_clicked();
     void on_pushButtonScanColors_clicked();
 

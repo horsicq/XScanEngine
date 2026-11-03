@@ -40,6 +40,9 @@ XScanEngineOptionsWidget::XScanEngineOptionsWidget(QWidget *pParent) : XShortcut
     ui->pushButtonUpdateDIEDatabase->hide();
     ui->pushButtonUpdatePEIDDatabase->hide();
     ui->pushButtonUpdateYARADatabase->hide();
+#ifndef USE_PEID
+    ui->groupBoxPeidDatabase->hide();
+#endif
 }
 
 XScanEngineOptionsWidget::~XScanEngineOptionsWidget()
@@ -93,10 +96,12 @@ void XScanEngineOptionsWidget::save()
         m_pOptions->getLineEdit(ui->lineEditDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_PATH);
         m_pOptions->getCheckBox(ui->groupBoxDIEDatabaseCustom, XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED);
     }
+#ifdef USE_PEID
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         m_pOptions->getLineEdit(ui->lineEditPeidDatabase, XOptions::ID_SCAN_PEID_DATABASE_PATH);
         m_pOptions->getLineEdit(ui->lineEditPeidDatabaseUpdateUrl, XOptions::ID_SCAN_PEID_DATABASE_UPDATE_URL);
     }
+#endif
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
         m_pOptions->getLineEdit(ui->lineEditYaraRules, XOptions::ID_SCAN_YARA_DATABASE_PATH);
         m_pOptions->getLineEdit(ui->lineEditYaraRulesUpdateUrl, XOptions::ID_SCAN_YARA_DATABASE_UPDATE_URL);
@@ -143,6 +148,7 @@ void XScanEngineOptionsWidget::reload()
         ui->groupBoxDIEDatabaseCustom->hide();
     }
 
+#ifdef USE_PEID
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         ui->groupBoxPeidDatabase->show();
         m_pOptions->setLineEdit(ui->lineEditPeidDatabase, XOptions::ID_SCAN_PEID_DATABASE_PATH);
@@ -154,6 +160,9 @@ void XScanEngineOptionsWidget::reload()
     } else {
         ui->groupBoxPeidDatabase->hide();
     }
+#else
+    ui->groupBoxPeidDatabase->hide();
+#endif
 
     if (m_pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
         ui->groupBoxYaraRules->show();
@@ -287,10 +296,12 @@ void XScanEngineOptionsWidget::setDefaultValues(XOptions *pOptions)
         pOptions->addID(XOptions::ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED, true);
     }
 
+#ifdef USE_PEID
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_PEID_ENABLED)) {
         pOptions->addID(XOptions::ID_SCAN_PEID_DATABASE_PATH, "$data/peid");
         pOptions->addID(XOptions::ID_SCAN_PEID_DATABASE_UPDATE_URL, "https://github.com/horsicq/XPEID/releases/tag/peid");
     }
+#endif
 
     if (pOptions->isIDPresent(XOptions::ID_SCAN_ENGINE_YARA_ENABLED)) {
         pOptions->addID(XOptions::ID_SCAN_YARA_DATABASE_PATH, "$data/yara_rules");
@@ -341,6 +352,7 @@ void XScanEngineOptionsWidget::on_toolButtonYaraRules_clicked()
     }
 }
 
+#ifdef USE_PEID
 void XScanEngineOptionsWidget::on_toolButtonPeidDatabase_clicked()
 {
     QString sText = ui->lineEditPeidDatabase->text();
@@ -352,6 +364,7 @@ void XScanEngineOptionsWidget::on_toolButtonPeidDatabase_clicked()
         ui->lineEditPeidDatabase->setText(sDirectoryName);
     }
 }
+#endif
 
 QList<DialogViewColors::RECORD> XScanEngineOptionsWidget::getRecords()
 {
@@ -410,10 +423,12 @@ void XScanEngineOptionsWidget::on_pushButtonUpdateDIEDatabase_clicked()
     QDesktopServices::openUrl(QUrl(ui->lineEditDIEDatabaseUpdateUrl->text()));
 }
 
+#ifdef USE_PEID
 void XScanEngineOptionsWidget::on_pushButtonUpdatePEIDDatabase_clicked()
 {
     QDesktopServices::openUrl(QUrl(ui->lineEditPeidDatabaseUpdateUrl->text()));
 }
+#endif
 
 void XScanEngineOptionsWidget::on_pushButtonUpdateYARADatabase_clicked()
 {

@@ -214,7 +214,9 @@ XBinary::XCONVERT _TABLE_XScanEngine_SCANENGINETYPE[] = {
     {XScanEngine::SCANENGINETYPE_DIE, "DiE", QString("DiE")},
     {XScanEngine::SCANENGINETYPE_NFD, "Nauz File Detector", QString("Nauz File Detector")},
     {XScanEngine::SCANENGINETYPE_YARA, "YARA", QString("YARA")},
+#ifdef USE_PEID
     {XScanEngine::SCANENGINETYPE_PEID, "PEiD", QString("PEiD")},
+#endif
 };
 
 XBinary::XCONVERT _TABLE_XScanEngine_RECORD_TYPE[] = {

@@ -461,9 +461,12 @@ int XScanEngineConsole::process()
     }
 
     if (scanOptions.sMainDatabasePath.isEmpty()) {
+#ifdef USE_PEID
         if (engineType == XScanEngine::SCANENGINETYPE_PEID) {
             scanOptions.sMainDatabasePath = "$data/peid";
-        } else if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
+        } else
+#endif
+            if (engineType == XScanEngine::SCANENGINETYPE_YARA) {
             scanOptions.sMainDatabasePath = "$data/yara_rules";
         } else {
             scanOptions.sMainDatabasePath = "$data/db";
