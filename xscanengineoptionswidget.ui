@@ -315,7 +315,7 @@
             <item>
              <widget class="QPushButton" name="pushButtonUpdateDIEDatabase">
               <property name="text">
-               <string>Update</string>
+               <string>Check</string>
               </property>
              </widget>
             </item>
@@ -398,7 +398,7 @@
             <item>
              <widget class="QPushButton" name="pushButtonUpdatePEIDDatabase">
               <property name="text">
-               <string>Update</string>
+               <string>Check</string>
               </property>
              </widget>
             </item>
@@ -447,7 +447,7 @@
             <item>
              <widget class="QPushButton" name="pushButtonUpdateYARADatabase">
               <property name="text">
-               <string>Update</string>
+               <string>Check</string>
               </property>
              </widget>
             </item>
