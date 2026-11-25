@@ -498,7 +498,7 @@ bool Binary_Script::compare(const QString &sSignature, qint64 nOffset)
 
     qint32 nSignatureSize = _sSignature.size();
 
-    if ((nSignatureSize + nOffset < m_nHeaderSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
+    if ((nOffset <= (std::numeric_limits<qint64>::max)() - nSignatureSize) && (nSignatureSize + nOffset < m_nHeaderSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
         (!_sSignature.contains('%')) && (!_sSignature.contains('*'))) {
         bResult = m_pBinary->compareSignatureStrings(m_sHeaderSignature.mid((int)((quint64)nOffset * 2), (int)((quint64)nSignatureSize * 2)), _sSignature);
     } else {
@@ -516,7 +516,7 @@ bool Binary_Script::compareEP(const QString &sSignature, qint64 nOffset)
 
     qint32 nSignatureSize = sSignature.size();
 
-    if ((nSignatureSize + nOffset < m_nEntryPointSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
+    if ((nOffset <= (std::numeric_limits<qint64>::max)() - nSignatureSize) && (nSignatureSize + nOffset < m_nEntryPointSignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
         (!_sSignature.contains('%')) && (!_sSignature.contains('*'))) {
         bResult = m_pBinary->compareSignatureStrings(m_sEntryPointSignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
     } else {
@@ -799,7 +799,7 @@ bool Binary_Script::compareOverlay(const QString &sSignature, qint64 nOffset)
 
     qint32 nSignatureSize = sSignature.size();
 
-    if ((nSignatureSize + nOffset < m_nOverlaySignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
+    if ((nOffset <= (std::numeric_limits<qint64>::max)() - nSignatureSize) && (nSignatureSize + nOffset < m_nOverlaySignatureSize) && (!_sSignature.contains('$')) && (!_sSignature.contains('#')) && (!_sSignature.contains('+')) &&
         (!_sSignature.contains('%')) && (!_sSignature.contains('*'))) {
         bResult = m_pBinary->compareSignatureStrings(m_sOverlaySignature.mid(nOffset * 2, nSignatureSize * 2), _sSignature);
     } else {

@@ -1348,6 +1348,8 @@ XScanEngine::DATABASE_STATE XScanEngine::getDatabaseState(XScanEngine::SCAN_OPTI
     listFT.append(XBinary::FT_MACHOFAT);
     listFT.append(XBinary::FT_AMIGAHUNK);
     listFT.append(XBinary::FT_ATARIST);
+    listFT.append(XBinary::FT_FAT);
+    listFT.append(XBinary::FT_MSA);
     listFT.append(XBinary::FT_DOS16M);
     listFT.append(XBinary::FT_DOS4G);
 
@@ -1473,7 +1475,8 @@ QMap<QString, XBinary::FT> XScanEngine::_getDatabaseFileTypeMap()
     mapResult.insert("DOS16M", XBinary::FT_DOS16M);
     mapResult.insert("DOS4G", XBinary::FT_DOS4G);
     mapResult.insert("Amiga", XBinary::FT_AMIGAHUNK);
-    mapResult.insert("AtariST", XBinary::FT_ATARIST);
+    mapResult.insert("GEMDOS", XBinary::FT_ATARIST);
+    mapResult.insert("AtariST", XBinary::FT_ATARIST);  // legacy name of GEMDOS
     mapResult.insert("JavaClass", XBinary::FT_JAVACLASS);
     mapResult.insert("PYC", XBinary::FT_PYC);
     mapResult.insert("PDF", XBinary::FT_PDF);
@@ -1483,6 +1486,8 @@ QMap<QString, XBinary::FT> XScanEngine::_getDatabaseFileTypeMap()
     mapResult.insert("PNG", XBinary::FT_PNG);
     mapResult.insert("RAR", XBinary::FT_RAR);
     mapResult.insert("ISO9660", XBinary::FT_ISO9660);
+    mapResult.insert("FAT", XBinary::FT_FAT);
+    mapResult.insert("MSA", XBinary::FT_MSA);
 
     return mapResult;
 }
@@ -1779,6 +1784,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "DOS16M", XBinary::FT_DOS16M));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "DOS4G", XBinary::FT_DOS4G));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "Amiga", XBinary::FT_AMIGAHUNK));
+                    m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "GEMDOS", XBinary::FT_ATARIST));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "AtariST", XBinary::FT_ATARIST));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "JavaClass", XBinary::FT_JAVACLASS));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "PYC", XBinary::FT_PYC));
@@ -1789,6 +1795,8 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "PNG", XBinary::FT_PNG));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "RAR", XBinary::FT_RAR));
                     m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "ISO9660", XBinary::FT_ISO9660));
+                    m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "FAT", XBinary::FT_FAT));
+                    m_listSignatures.append(_loadDatabaseFromArchive(&zip, &listRecords, databaseType, "MSA", XBinary::FT_MSA));
 
                     bResult = true;
                 }
@@ -1850,6 +1858,7 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "DOS16M", databaseType, XBinary::FT_DOS16M, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "DOS4G", databaseType, XBinary::FT_DOS4G, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "Amiga", databaseType, XBinary::FT_AMIGAHUNK, pPdStruct));
+                listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "GEMDOS", databaseType, XBinary::FT_ATARIST, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "AtariST", databaseType, XBinary::FT_ATARIST, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "JavaClass", databaseType, XBinary::FT_JAVACLASS, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "PYC", databaseType, XBinary::FT_PYC, pPdStruct));
@@ -1860,6 +1869,8 @@ bool XScanEngine::loadDatabase(const QString &sDatabasePath, DT databaseType, bo
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "PNG", databaseType, XBinary::FT_PNG, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "RAR", databaseType, XBinary::FT_RAR, pPdStruct));
                 listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "ISO9660", databaseType, XBinary::FT_ISO9660, pPdStruct));
+                listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "FAT", databaseType, XBinary::FT_FAT, pPdStruct));
+                listNewRecords.append(_loadDatabaseFromPath(_sDatabasePath + QDir::separator() + "MSA", databaseType, XBinary::FT_MSA, pPdStruct));
 
                 std::sort(listNewRecords.begin(), listNewRecords.end(), sort_signature_prio);
 
@@ -1927,6 +1938,8 @@ QList<XScanEngine::SIGNATURE_STATE> XScanEngine::getSignatureStates()
     listFT.append(XBinary::FT_MACHOFAT);
     listFT.append(XBinary::FT_AMIGAHUNK);
     listFT.append(XBinary::FT_ATARIST);
+    listFT.append(XBinary::FT_FAT);
+    listFT.append(XBinary::FT_MSA);
     listFT.append(XBinary::FT_DOS16M);
     listFT.append(XBinary::FT_DOS4G);
 
@@ -2147,7 +2160,8 @@ QList<XScanEngine::DATABASE_DIRECTORY> XScanEngine::_getDatabaseDirectories()
         {"DOS16M", XBinary::FT_DOS16M},
         {"DOS4G", XBinary::FT_DOS4G},
         {"Amiga", XBinary::FT_AMIGAHUNK},
-        {"AtariST", XBinary::FT_ATARIST},
+        {"GEMDOS", XBinary::FT_ATARIST},
+        {"AtariST", XBinary::FT_ATARIST},  // legacy name of GEMDOS
         {"JavaClass", XBinary::FT_JAVACLASS},
         {"PYC", XBinary::FT_PYC},
         {"PDF", XBinary::FT_PDF},
@@ -2157,6 +2171,8 @@ QList<XScanEngine::DATABASE_DIRECTORY> XScanEngine::_getDatabaseDirectories()
         {"PNG", XBinary::FT_PNG},
         {"RAR", XBinary::FT_RAR},
         {"ISO9660", XBinary::FT_ISO9660},
+        {"FAT", XBinary::FT_FAT},
+        {"MSA", XBinary::FT_MSA},
     };
 
     QList<DATABASE_DIRECTORY> listResult;
@@ -3615,9 +3631,11 @@ bool XScanEngine::isWrapper(const QString &sType)
 
 bool XScanEngine::isScanable(const QSet<XBinary::FT> &stFT)
 {
+    // GEMDOS programs are what an Atari floppy image holds.  Floppy disk images (FT_FAT, FT_MSA)
+    // are FT_ARCHIVE as well.
     return (stFT.contains(XBinary::FT_MSDOS) || stFT.contains(XBinary::FT_NE) || stFT.contains(XBinary::FT_LE) || stFT.contains(XBinary::FT_LX) ||
             stFT.contains(XBinary::FT_PE) || stFT.contains(XBinary::FT_ELF) || stFT.contains(XBinary::FT_MACHO) || stFT.contains(XBinary::FT_DEX) ||
-            stFT.contains(XBinary::FT_PDF) || stFT.contains(XBinary::FT_ARCHIVE));
+            stFT.contains(XBinary::FT_PDF) || stFT.contains(XBinary::FT_ATARIST) || stFT.contains(XBinary::FT_ARCHIVE));
 }
 
 XScanEngine::SCANID XScanEngine::createResultId(QIODevice *pDevice, const SCANID &parentId, XBinary::FT fileType)
@@ -3867,9 +3885,20 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
     } else if (stFT.contains(XBinary::FT_BWDOS16M)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_BWDOS16M, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_BWDOS16M;
+    } else if (stFT.contains(XBinary::FT_FAT)) {
+        // Raw FAT12/FAT16 floppy disk image (Atari ST .st and others); its files are scanned below.
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_FAT, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_FAT;
+    } else if (stFT.contains(XBinary::FT_MSA)) {
+        // Atari MSA disk image; its decoded image is scanned below.
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_MSA, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_MSA;
     } else if (stFT.contains(XBinary::FT_AMIGAHUNK)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_AMIGAHUNK, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_AMIGAHUNK;
+    } else if (stFT.contains(XBinary::FT_ATARIST)) {
+        _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_ATARIST, pScanOptions, true, pPdStruct);
+        if (bInit) pScanResult->ftInit = XBinary::FT_ATARIST;
     } else if (stFT.contains(XBinary::FT_PDF)) {
         _processDetect(&scanIdMain, pScanResult, _pDevice, parentId, XBinary::FT_PDF, pScanOptions, true, pPdStruct);
         if (bInit) pScanResult->ftInit = XBinary::FT_PDF;
@@ -3970,7 +3999,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
             bool bScanableArchive = false;
 
             if (stFT.contains(XBinary::FT_ZIP) || stFT.contains(XBinary::FT_7Z) || stFT.contains(XBinary::FT_RAR) || stFT.contains(XBinary::FT_CAB) ||
-                stFT.contains(XBinary::FT_ISO9660)) {
+                stFT.contains(XBinary::FT_ISO9660) || stFT.contains(XBinary::FT_FAT) || stFT.contains(XBinary::FT_MSA)) {
                 bScanableArchive = true;
             }
 
@@ -4014,6 +4043,13 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
                                     scanIdSub.filePart = XBinary::FILEPART_STREAM;
                                     scanIdSub.nOffset = archiveRecord.nStreamOffset;
                                     scanIdSub.nSize = archiveRecord.nStreamSize;
+
+                                    if (XBinary::isArchiveStreamNoExtent(archiveRecord.nStreamOffset, archiveRecord.nStreamSize)) {
+                                        // A member assembled by its reader (scattered clusters, a decoded stream) has no
+                                        // extent in the container: show its unpacked size from the start.
+                                        scanIdSub.nOffset = 0;
+                                        scanIdSub.nSize = archiveRecord.mapProperties.value(XBinary::FPART_PROP_UNCOMPRESSEDSIZE).toLongLong();
+                                    }
                                     scanIdSub.sOriginalName = sOriginalName;
                                     scanIdSub.sInfo = XBinary::getHandleMethods(archiveRecord.mapProperties);
 
@@ -4902,6 +4938,8 @@ QSet<XBinary::FT> XScanEngine::getFileTypesSupported()
     stResult.insert(XBinary::FT_NPM);
     stResult.insert(XBinary::FT_RAR);
     stResult.insert(XBinary::FT_ISO9660);
+    stResult.insert(XBinary::FT_FAT);
+    stResult.insert(XBinary::FT_MSA);
     stResult.insert(XBinary::FT_MSDOS);
     stResult.insert(XBinary::FT_NE);
     stResult.insert(XBinary::FT_LE);
