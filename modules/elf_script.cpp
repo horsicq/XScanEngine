@@ -77,6 +77,18 @@ qint32 ELF_Script::getSectionNumber(const QString &sSectionName)
     return m_pELF->getSectionNumber(sSectionName, &m_listSectionRecords);  // TODO get pdStruct
 }
 
+QString ELF_Script::getSectionName(quint32 nNumber)
+{
+    // APKiD ELF: section name resolved via e_shstrndx; "" for an index outside the section table.
+    QString sResult;
+
+    if (nNumber < (quint32)m_listSectionRecords.count()) {
+        sResult = m_listSectionRecords.at(nNumber).sName;
+    }
+
+    return sResult;
+}
+
 quint16 ELF_Script::getElfHeader_type()
 {
     return m_elfHeader.e_type;

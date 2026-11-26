@@ -3990,7 +3990,7 @@ void XScanEngine::scanProcess(QIODevice *pDevice, SCAN_RESULT *pScanResult, SCAN
 
     if (!(pScanOptions->bCollection)) {
         if (pScanOptions->bIsArchivesScan) {
-            qint32 nLimit = 20;
+            qint32 nLimit = 1000;
 
             if (pScanOptions->bIsAggressiveScan) {
                 nLimit = 100000;

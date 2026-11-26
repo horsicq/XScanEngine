@@ -36,6 +36,10 @@ public slots:
     bool isDexStringPresent(const QString &sString);
     bool isDexItemStringPresent(const QString &sItemString);
     quint32 getMapItemsHash();
+    // APKiD DEX
+    qint64 getUnicodeMemberNameCount(const QString &sKind);
+    bool isDexStringPresentExp(const QString &sPattern);
+    bool isStringPoolSortedByHeader();
 
 private:
     XDEX *m_pDex;
@@ -44,6 +48,12 @@ private:
     QList<QString> m_listStrings;
     QList<QString> m_listItemStrings;
     quint32 m_MapItemsHash;
+    // APKiD DEX: YARA 3.11 legacy dex module values, computed on first use
+    bool m_bLegacyDone;
+    qint64 m_nLegacyUnicodeFieldNames;
+    qint64 m_nLegacyUnicodeMethodNames;
+    bool m_bLegacyUnsortedStringPool;
+    void _analyzeLegacy();
 };
 
 #endif  // DEX_SCRIPT_H
