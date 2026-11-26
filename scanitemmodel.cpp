@@ -319,6 +319,18 @@ ScanItem *ScanItemModel::rootItem()
     return this->m_pRootItem;
 }
 
+// The offset XML/JSON report for a record: the position of its file part (overlay, resource,
+// archive stream) in the parent, as the text output prints it ("Offset = 0x..."). id.nOffset is
+// the start of the scanned sub-device, which is 0 for those parts.
+static qint64 _getRecordOffset(const XScanEngine::SCANSTRUCT &ss)
+{
+    if (ss.parentId.filePart != XBinary::FILEPART_HEADER) {
+        return ss.parentId.nOffset;
+    }
+
+    return ss.id.nOffset;
+}
+
 void ScanItemModel::_toXML(QXmlStreamWriter *pXml, ScanItem *pItem, qint32 nLevel)
 {
     const XScanEngine::SCANSTRUCT &ss = pItem->scanStruct();
@@ -330,7 +342,7 @@ void ScanItemModel::_toXML(QXmlStreamWriter *pXml, ScanItem *pItem, qint32 nLeve
             pXml->writeAttribute("parentfilepart", XBinary::recordFilePartIdToString(ss.parentId.filePart));
             pXml->writeAttribute("filetype", XBinary::fileTypeIdToString(ss.id.fileType));
             pXml->writeAttribute("info", ss.id.sInfo);
-            pXml->writeAttribute("offset", QString::number(ss.id.nOffset));
+            pXml->writeAttribute("offset", QString::number(_getRecordOffset(ss)));
             pXml->writeAttribute("size", QString::number(ss.id.nSize));
         }
 
@@ -363,7 +375,7 @@ void ScanItemModel::_toJSON(QJsonObject *pJsonObject, ScanItem *pItem, qint32 nL
             pJsonObject->insert("parentfilepart", XBinary::recordFilePartIdToString(ss.parentId.filePart));
             pJsonObject->insert("filetype", XBinary::fileTypeIdToString(ss.id.fileType));
             pJsonObject->insert("info", ss.id.sInfo);
-            pJsonObject->insert("offset", QString::number(ss.id.nOffset));
+            pJsonObject->insert("offset", QString::number(_getRecordOffset(ss)));
             pJsonObject->insert("size", QString::number(ss.id.nSize));
 
             sArrayName = "values";
